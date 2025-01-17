@@ -95,10 +95,10 @@ def initDB():
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS crime_slots
     (crime_slot_id INTEGER PRIMARY KEY AUTOINCREMENT, 
-    crimes_id INTEGER,
+    crimeInstance_id INTEGER,
     position TEXT, item_requirement_id INTEGER,
     success_chance REAL, 
-    FOREIGN KEY (crimes_id) REFERENCES crimeInstances (crimeInstance_id)
+    FOREIGN KEY (crimeInstance_id) REFERENCES crimeInstances (crimeInstance_id)
     )''')
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS slot_assignments
@@ -141,7 +141,7 @@ def initDB():
         users.level AS user_level,
         users.position_in_faction    
     FROM crimeInstances c 
-    LEFT JOIN crime_slots cs ON cs.crimes_id = c.crimeInstance_id
+    LEFT JOIN crime_slots cs ON cs.crimeInstance_id = c.crimeInstance_id
     LEFT JOIN slot_assignments sa ON cs.crime_slot_id = sa.crime_slot_id
     LEFT JOIN users ON sa.user_id = users.user_id;
         ''')

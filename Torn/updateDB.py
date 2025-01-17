@@ -119,7 +119,7 @@ def update_crimeInstances():
         for slot in crime['slots']:
             item_requirement_id = slot['item_requirement']['id'] if slot['item_requirement'] else None
             cursor.execute('''INSERT OR REPLACE INTO crime_slots 
-                              (crimes_id, position, item_requirement_id, success_chance)
+                              (crimeInstance_id, position, item_requirement_id, success_chance)
                               VALUES (?, ?, ?, ?)''',
                            (crime['id'], 
                             slot['position'], 
@@ -127,7 +127,7 @@ def update_crimeInstances():
                             slot['success_chance']))
 
             # Get the slot_id for the current slot
-            cursor.execute("SELECT crime_slot_id FROM crime_slots WHERE crimes_id = ? AND position = ?",
+            cursor.execute("SELECT crime_slot_id FROM crime_slots WHERE crimeInstance_id = ? AND position = ?",
                            (crime['id'], slot['position']))
             crime_slot_id = cursor.fetchone()[0]
 
@@ -163,7 +163,7 @@ def update_crimeInstances():
                         SELECT DISTINCT cn.name, cs.position
                         FROM crimeInstances c 
                         INNER JOIN crime_names cn ON cn.name = c.name
-                        INNER JOIN crime_slots cs ON c.crimeInstance_id = cs.crimes_id 
+                        INNER JOIN crime_slots cs ON c.crimeInstance_id = cs.crimeInstance_id 
                         ) AS T1
      ''')
     conn.commit()
