@@ -37,9 +37,14 @@ def initDB():
     cursor = conn.cursor()
 
     # Create tables if they don't exist
-    cursor.execute('''CREATE TABLE IF NOT EXISTS preferences (
+    cursor.executescript('''CREATE TABLE IF NOT EXISTS preferences (
     key TEXT PRIMARY KEY,
-    value TEXT)''')
+    value TEXT);
+                   
+    INSERT OR IGNORE INTO preferences (key, value) 
+    VALUES 
+          ('TORN_API_KEY',NULL);                  
+    ''')
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS users
     (id INTEGER PRIMARY KEY, 
@@ -63,8 +68,21 @@ def initDB():
     )''')  # Added is_in_oc
   
    # Create tables if they don't exist
+    cursor.executescript('''DROP TABLE crimes_version; 
+                         CREATE TABLE IF NOT EXISTS crimes_version
+    (version_id INTEGER PRIMARY KEY, 
+    name TEXT, 
+    start_at DATETIME);
+    
+    INSERT OR IGNORE INTO crimes_version (version_id, name, start_at) 
+    VALUES 
+            (1, 'orginal high success chances','2024-12-31'), 
+            (2, 'Lowered successes for new crime instances','2025-01-09');                  
+    ''')
+
     cursor.execute('''CREATE TABLE IF NOT EXISTS crimes
     (id INTEGER PRIMARY KEY, 
+    version_id INTEGER,
     name TEXT, 
     difficulty INTEGER,
     status TEXT, 
@@ -74,6 +92,7 @@ def initDB():
     ready_at DATETIME, 
     expired_at DATETIME,
     FOREIGN KEY (name) REFERENCES crime_names(name)
+    FOREIGN KEY (version_id) REFERENCES crimes_version(version_id)
     )''')
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS crime_slots
@@ -87,23 +106,18 @@ def initDB():
     cursor.execute('''CREATE TABLE IF NOT EXISTS slot_assignments
     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
      slot_id INTEGER,
-     user_id INTEGER, 
+     user_id INTEGER DEFAULT NULL, 
      joined_at DATETIME, 
      progress REAL,
      FOREIGN KEY (slot_id) REFERENCES crime_slots (id), 
      FOREIGN KEY (user_id) REFERENCES users(id)
      );''') 
 
-# Create the crime_names table with generated id
-    cursor.execute("DROP TABLE IF EXISTS crime_names")
-    cursor.execute('''CREATE TABLE crime_names (
-    name TEXT PRIMARY KEY 
-    );''')  
-#--FOREIGN KEY (name) REFERENCES crimes(name)
+    # Create the crime_names table with generated id
+    cursor.execute('''CREATE TABLE IF NOT EXISTS crime_names (name TEXT PRIMARY KEY);''')  
     
     # Create the crime_positions table
-    cursor.execute("DROP TABLE IF EXISTS crime_positions")
-    cursor.execute('''CREATE TABLE crime_positions (
+    cursor.execute('''CREATE TABLE IF NOT EXISTS crime_positions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     crime_name TEXT,  
     position TEXT,
@@ -132,8 +146,8 @@ def initDB():
     FROM users u
     INNER JOIN faction_members fm ON u.id = fm.user_id''')
 
-    cursor.execute("DROP VIEW IF EXISTS crime_slot_assignments_view")
-    cursor.execute('''CREATE VIEW crime_slot_assignments_view AS
+    cursor.executescript('''DROP VIEW IF EXISTS crime_slot_assignments_view;
+    CREATE VIEW crime_slot_assignments_view AS
     SELECT
         cs.id AS slot_id,
         sa.user_id,
@@ -154,29 +168,30 @@ def initDB():
     LEFT JOIN faction_members_view fmv ON sa.user_id = fmv.id;
         ''')
     
-
-    cursor.execute("DROP VIEW IF EXISTS crime_name_positions_view")
-    cursor.execute('''CREATE VIEW crime_name_positions_view AS
+    cursor.executescript('''DROP VIEW IF EXISTS crime_name_positions_view;
+    CREATE VIEW crime_name_positions_view AS
     SELECT
         cn.name AS crime_name,
         cp.position
     FROM crime_names cn
     INNER JOIN crime_positions cp ON cn.name = cp.crime_name;''')
     
-    cursor.execute("DROP VIEW IF EXISTS _rowCounts")
-    cursor.execute('''CREATE VIEW _rowCounts AS
-    SELECT 'crime_name_positions_view' AS "name", 'view' AS "type", COUNT(*) AS "rows" FROM "crime_name_positions_view"
-        UNION SELECT 'crime_names' as "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crime_names"
+    cursor.executescript("""DROP VIEW IF EXISTS _rowCounts ;
+    CREATE VIEW _rowCounts AS
+        SELECT 'crime_name_positions_view' AS "name", 'view' AS "type", COUNT(*) AS "rows" FROM "crime_name_positions_view"
+        UNION SELECT 'crime_names' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crime_names"
         UNION SELECT 'crime_positions' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crime_positions"
         UNION SELECT 'crime_slot_assignments_view' AS "name", 'view' AS "type", COUNT(*) AS "rows" FROM "crime_slot_assignments_view"
         UNION SELECT 'crime_slots' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crime_slots"
         UNION SELECT 'crimes' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crimes"
+        UNION SELECT 'crimes_version' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crimes_version"
         UNION SELECT 'faction_members' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "faction_members"
         UNION SELECT 'faction_members_view' AS "name", 'view' AS "type", COUNT(*) AS "rows" FROM "faction_members_view"
         UNION SELECT 'preferences' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "preferences"
         UNION SELECT 'slot_assignments' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "slot_assignments"
         UNION SELECT 'sqlite_sequence' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "sqlite_sequence"
-        UNION SELECT 'users' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "users"''')
+        UNION SELECT 'users' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "users"
+      """)
 
     cursor.execute('''PRAGMA optimize;''')
 
@@ -184,5 +199,6 @@ def initDB():
     conn.close()
 
     db_initialised=True
+
     return db_initialised
 
