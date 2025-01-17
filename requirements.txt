@@ -1,0 +1,4 @@
+requests
+tabulate
+eralchemy
+graphviz
