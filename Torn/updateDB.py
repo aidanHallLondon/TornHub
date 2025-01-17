@@ -95,15 +95,18 @@ def update_crimes():
     # Insert or update crimes (ignore if crime ID already exists)
     for crime in crimes:
         try:
+            created_at = datetime.fromtimestamp(crime['created_at']).isoformat()
+            version_id = 1 if datetime.fromtimestamp(crime['created_at']) <= datetime(2025, 1, 8) else 2
             cursor.execute('''
-                    INSERT INTO crimes (id, name, difficulty, status, created_at, 
+                    INSERT INTO crimes (id, version_id, name, difficulty, status, created_at, 
                                initiated_at, planning_at, ready_at, expired_at)
-                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                            (crime['id'], 
+                            version_id,
                             crime['name'], 
                             crime['difficulty'], 
                             crime['status'],
-                            datetime.fromtimestamp(crime['created_at']).isoformat() if crime['created_at'] else None,
+                            created_at,
                             datetime.fromtimestamp(crime['initiated_at']).isoformat() if crime['initiated_at'] else None,
                             datetime.fromtimestamp(crime['planning_at']).isoformat() if crime['planning_at'] else None,
                             datetime.fromtimestamp(crime['ready_at']).isoformat() if crime['ready_at'] else None,
@@ -138,7 +141,12 @@ def update_crimes():
                                 datetime.fromtimestamp(slot['user']['joined_at']).isoformat(), 
                                 slot['user']['progress'])
                                 )
-    
+    execute(cursor,'FK fix for users no longer in the faction ',''' 
+        UPDATE slot_assignments 
+            SET user_id = NULL 
+                WHERE user_id NOT IN (SELECT id FROM users);
+    ''')
+
     # Insert distinct crime names into crime_names table
     execute(cursor,'INSERT INTO crime_names ','''
             INSERT OR IGNORE INTO crime_names (name) 
