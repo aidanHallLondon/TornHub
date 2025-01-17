@@ -34,7 +34,6 @@ def execute(cursor, label, sql, values=None):  # Add optional values parameter
 def update_faction_members():
     """
     Fetches faction member data and updates the SQLite database,
-    normalizing the data into 'users' and 'faction_members' tables.
 
     Args:
         db_path (str): Path to the SQLite database file.
@@ -51,9 +50,12 @@ def update_faction_members():
             until_timestamp = datetime.fromtimestamp(member['status']['until']).isoformat() if member['status']['until'] else None
 
             cursor.execute('''
-                    INSERT INTO users (id, name, level, last_action_timestamp, status, 
-                               life_current, life_maximum, has_early_discharge, until, is_revivable) 
-                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    INSERT INTO users (
+                            user_id, name, level, last_action, user_status, 
+                            life_current, life_maximum, has_early_discharge, until, is_revivable,
+                            days_in_faction, is_in_faction, position_in_faction, is_in_oc
+                           ) 
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?,?,?,?)''',
                            (member['id'], 
                             member['name'], 
                             member['level'], 
@@ -61,25 +63,22 @@ def update_faction_members():
                             member['status']['state'],
                             member['life']['current'], 
                             member['life']['maximum'],
-                            member['has_early_discharge'], until_timestamp, 
-                            member['is_revivable']))
+                            member['has_early_discharge'], 
+                            until_timestamp, 
+                            member['is_revivable'],
+                            member['days_in_faction'], 
+                            1, # is_in_faction
+                            member['position'],
+                            member['is_in_oc']
+                        ))
         except sqlite3.IntegrityError:
             pass  # Ignore if user ID already exists
-
-    # Insert or update faction members
-    for member in data:
-        cursor.execute('''INSERT OR REPLACE INTO faction_members 
-                          (user_id, days_in_faction, position, is_in_oc) 
-                          VALUES (?, ?, ?, ?)''',
-                       (member['id'], member['days_in_faction'], member['position'],
-                        member['is_in_oc']))
-
   
     conn.commit()
     conn.close()
 
 
-def update_crimes():
+def update_crimeInstances():
     """
     Fetches crime data using getCrimes() and updates the SQLite database.
 
@@ -87,18 +86,18 @@ def update_crimes():
         db_path (str): Path to the SQLite database file.
     """
 
-    crimes = getCrimes()  # Get the list of crimes directly
+    crimeInstances = getCrimes()  # Get the list of crimes directly
 
     conn = sqlite3.connect(DB_CONNECTPATH)
     cursor = conn.cursor()
 
     # Insert or update crimes (ignore if crime ID already exists)
-    for crime in crimes:
+    for crime in crimeInstances:
         try:
             created_at = datetime.fromtimestamp(crime['created_at']).isoformat()
             version_id = 1 if datetime.fromtimestamp(crime['created_at']) <= datetime(2025, 1, 8) else 2
             cursor.execute('''
-                    INSERT INTO crimes (id, version_id, name, difficulty, status, created_at, 
+                    INSERT INTO crimeInstances (crimeInstance_id, version_id, name, difficulty, crime_status, created_at, 
                                initiated_at, planning_at, ready_at, expired_at)
                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                            (crime['id'], 
@@ -128,15 +127,15 @@ def update_crimes():
                             slot['success_chance']))
 
             # Get the slot_id for the current slot
-            cursor.execute("SELECT id FROM crime_slots WHERE crimes_id = ? AND position = ?",
+            cursor.execute("SELECT crime_slot_id FROM crime_slots WHERE crimes_id = ? AND position = ?",
                            (crime['id'], slot['position']))
-            slot_id = cursor.fetchone()[0]
+            crime_slot_id = cursor.fetchone()[0]
 
             # Insert slot assignments (if user exists)
             if slot['user']:
-                cursor.execute('''INSERT INTO slot_assignments (slot_id, user_id, joined_at, progress)
+                cursor.execute('''INSERT INTO slot_assignments (crime_slot_id, user_id, joined_at, progress)
                                   VALUES (?, ?, ?, ?)''', (
-                                slot_id, 
+                                crime_slot_id, 
                                 slot['user']['id'], 
                                 datetime.fromtimestamp(slot['user']['joined_at']).isoformat(), 
                                 slot['user']['progress'])
@@ -144,13 +143,17 @@ def update_crimes():
     execute(cursor,'FK fix for users no longer in the faction ',''' 
         UPDATE slot_assignments 
             SET user_id = NULL 
-                WHERE user_id NOT IN (SELECT id FROM users);
+                WHERE user_id NOT IN (SELECT user_id FROM users);
     ''')
 
     # Insert distinct crime names into crime_names table
+    execute(cursor,'INSERT INTO crime_status ','''
+            INSERT OR IGNORE INTO crime_status (crime_status)
+            SELECT DISTINCT crime_status FROM crimeInstances''')
+
     execute(cursor,'INSERT INTO crime_names ','''
             INSERT OR IGNORE INTO crime_names (name) 
-            SELECT DISTINCT name FROM crimes''')
+            SELECT DISTINCT name FROM crimeInstances''')
 
     # # Insert positions for each crime name
     cursor.execute(''' DELETE FROM crime_positions ''')
@@ -158,16 +161,16 @@ def update_crimes():
                     INSERT OR IGNORE INTO crime_positions (crime_name, position)
                         SELECT DISTINCT name, position FROM (
                         SELECT DISTINCT cn.name, cs.position
-                        FROM crimes c 
+                        FROM crimeInstances c 
                         INNER JOIN crime_names cn ON cn.name = c.name
-                        INNER JOIN crime_slots cs ON c.id = cs.crimes_id 
+                        INNER JOIN crime_slots cs ON c.crimeInstance_id = cs.crimes_id 
                         ) AS T1
      ''')
     conn.commit()
     conn.close()
 
 def updateDB():
-    update_crimes()
+    update_crimeInstances()
     update_faction_members()
 
 
