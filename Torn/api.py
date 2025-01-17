@@ -39,7 +39,10 @@ def _get_api_key(db_path=DB_PATH, api_key_settingName='TORN_API_KEY', force=Fals
     Returns:
         str: The API key.
     """
-
+    global api_key 
+    if api_key != None and checkAPIKey(api_key) and not force:
+        return api_key
+    
     # Check for API key in command-line arguments
     for arg in sys.argv:
         if arg.startswith("--api_key="):
