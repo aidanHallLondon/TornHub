@@ -96,8 +96,7 @@ def initDB():
     cursor.execute('''CREATE TABLE IF NOT EXISTS crime_slots
     (crime_slot_id INTEGER PRIMARY KEY AUTOINCREMENT, 
     crimeInstance_id INTEGER,
-    position TEXT, item_requirement_id INTEGER,
-    success_chance REAL, 
+    position TEXT, item_requirement_id INTEGER, 
     FOREIGN KEY (crimeInstance_id) REFERENCES crimeInstances (crimeInstance_id)
     )''')
 
@@ -107,6 +106,7 @@ def initDB():
      user_id INTEGER DEFAULT NULL, 
      joined_at DATETIME, 
      progress REAL,
+     success_chance REAL,
      FOREIGN KEY (crime_slot_id) REFERENCES crime_slots (crime_slot_id), 
      FOREIGN KEY (user_id) REFERENCES users(user_id)
      );''') 
@@ -127,21 +127,24 @@ def initDB():
     cursor.executescript('''DROP VIEW IF EXISTS crime_slot_assignments_view;
     CREATE VIEW crime_slot_assignments_view AS
     SELECT
+        ci.crimeInstance_id,
+        ci.name AS crime_name,
+        ci.difficulty AS crime_difficulty,
+        ci.crime_status,                
         cs.crime_slot_id,
-        users.user_id,
-        c.name AS crime_name,
         cs.position AS slot_position,  -- Rename to avoid ambiguity
-        users.name AS user_name,
-        c.difficulty AS crime_difficulty,
-        c.crime_status AS crime_status,                
         cs.item_requirement_id,
-        cs.success_chance,
         sa.joined_at,
+        sa.success_chance,
         sa.progress,
+        users.user_id,
+        users.name AS user_name,
         users.level AS user_level,
-        users.position_in_faction    
-    FROM crimeInstances c 
-    LEFT JOIN crime_slots cs ON cs.crimeInstance_id = c.crimeInstance_id
+        users.position_in_faction ,   
+        users.last_action AS user_last_action,
+        users.is_in_faction AS user_is_in_faction           
+    FROM crimeInstances ci 
+    LEFT JOIN crime_slots cs ON cs.crimeInstance_id = ci.crimeInstance_id
     LEFT JOIN slot_assignments sa ON cs.crime_slot_id = sa.crime_slot_id
     LEFT JOIN users ON sa.user_id = users.user_id;
         ''')
@@ -185,7 +188,7 @@ def initDB():
         cs.crime_slot_id,
         cs.position AS slot_position,
         cs.item_requirement_id,
-        cs.success_chance,
+        sa.success_chance,
         sa.slot_assignment_id,
         sa.joined_at AS assignment_joined_at,
         sa.progress AS assignment_progress,

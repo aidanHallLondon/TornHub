@@ -31,7 +31,7 @@ def execute(cursor, label, sql, values=None):  # Add optional values parameter
     # print(f"SQL {label}: Completed in {time_taken:.2f} seconds")
 
 
-def update_faction_members():
+def update_faction_members( cursor):
     """
     Fetches faction member data and updates the SQLite database,
 
@@ -40,9 +40,6 @@ def update_faction_members():
     """
     data = getFactionMembers()
 
-    conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)  # Add detect_types
-    cursor = conn.cursor()
- 
     # Insert or update users
     for member in data:
         try:
@@ -73,12 +70,8 @@ def update_faction_members():
                         ))
         except sqlite3.IntegrityError:
             pass  # Ignore if user ID already exists
-  
-    conn.commit()
-    conn.close()
 
-
-def update_crimeInstances():
+def update_crimeInstances( cursor):
     """
     Fetches crime data using getCrimes() and updates the SQLite database.
 
@@ -88,8 +81,6 @@ def update_crimeInstances():
 
     crimeInstances = getCrimes()  # Get the list of crimes directly
 
-    conn = sqlite3.connect(DB_CONNECTPATH)
-    cursor = conn.cursor()
     # Insert or update crimes (ignore if crime ID already exists)
     for crime in crimeInstances:
         try:
@@ -118,32 +109,29 @@ def update_crimeInstances():
         for slot in crime['slots']:
             item_requirement_id = slot['item_requirement']['id'] if slot['item_requirement'] else None
             cursor.execute('''INSERT OR REPLACE INTO crime_slots 
-                              (crimeInstance_id, position, item_requirement_id, success_chance)
-                              VALUES (?, ?, ?, ?)''',
+                              (crimeInstance_id, position, item_requirement_id)
+                              VALUES (?, ?, ?)''',
                            (crime['id'], 
                             slot['position'], 
-                            item_requirement_id, 
-                            slot['success_chance']))
+                            item_requirement_id)
+                        )
 
-            # Get the slot_id for the current slot
-            cursor.execute("SELECT crime_slot_id FROM crime_slots WHERE crimeInstance_id = ? AND position = ?",
-                           (crime['id'], slot['position']))
-            crime_slot_id = cursor.fetchone()[0]
+            # Get the slot_id for the new slot
+            crime_slot_id = cursor.lastrowid
 
             # Insert slot assignments (if user exists)
             if slot['user']:
-                cursor.execute('''INSERT INTO slot_assignments (crime_slot_id, user_id, joined_at, progress)
-                                  VALUES (?, ?, ?, ?)''', (
+                cursor.execute('''INSERT OR REPLACE INTO slot_assignments (
+                               crime_slot_id, user_id, joined_at,  
+                               success_chance, progress
+                               )
+                                  VALUES (?, ?, ?, ?, ?)''', (
                                 crime_slot_id, 
                                 slot['user']['id'], 
                                 datetime.fromtimestamp(slot['user']['joined_at']).isoformat(), 
+                                slot['success_chance'],
                                 slot['user']['progress'])
                                 )
-    execute(cursor,'FK fix for users no longer in the faction ',''' 
-        UPDATE slot_assignments 
-            SET user_id = NULL 
-                WHERE user_id NOT IN (SELECT user_id FROM users);
-    ''')
 
     # Insert distinct crime names into crime_names table
     execute(cursor,'INSERT INTO crime_status ','''
@@ -165,13 +153,25 @@ def update_crimeInstances():
                         INNER JOIN crime_slots cs ON c.crimeInstance_id = cs.crimeInstance_id 
                         ) AS T1
      ''')
-    conn.commit()
-    conn.close()
+
+
+def cleamUpFKIssues(cursor):
+    execute(cursor,'FK fix for users no longer in the faction ',''' 
+        UPDATE slot_assignments 
+            SET user_id = NULL 
+                WHERE user_id NOT IN (SELECT user_id FROM users);
+    ''')
 
 def updateDB():
-    update_crimeInstances()
-    update_faction_members()
-
+    conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)  # Add detect_types
+    cursor = conn.cursor()
+    #
+    update_crimeInstances( cursor)
+    update_faction_members( cursor)
+    cleamUpFKIssues( cursor)
+    #
+    conn.commit()
+    conn.close()
 
 def exampleQ():
     # Now you can query your data using SQL
