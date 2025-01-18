@@ -90,7 +90,6 @@ def update_crimeInstances():
 
     conn = sqlite3.connect(DB_CONNECTPATH)
     cursor = conn.cursor()
-
     # Insert or update crimes (ignore if crime ID already exists)
     for crime in crimeInstances:
         try:

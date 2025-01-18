@@ -23,7 +23,8 @@ def getFactionMembers(params={"striptags": "false"}, force=False):
     return cached_api_call("faction/members", dataKey="members", params=params, force=force) 
 
 def getCrimes(params=None, force=False):
-    return cached_api_paged_call(endpoint="faction/crimes", dataKey="crimes", params=params, force=force) 
+    crimes= cached_api_paged_call(endpoint="faction/crimes", dataKey="crimes", params=params, force=force) 
+    return crimes 
 
 # Interface functions
 
@@ -123,45 +124,6 @@ def cached_api_call(endpoint, params=None, dataKey=None, force=False):
     else:
         data.extend(new_data )
     _saveData(endpoint, params, data)
-    if not os.path.exists(CACHE_PATH):
-        os.makedirs(CACHE_PATH)
-
-    # cache_filename = f"{endpoint.replace('/', '_')}"
-    # if params:
-    #     param_string = "_".join(
-    #         f"{k}_{v}" for k, v in sorted(params.items()) if k not in ['selections', 'from', 'to']
-    #     )
-    #     cache_filename += f"_{param_string}"
-    # cache_filename += ".json"
-    # cache_filepath = os.path.join(CACHE_PATH, cache_filename)
-
-    # if not force:
-    #     try:
-    #         if os.path.exists(cache_filepath):
-    #             file_age = time.time() - os.path.getmtime(cache_filepath)
-    #             if file_age < maxAge:
-    #                 with open(cache_filepath, "r") as f:
-    #                     #print(f"Using cached data for {endpoint} (age: {int(file_age)} seconds)")
-    #                     return json.load(f)
-    #     except Exception as e:
-    #         print(f"Error reading cache file: {e}")
-
-    # # Make the API call using generic_api_call
-    # url = f"{BASE_URL}/{endpoint}"
-    # data = _api_raw_call(url, params=params)
-    # if dataKey:
-    #     data= data[dataKey]
-
-    # # Cache the API response
-    # _saveData(endpoint, params, data)
-    # if data:
-    #     try:
-    #         with open(cache_filepath, "w") as f:
-    #             json.dump(data, f, indent=4)
-    #         print(f"Data fetched and cached for {endpoint}")
-    #     except Exception as e:
-    #         print(f"Error writing to cache file: {e}")
-
     return data
 
 # PAGED API CALLS
@@ -177,6 +139,7 @@ def cached_api_paged_call(endpoint, dataKey=None, params=None, force=False):
     data = _loadCachedData(endpoint, params=params)
     data.extend( _paginated_api_calls(endpoint, dataKey=dataKey, offset= len(data), params=None))
     _saveData(endpoint, params, data)
+    return data
 
 def _paginated_api_calls(endpoint, dataKey, offset=0, params=None):
     '''
