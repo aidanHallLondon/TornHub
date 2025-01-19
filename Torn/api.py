@@ -19,11 +19,11 @@ if not os.path.exists(CACHE_PATH):
 
 # Torn API call wrappers
 
-def getFactionMembers(params={"striptags": "false"}, force=False):
-    return cached_api_call("faction/members", dataKey="members", params=params, force=force) 
+def getFactionMembers(params={"striptags": "false"}, cache_age_limit=3600*24, force=False):
+    return cached_api_call("faction/members", dataKey="members", params=params, cache_age_limit=cache_age_limit, force=force) 
 
-def getCrimes(params=None, force=False):
-    crimes= cached_api_paged_call(endpoint="faction/crimes", dataKey="crimes", params=params, force=force) 
+def getCrimes(params=None, cache_age_limit=3600, force=False):
+    crimes= cached_api_paged_call(endpoint="faction/crimes",  params=params, dataKey="crimes", cache_age_limit=cache_age_limit, force=force) 
     return crimes 
 
 # Interface functions
@@ -54,17 +54,32 @@ def _getApiURL(endpoint):
       global BASE_URL
       return f"{BASE_URL}/{endpoint}"
  
-def _loadCachedData(endpoint,params=None,defaultEmptyData=[]):
-    '''
-    Loads cached API data from a file.
+
+def _loadCachedData(endpoint, params=None, cache_age_limit=3600):
+    """
+    Loads cached API data from a file if it exists and is not too old.
     Otherwise returns the default empty data.
-    '''
+
+    Args:
+        endpoint (str): The API endpoint.
+        params (dict, optional): Parameters for the API call. Defaults to None.
+        cache_age_limit (int, optional): Maximum age of the cached file in seconds. Defaults to 3600.
+
+    Returns:
+        list or dict: The cached data if found and valid, otherwise the default empty data.
+    """
     filePath = _getCacheFilePath(endpoint, params=params)
     if os.path.exists(filePath):
-        with open(filePath, "r") as file:
-            return json.load(file)
-    else:
-        return defaultEmptyData
+        if time.time() - os.path.getmtime(filePath) < cache_age_limit:
+            try:
+                with open(filePath, "r") as file:
+                    data = json.load(file)
+                    #print(f"Using cached data from {filePath}")
+                    return data
+            except json.JSONDecodeError:
+                print(f"Error reading cache file {filePath}")
+                pass
+    return None
     
 # API CALLS
 # API CALLS
@@ -102,44 +117,72 @@ def _api_raw_call(url, params=None):
     except ValueError as json_err:
         print(f"Error decoding JSON response: {json_err}")
         return None
-    
-def cached_api_call(endpoint, params=None, dataKey=None, force=False):
+
+def cached_api_call(endpoint, params=None, dataKey=None, cache_age_limit=3600, force=False):
     """
     Makes an API call with caching.
 
     Args:
         endpoint (str): The API endpoint (e.g., "faction/basic").
         params (dict, optional): Parameters for the API call. Defaults to None.
-        maxAge (int, optional): Maximum age of cached data in seconds. Defaults to 60.
+        cache_age_limit (int, optional): Maximum age of cached data in seconds. Defaults to 3600.
         force (bool, optional): Force a fresh API call, ignoring the cache. Defaults to False.
 
     Returns:
         dict: The JSON response from the API, or None if there was an error.
     """
-    data = _loadCachedData(endpoint, params=params)
-    new_data = _api_raw_call(url=_getApiURL(endpoint), params=params)
-   
-    if dataKey:
-        data.extend(new_data[dataKey])
+    if force:
+        data = None
     else:
-        data.extend(new_data )
-    _saveData(endpoint, params, data)
+        data = _loadCachedData(endpoint, params=params, cache_age_limit=cache_age_limit)
+
+    if data == None:
+        data = _api_raw_call(url=_getApiURL(endpoint), params=params)
+        if dataKey:
+            data = data[dataKey]
+        _saveData(endpoint, params, data)
     return data
 
 # PAGED API CALLS
 # PAGED API CALLS
 # PAGED API CALLS
 # PAGED API CALLS
+def cached_api_paged_call(endpoint,  params=None, dataKey=None, cache_age_limit=3600, force=False):
+    '''
+        Makes a cached API call with pagination support.
+        This function attempts to load cached data for the given API endpoint and parameters.
+        If the cached data is not available or is outdated, it makes paginated API calls to
+        fetch the data and then caches it for future use.
+        Args:
+            endpoint (str): The API endpoint to call.
+            params (dict, optional): The parameters to pass to the API call. Defaults to None.
+            dataKey (str, optional): The key to extract data from the API response. Defaults to None.
+            cache_age_limit (int, optional): The maximum age of the cache in seconds. Defaults to 3600.
+            force (bool, optional): If True, forces a fresh API call, bypassing the cache. Defaults to False.
+        Returns:
+            dict: The data retrieved from the API or cache.
+    '''
+    if force:
+        data = None
+    else:
+        data = _loadCachedData(endpoint, params=params, cache_age_limit=cache_age_limit)
 
-def cached_api_paged_call(endpoint, dataKey=None, params=None, force=False):
-    '''
-    Fetches paged data from the Torn API and appends it to a file.
-    '''
-    offset=0 # assume none until we find cached data
-    data = _loadCachedData(endpoint, params=params)
-    data.extend( _paginated_api_calls(endpoint, dataKey=dataKey, offset= len(data), params=None))
-    _saveData(endpoint, params, data)
+    if data == None:
+        data = _paginated_api_calls(endpoint, dataKey=dataKey, offset= len(data), params=None)
+        if dataKey:
+            data = data[dataKey]
+        _saveData(endpoint, params, data)
     return data
+
+# def cached_api_paged_log_call(endpoint,  params=None, dataKey=None, cache_age_limit=3600, force=False):
+#     '''
+#     Fetches paged data from the Torn API and appends it to a file.
+#     '''
+#     offset=0 # assume none until we find cached data
+#     data = _loadCachedData(endpoint, params=params)
+#     data.extend( _paginated_api_calls(endpoint, dataKey=dataKey, offset= len(data), params=None))
+#     _saveData(endpoint, params, data)
+#     return data
 
 def _paginated_api_calls(endpoint, dataKey, offset=0, params=None):
     '''
