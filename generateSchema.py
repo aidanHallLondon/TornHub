@@ -1,6 +1,5 @@
 import sqlite3
-from Torn.manageDB import initDB,DB_CONNECTPATH
-from Torn.updateDB import updateDB
+from Torn.manageDB import initDB,DB_CONNECTPATH,updateDB
 from tabulate import tabulate
 from eralchemy import render_er
 from sqlalchemy import create_engine,MetaData
@@ -11,7 +10,8 @@ updateDB()
 conn = sqlite3.connect(DB_CONNECTPATH)
 cursor = conn.cursor()
 
-cursor.execute('''SELECT schema.type, schema.name,rows FROM sqlite_master AS Schema 
+
+cursor.execute('''SELECT schema.type, schema.name,row_count FROM sqlite_master AS Schema 
                LEFT JOIN _rowCounts as rc ON rc.name = Schema.name AND rc.type = Schema.type
                WHERE Schema.name NOT LIKE '[_]%' 
                ORDER BY 3 DESC,2,1''')

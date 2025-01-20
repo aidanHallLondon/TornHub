@@ -2,13 +2,16 @@ import sqlite3
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import  initDB, updateDB, dumpResults
 # from Torn.db.faction import create_faction, update_faction
-from Torn.api import cached_api_paged_call
+from Torn.api import cached_api_call, cached_api_paged_call
+import json
+
 
 selectionsDone = [
     "crimes",
     "members",
     "basic","currency","hof","stats","timestamp","lookup",
     "applications", 
+    "armor", "boosters","medical","temporary","weapons", "drugs","caches","cesium",
 ]
 selections = [
     "upgrades",
@@ -20,13 +23,6 @@ selections = [
     "reports",
     "revives",
     "revivesfull",
-    "armor",
-    "boosters",
-    "medical",
-    "temporary",
-    "weapons" "drugs",
-    "caches",
-    "cesium",
     "news",
     "mainnews",
     "armorynews",
@@ -62,12 +58,20 @@ cursor = conn.cursor()
 
 # # cursor.execute("""SELECT * FROM applications """)
 
-cursor.execute("""SELECT * FROM _rowCounts """)
+
+
+
+
+# cursor.execute("""SELECT * FROM _rowCounts """)
+
+cursor.execute("""SELECT * FROM armory_items """)
 dumpResults(cursor)
+# cursor.execute("""SELECT * FROM armory_loans """)
+# dumpResults(cursor)
 # # data=getFaction()
 # # data = getSelection(cursor,selections=["basic","currency","hof", "stats"],cache_age_limit=3600, force=False)
 
-# #print(json.dumps(data, indent=2))
+# print(json.dumps(data, indent=2))
 
 conn.commit()
 conn.close()
