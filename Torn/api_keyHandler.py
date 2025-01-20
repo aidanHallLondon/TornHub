@@ -1,9 +1,12 @@
 import os
+import sqlite3
 import sys
-from Torn.manageDB import DB_PATH,getPreference,setPreference
+from Torn.db._globals import DB_CONNECTPATH
 
 api_key_preferenceName='TORN_API_KEY'
 api_key = None  
+
+
 
 def checkAPIKey(api_key=api_key):
     """
@@ -14,13 +17,12 @@ def checkAPIKey(api_key=api_key):
     else:
         return False
 
-def get_api_key(db_path=DB_PATH, api_key_settingName='TORN_API_KEY', force=False):
+def get_api_key( api_key_settingName='TORN_API_KEY', force=False):
     """
     Retrieves the API key from the database, environment variables, 
     command-line arguments, or prompts the user for it.
 
     Args:
-        db_path (str): Path to the SQLite database file.
         env_var_name (str): The name of the environment variable to check.
         force (bool): If True, forces prompting for the API key even if it's 
                       found elsewhere.
@@ -29,6 +31,7 @@ def get_api_key(db_path=DB_PATH, api_key_settingName='TORN_API_KEY', force=False
         str: The API key.
     """
     global api_key 
+    
     if api_key != None and checkAPIKey(api_key) and not force:
         return api_key
     
@@ -59,7 +62,7 @@ def get_api_key(db_path=DB_PATH, api_key_settingName='TORN_API_KEY', force=False
 A Torn API key is needed. 
 -------------------------          
 Go to Torn.com -> Settings -> API Keys and create a Limited Access key. Copy it and paste it here.
-This will be stored in the database '{db_path}' in preferences with the key '{api_key_settingName}'. 
+This will be stored in the database in preferences with the key '{api_key_settingName}'. 
 DO NOT SHARE your database with this key 
 """)
 
@@ -72,3 +75,24 @@ DO NOT SHARE your database with this key
     print('API key stored in the DB.')
 
     return api_key
+
+def getPreference(settingName):
+    # os.remove(DB_CONNECTPATH)
+    conn = sqlite3.connect(DB_CONNECTPATH)
+    cursor = conn.cursor()
+    try:
+        sql = f'SELECT value FROM preferences WHERE key = "{settingName}"'
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        return result
+    except:
+        return None
+    
+def setPreference(settingName,value):
+    if not settingName:
+        return None
+    conn = sqlite3.connect(DB_CONNECTPATH)
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)", (settingName, value))
+    conn.commit()
+    conn.close()
