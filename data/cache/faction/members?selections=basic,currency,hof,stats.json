@@ -1,0 +1,2677 @@
+{
+  "members": [
+    {
+      "id": 918694,
+      "name": "anthonee",
+      "level": 20,
+      "days_in_faction": 11,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737319920,
+        "relative": "9 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 962,
+        "maximum": 962
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 1403087,
+      "name": "vertices",
+      "level": 15,
+      "days_in_faction": 200,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737289880,
+        "relative": "8 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 625,
+        "maximum": 625
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 1673701,
+      "name": "HighGuy",
+      "level": 15,
+      "days_in_faction": 124,
+      "last_action": {
+        "status": "Idle",
+        "timestamp": 1737294200,
+        "relative": "7 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 625,
+        "maximum": 625
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 1701621,
+      "name": "DieselBlade",
+      "level": 56,
+      "days_in_faction": 251,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737314123,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 2942,
+        "maximum": 2942
+      },
+      "revive_setting": "Unknown",
+      "position": "Leader",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 1843955,
+      "name": "DgChrono",
+      "level": 20,
+      "days_in_faction": 17,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737313694,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1050,
+        "maximum": 1050
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 1953212,
+      "name": "SargeEddy",
+      "level": 21,
+      "days_in_faction": 124,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737305303,
+        "relative": "4 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1063,
+        "maximum": 1063
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2078381,
+      "name": "Brekz",
+      "level": 18,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737318472,
+        "relative": "33 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 775,
+        "maximum": 775
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2320209,
+      "name": "AfterbirthSoup",
+      "level": 18,
+      "days_in_faction": 53,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737280805,
+        "relative": "11 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 813,
+        "maximum": 813
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2327761,
+      "name": "Alex-Cross",
+      "level": 20,
+      "days_in_faction": 96,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737189981,
+        "relative": "1 day ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 875,
+        "maximum": 875
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2353036,
+      "name": "PrinceAbadon",
+      "level": 20,
+      "days_in_faction": 158,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737312418,
+        "relative": "2 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 875,
+        "maximum": 875
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2387179,
+      "name": "Lemine",
+      "level": 10,
+      "days_in_faction": 52,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737295124,
+        "relative": "7 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 393,
+        "maximum": 393
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2605137,
+      "name": "Badaaction",
+      "level": 21,
+      "days_in_faction": 145,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737072980,
+        "relative": "2 days ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1110,
+        "maximum": 1110
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2711719,
+      "name": "GHOSTGAMING7734",
+      "level": 21,
+      "days_in_faction": 60,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737081064,
+        "relative": "2 days ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1110,
+        "maximum": 1110
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2722164,
+      "name": "PredatorX40",
+      "level": 19,
+      "days_in_faction": 55,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737312469,
+        "relative": "2 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 866,
+        "maximum": 866
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2776118,
+      "name": "bjirn",
+      "level": 15,
+      "days_in_faction": 171,
+      "last_action": {
+        "status": "Idle",
+        "timestamp": 1737242224,
+        "relative": "21 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 687,
+        "maximum": 687
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2837047,
+      "name": "dontquestion1t",
+      "level": 11,
+      "days_in_faction": 4,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737226751,
+        "relative": "1 day ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 446,
+        "maximum": 446
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2883069,
+      "name": "mingler",
+      "level": 23,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737276655,
+        "relative": "12 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1281,
+        "maximum": 1281
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2941755,
+      "name": "Pranish109",
+      "level": 9,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737284460,
+        "relative": "10 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 325
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2979496,
+      "name": "Owsix",
+      "level": 12,
+      "days_in_faction": 121,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737187870,
+        "relative": "1 day ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 522
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2982664,
+      "name": "VSPGamer",
+      "level": 27,
+      "days_in_faction": 54,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737290608,
+        "relative": "8 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1225,
+        "maximum": 1225
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2993118,
+      "name": "Leserious",
+      "level": 22,
+      "days_in_faction": 186,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1736967264,
+        "relative": "4 days ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1218,
+        "maximum": 1218
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 2999079,
+      "name": "Arthur18Shelby",
+      "level": 8,
+      "days_in_faction": 6,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737184610,
+        "relative": "1 day ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 330
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3034550,
+      "name": "skubasteve",
+      "level": 6,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737314823,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 225,
+        "maximum": 225
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3081577,
+      "name": "HEXES1",
+      "level": 13,
+      "days_in_faction": 36,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737317130,
+        "relative": "55 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 630,
+        "maximum": 630
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3081788,
+      "name": "T0kZiiKxNUGz",
+      "level": 9,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737161127,
+        "relative": "1 day ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 341
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3111537,
+      "name": "Dudeishdude",
+      "level": 5,
+      "days_in_faction": 4,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737275199,
+        "relative": "12 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 200,
+        "maximum": 200
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3112952,
+      "name": "Rhino223",
+      "level": 4,
+      "days_in_faction": 17,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737300941,
+        "relative": "5 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 175,
+        "maximum": 175
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3191959,
+      "name": "Big_Kaino",
+      "level": 20,
+      "days_in_faction": 11,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737310081,
+        "relative": "2 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1093,
+        "maximum": 1093
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3198968,
+      "name": "Mehdi1",
+      "level": 19,
+      "days_in_faction": 196,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737318018,
+        "relative": "40 minutes ago"
+      },
+      "status": {
+        "description": "Traveling to South Africa",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 825,
+        "maximum": 825
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3260776,
+      "name": "Zinkflux1",
+      "level": 22,
+      "days_in_faction": 90,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737252397,
+        "relative": "18 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 975,
+        "maximum": 975
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3272034,
+      "name": "Darish_Vol",
+      "level": 36,
+      "days_in_faction": 249,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737315101,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Traveling to United Kingdom",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 1675,
+        "maximum": 1675
+      },
+      "revive_setting": "Unknown",
+      "position": "Galactic Commander",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3275171,
+      "name": "Fiske",
+      "level": 24,
+      "days_in_faction": 260,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737297633,
+        "relative": "6 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1075,
+        "maximum": 1075
+      },
+      "revive_setting": "Unknown",
+      "position": "Galactic Commander",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3278010,
+      "name": "GirthBrooksJr",
+      "level": 26,
+      "days_in_faction": 160,
+      "last_action": {
+        "status": "Online",
+        "timestamp": 1737320403,
+        "relative": "0 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 118,
+        "maximum": 1175
+      },
+      "revive_setting": "Unknown",
+      "position": "Star Explorer",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3278305,
+      "name": "Evilperson85",
+      "level": 27,
+      "days_in_faction": 198,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737210600,
+        "relative": "1 day ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 1225
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3286936,
+      "name": "Blubi",
+      "level": 32,
+      "days_in_faction": 256,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737320076,
+        "relative": "6 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1548,
+        "maximum": 1548
+      },
+      "revive_setting": "Unknown",
+      "position": "Galactic Commander",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3287241,
+      "name": "Gaskarth",
+      "level": 41,
+      "days_in_faction": 254,
+      "last_action": {
+        "status": "Online",
+        "timestamp": 1737319533,
+        "relative": "15 minutes ago"
+      },
+      "status": {
+        "description": "Returning to Torn from United Kingdom",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 2213,
+        "maximum": 2213
+      },
+      "revive_setting": "Everyone",
+      "position": "Co-leader",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3290267,
+      "name": "Robwob",
+      "level": 22,
+      "days_in_faction": 180,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737304538,
+        "relative": "4 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1072,
+        "maximum": 1072
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3296894,
+      "name": "PYE110",
+      "level": 22,
+      "days_in_faction": 137,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737112926,
+        "relative": "2 days ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 1365
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3316170,
+      "name": "skengdo",
+      "level": 12,
+      "days_in_faction": 228,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737242462,
+        "relative": "21 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 712,
+        "maximum": 712
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3326992,
+      "name": "FatBluntJay",
+      "level": 23,
+      "days_in_faction": 195,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737077453,
+        "relative": "2 days ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 1025
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3335608,
+      "name": "Zible",
+      "level": 30,
+      "days_in_faction": 209,
+      "last_action": {
+        "status": "Online",
+        "timestamp": 1737320429,
+        "relative": "0 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1375,
+        "maximum": 1375
+      },
+      "revive_setting": "Unknown",
+      "position": "Galactic Commander",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3343190,
+      "name": "user0047b",
+      "level": 21,
+      "days_in_faction": 198,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737305813,
+        "relative": "4 hours ago"
+      },
+      "status": {
+        "description": "In South Africa",
+        "details": null,
+        "state": "Abroad",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 1017
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3346647,
+      "name": "MidMirrorShades",
+      "level": 20,
+      "days_in_faction": 143,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737124549,
+        "relative": "2 days ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 962,
+        "maximum": 962
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3349893,
+      "name": "Immortal_Hulk",
+      "level": 23,
+      "days_in_faction": 144,
+      "last_action": {
+        "status": "Idle",
+        "timestamp": 1737318883,
+        "relative": "26 minutes ago"
+      },
+      "status": {
+        "description": "Returning to Torn from United Kingdom",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 1076,
+        "maximum": 1076
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3354542,
+      "name": "Mazoki",
+      "level": 11,
+      "days_in_faction": 188,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737318816,
+        "relative": "27 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 362,
+        "maximum": 425
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3356154,
+      "name": "SaltySpitoon",
+      "level": 21,
+      "days_in_faction": 186,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737277634,
+        "relative": "11 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 925,
+        "maximum": 925
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3375043,
+      "name": "Duo_K1ll",
+      "level": 24,
+      "days_in_faction": 139,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737319173,
+        "relative": "21 minutes ago"
+      },
+      "status": {
+        "description": "Returning to Torn from South Africa",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 1236,
+        "maximum": 1236
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3375605,
+      "name": "Ingroeitoonnael",
+      "level": 16,
+      "days_in_faction": 164,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737315932,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 776,
+        "maximum": 776
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3375953,
+      "name": "Tyusmurray",
+      "level": 20,
+      "days_in_faction": 165,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737290570,
+        "relative": "8 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 875,
+        "maximum": 875
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3376258,
+      "name": "Silver5696",
+      "level": 14,
+      "days_in_faction": 165,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737277383,
+        "relative": "11 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 632
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3376970,
+      "name": "Satiscat",
+      "level": 18,
+      "days_in_faction": 102,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737275915,
+        "relative": "12 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 813,
+        "maximum": 813
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3377101,
+      "name": "SiriusDotExe",
+      "level": 21,
+      "days_in_faction": 160,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737288152,
+        "relative": "8 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 971,
+        "maximum": 971
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3382234,
+      "name": "Asarzel",
+      "level": 22,
+      "days_in_faction": 160,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737315304,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1072,
+        "maximum": 1072
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3383955,
+      "name": "DipperPines",
+      "level": 16,
+      "days_in_faction": 155,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737289003,
+        "relative": "8 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 776,
+        "maximum": 776
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3392385,
+      "name": "Dhuygy",
+      "level": 18,
+      "days_in_faction": 124,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737240097,
+        "relative": "22 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 620,
+        "maximum": 775
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3423304,
+      "name": "S-J-Blurton",
+      "level": 20,
+      "days_in_faction": 6,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737317375,
+        "relative": "51 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1006,
+        "maximum": 1006
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3425226,
+      "name": "Kieth_",
+      "level": 16,
+      "days_in_faction": 4,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737274848,
+        "relative": "12 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 742,
+        "maximum": 742
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3428191,
+      "name": "Elnubi",
+      "level": 10,
+      "days_in_faction": 107,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737196895,
+        "relative": "1 day ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 393
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3444547,
+      "name": "MordareK",
+      "level": 21,
+      "days_in_faction": 44,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737239275,
+        "relative": "22 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 971,
+        "maximum": 971
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3445070,
+      "name": "Shadowsnake87",
+      "level": 17,
+      "days_in_faction": 103,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737314016,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Returning to Torn from United Kingdom",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 797,
+        "maximum": 797
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3446089,
+      "name": "Yiqiao",
+      "level": 12,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737277884,
+        "relative": "11 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 475,
+        "maximum": 475
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3446428,
+      "name": "SilentAssasin7",
+      "level": 20,
+      "days_in_faction": 96,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737315844,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Traveling to Argentina",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 875,
+        "maximum": 875
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3452667,
+      "name": "Elemperor1",
+      "level": 11,
+      "days_in_faction": 96,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737318015,
+        "relative": "40 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 425,
+        "maximum": 425
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3460376,
+      "name": "Galactic_Cowboy",
+      "level": 24,
+      "days_in_faction": 90,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737315407,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Traveling to Argentina",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 1128,
+        "maximum": 1128
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3473040,
+      "name": "boogidee",
+      "level": 16,
+      "days_in_faction": 75,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737320314,
+        "relative": "2 minutes ago"
+      },
+      "status": {
+        "description": "Traveling to Cayman Islands",
+        "details": null,
+        "state": "Traveling",
+        "until": null
+      },
+      "life": {
+        "current": 675,
+        "maximum": 675
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3474093,
+      "name": "javajuice24",
+      "level": 27,
+      "days_in_faction": 75,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737287925,
+        "relative": "9 hours ago"
+      },
+      "status": {
+        "description": "In China",
+        "details": null,
+        "state": "Abroad",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 1225
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3475027,
+      "name": "oxycodoneisgod",
+      "level": 13,
+      "days_in_faction": 75,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737083011,
+        "relative": "2 days ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 551
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3486834,
+      "name": "Bubi1234",
+      "level": 14,
+      "days_in_faction": 65,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737311986,
+        "relative": "2 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 690,
+        "maximum": 690
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3507332,
+      "name": "Dustinkur",
+      "level": 14,
+      "days_in_faction": 47,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1736924173,
+        "relative": "4 days ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 632
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3508504,
+      "name": "Daniyelli",
+      "level": 11,
+      "days_in_faction": 49,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737320278,
+        "relative": "3 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 357,
+        "maximum": 425
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3516151,
+      "name": "INTERSTELLAR",
+      "level": 9,
+      "days_in_faction": 4,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737286535,
+        "relative": "9 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 183,
+        "maximum": 406
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3525601,
+      "name": "isakgoat",
+      "level": 7,
+      "days_in_faction": 17,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737291388,
+        "relative": "8 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 250,
+        "maximum": 250
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3526498,
+      "name": "Paddlins",
+      "level": 9,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737270055,
+        "relative": "14 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 373,
+        "maximum": 373
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3527414,
+      "name": "chochonut",
+      "level": 5,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737297807,
+        "relative": "6 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 200,
+        "maximum": 200
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3527874,
+      "name": "Bundle",
+      "level": 15,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737318813,
+        "relative": "27 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 656,
+        "maximum": 656
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3529149,
+      "name": "HansMortis",
+      "level": 11,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Idle",
+        "timestamp": 1737318648,
+        "relative": "30 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 425,
+        "maximum": 425
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3530064,
+      "name": "Iron_hammer",
+      "level": 9,
+      "days_in_faction": 13,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737240906,
+        "relative": "22 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 357,
+        "maximum": 357
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3530841,
+      "name": "Kingston_Flamer",
+      "level": 5,
+      "days_in_faction": 13,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737242446,
+        "relative": "21 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 200,
+        "maximum": 200
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3530855,
+      "name": "Coco01",
+      "level": 5,
+      "days_in_faction": 6,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737311283,
+        "relative": "2 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 230,
+        "maximum": 230
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3531351,
+      "name": "GodOfWar83",
+      "level": 7,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737313570,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 275,
+        "maximum": 275
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3532277,
+      "name": "Fyreign",
+      "level": 10,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737299453,
+        "relative": "5 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 325,
+        "maximum": 375
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3533172,
+      "name": "moondanda",
+      "level": 10,
+      "days_in_faction": 25,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737292074,
+        "relative": "7 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 412,
+        "maximum": 412
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3533405,
+      "name": "IAmToxicAf",
+      "level": 11,
+      "days_in_faction": 27,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737312412,
+        "relative": "2 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 446,
+        "maximum": 446
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3536192,
+      "name": "Joakim",
+      "level": 5,
+      "days_in_faction": 17,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737316539,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 31,
+        "maximum": 200
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3543889,
+      "name": "Alex020263",
+      "level": 6,
+      "days_in_faction": 17,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737308565,
+        "relative": "3 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 236,
+        "maximum": 236
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3544262,
+      "name": "Mr_JERRY",
+      "level": 5,
+      "days_in_faction": 12,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737301317,
+        "relative": "5 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 210,
+        "maximum": 210
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3546090,
+      "name": "Cantu",
+      "level": 8,
+      "days_in_faction": 13,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737319824,
+        "relative": "10 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 275,
+        "maximum": 275
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3546795,
+      "name": "ASHUUU",
+      "level": 8,
+      "days_in_faction": 13,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737316217,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 302,
+        "maximum": 302
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3548610,
+      "name": "BANGI0",
+      "level": 7,
+      "days_in_faction": 11,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737318153,
+        "relative": "38 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 249,
+        "maximum": 262
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3548638,
+      "name": "Dev_Z",
+      "level": 7,
+      "days_in_faction": 13,
+      "last_action": {
+        "status": "Online",
+        "timestamp": 1737320459,
+        "relative": "0 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 253,
+        "maximum": 262
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3548718,
+      "name": "BossmanDLo",
+      "level": 8,
+      "days_in_faction": 13,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737318014,
+        "relative": "40 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 290,
+        "maximum": 302
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3548811,
+      "name": "SiriusCack",
+      "level": 11,
+      "days_in_faction": 12,
+      "last_action": {
+        "status": "Idle",
+        "timestamp": 1737319520,
+        "relative": "15 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 446,
+        "maximum": 446
+      },
+      "revive_setting": "Unknown",
+      "position": "Astro Guard",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": true,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3551335,
+      "name": "trevor187",
+      "level": 8,
+      "days_in_faction": 6,
+      "last_action": {
+        "status": "Online",
+        "timestamp": 1737320360,
+        "relative": "1 minute ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 288,
+        "maximum": 288
+      },
+      "revive_setting": "Unknown",
+      "position": "Member",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3556404,
+      "name": "bklmuncher101",
+      "level": 5,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737315952,
+        "relative": "1 hour ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 73,
+        "maximum": 210
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3557938,
+      "name": "twiggy_chan",
+      "level": 5,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737320107,
+        "relative": "5 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 210,
+        "maximum": 210
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3559031,
+      "name": "BuzzOA",
+      "level": 5,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737249706,
+        "relative": "19 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 200,
+        "maximum": 200
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": false,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3564080,
+      "name": "BigPandaa",
+      "level": 5,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Idle",
+        "timestamp": 1737320177,
+        "relative": "4 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 200,
+        "maximum": 200
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3565297,
+      "name": "Ryando123",
+      "level": 5,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Offline",
+        "timestamp": 1737289592,
+        "relative": "8 hours ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 1,
+        "maximum": 200
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    },
+    {
+      "id": 3566683,
+      "name": "Justasian",
+      "level": 5,
+      "days_in_faction": 0,
+      "last_action": {
+        "status": "Idle",
+        "timestamp": 1737319655,
+        "relative": "13 minutes ago"
+      },
+      "status": {
+        "description": "Okay",
+        "details": null,
+        "state": "Okay",
+        "until": null
+      },
+      "life": {
+        "current": 210,
+        "maximum": 210
+      },
+      "revive_setting": "Unknown",
+      "position": "Recruit",
+      "is_revivable": true,
+      "is_on_wall": false,
+      "is_in_oc": false,
+      "has_early_discharge": false
+    }
+  ]
+}

@@ -1,0 +1,292 @@
+CREATE VIEW _rowCounts AS --dynamic code
+SELECT 'crimes_version' AS name, 'table' AS type, COUNT(*) AS row_count FROM crimes_version UNION ALL
+SELECT 'crimeInstances' AS name, 'table' AS type, COUNT(*) AS row_count FROM crimeInstances UNION ALL
+SELECT 'crime_status' AS name, 'table' AS type, COUNT(*) AS row_count FROM crime_status UNION ALL
+SELECT 'crime_slots' AS name, 'table' AS type, COUNT(*) AS row_count FROM crime_slots UNION ALL
+SELECT 'slot_assignments' AS name, 'table' AS type, COUNT(*) AS row_count FROM slot_assignments UNION ALL
+SELECT 'crime_names' AS name, 'table' AS type, COUNT(*) AS row_count FROM crime_names UNION ALL
+SELECT 'crime_positions' AS name, 'table' AS type, COUNT(*) AS row_count FROM crime_positions UNION ALL
+SELECT 'preferences' AS name, 'table' AS type, COUNT(*) AS row_count FROM preferences UNION ALL
+SELECT 'users' AS name, 'table' AS type, COUNT(*) AS row_count FROM users UNION ALL
+SELECT 'factionRecords' AS name, 'table' AS type, COUNT(*) AS row_count FROM factionRecords UNION ALL
+SELECT 'applications' AS name, 'table' AS type, COUNT(*) AS row_count FROM applications UNION ALL
+SELECT 'armory_types' AS name, 'table' AS type, COUNT(*) AS row_count FROM armory_types UNION ALL
+SELECT 'armory_items' AS name, 'table' AS type, COUNT(*) AS row_count FROM armory_items UNION ALL
+SELECT 'armory_loans' AS name, 'table' AS type, COUNT(*) AS row_count FROM armory_loans UNION ALL
+SELECT 'crime_slot_assignments_view' AS name, 'view' AS type, COUNT(*) AS row_count FROM crime_slot_assignments_view UNION ALL
+SELECT 'crime_name_positions_view' AS name, 'view' AS type, COUNT(*) AS row_count FROM crime_name_positions_view UNION ALL
+SELECT 'crimeInstance_cube' AS name, 'view' AS type, COUNT(*) AS row_count FROM crimeInstance_cube UNION ALL
+SELECT 'faction' AS name, 'view' AS type, COUNT(*) AS row_count FROM faction
+
+CREATE TABLE applications (
+        application_id INTEGER PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        user_name TEXT NOT NULL,
+        user_level INTEGER NOT NULL,
+        user_strength INTEGER ,
+        user_speed INTEGER ,
+        user_dexterity INTEGER ,
+        user_defense INTEGER ,
+        message TEXT,
+        valid_until INTEGER NOT NULL,
+        status TEXT NOT NULL
+    )
+
+CREATE TABLE armory_items (
+    item_id INTEGER PRIMARY KEY,
+    armory_type_id INTEGER NOT NULL,
+    item_name TEXT NOT NULL,
+    item_type TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    available INTEGER,
+    loaned INTEGER,
+    loaned_to TEXT,
+    FOREIGN KEY (armory_type_id) REFERENCES armory_types(armory_type_id)
+)
+
+CREATE TABLE armory_loans (
+    loan_id INTEGER PRIMARY KEY AUTOINCREMENT, -- Add a primary key for this table
+    item_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY (item_id) REFERENCES armory_items(item_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+)
+
+CREATE TABLE armory_types (
+    armory_type_id INTEGER PRIMARY KEY,
+    armory_type_name TEXT NOT NULL
+)
+
+CREATE VIEW crimeInstance_cube AS
+    SELECT
+        ci.crimeInstance_id,
+        ci.name AS crime_name,
+        ci.difficulty AS crime_difficulty,
+        ci.crime_status AS crime_status,
+        ci.created_at AS crime_created_at,
+        ci.initiated_at AS crime_initiated_at,
+        ci.planning_at AS crime_planning_at,
+        ci.ready_at AS crime_ready_at,
+        ci.expired_at AS crime_expired_at,
+        cs.crime_slot_id,
+        cs.position AS slot_position,
+        cs.item_requirement_id,
+        sa.success_chance,
+        sa.slot_assignment_id,
+        sa.joined_at AS assignment_joined_at,
+        sa.progress AS assignment_progress,
+        u.user_id,
+        u.name AS user_name,
+        u.level AS user_level,
+        u.last_action AS user_last_action,
+        u.user_status AS user_status,
+        u.life_current AS user_life_current,
+        u.life_maximum AS user_life_maximum,
+        u.has_early_discharge AS user_has_early_discharge,
+        u.until AS user_until,
+        u.days_in_faction AS user_days_in_faction,
+        u.position_in_faction AS user_position_in_faction,
+        u.is_in_faction AS user_is_in_faction,
+        u.is_in_oc AS user_is_in_oc,
+        u.is_revivable AS user_is_revivable
+    FROM
+        crimeInstances ci
+    LEFT JOIN
+        crime_slots cs ON ci.crimeInstance_id = cs.crimeInstance_id
+    LEFT JOIN
+        slot_assignments sa ON cs.crime_slot_id = sa.crime_slot_id
+    LEFT JOIN
+        users u ON sa.user_id = u.user_id
+
+CREATE TABLE crimeInstances
+    (crimeInstance_id INTEGER PRIMARY KEY, 
+    version_id INTEGER,
+    name TEXT, 
+    difficulty INTEGER,
+    crime_status TEXT, 
+    created_at DATETIME, 
+    initiated_at DATETIME,
+    planning_at DATETIME, 
+    ready_at DATETIME, 
+    expired_at DATETIME,
+    FOREIGN KEY (name) REFERENCES crime_names(name)
+    FOREIGN KEY (version_id) REFERENCES crimes_version(version_id),
+    FOREIGN KEY (crime_status) REFERENCES crime_status(crime_status)
+    )
+
+CREATE VIEW crime_name_positions_view AS
+    SELECT
+        cn.name AS crime_name,
+        cp.position
+    FROM crime_names cn
+    INNER JOIN crime_positions cp ON cn.name = cp.crime_name
+
+CREATE TABLE crime_names (name TEXT PRIMARY KEY)
+
+CREATE TABLE crime_positions (
+    crime_position_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    crime_name TEXT,  
+    position TEXT,
+    FOREIGN KEY (crime_name) REFERENCES crime_names (name)
+    )
+
+CREATE VIEW crime_slot_assignments_view AS
+    SELECT
+        ci.crimeInstance_id,
+        ci.name AS crime_name,
+        ci.difficulty AS crime_difficulty,
+        ci.crime_status,                
+        cs.crime_slot_id,
+        cs.position AS slot_position,  -- Rename to avoid ambiguity
+        cs.item_requirement_id,
+        sa.joined_at,
+        sa.success_chance,
+        sa.progress,
+        users.user_id,
+        users.name AS user_name,
+        users.level AS user_level,
+        users.position_in_faction ,   
+        users.last_action AS user_last_action,
+        users.is_in_faction AS user_is_in_faction           
+    FROM crimeInstances ci 
+    LEFT JOIN crime_slots cs ON cs.crimeInstance_id = ci.crimeInstance_id
+    LEFT JOIN slot_assignments sa ON cs.crime_slot_id = sa.crime_slot_id
+    LEFT JOIN users ON sa.user_id = users.user_id
+
+CREATE TABLE crime_slots
+    (crime_slot_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    crimeInstance_id INTEGER,
+    position TEXT, item_requirement_id INTEGER, 
+    FOREIGN KEY (crimeInstance_id) REFERENCES crimeInstances (crimeInstance_id)
+    )
+
+CREATE TABLE crime_status (crime_status TEXT PRIMARY KEY)
+
+CREATE TABLE crimes_version
+    (version_id INTEGER PRIMARY KEY, 
+    name TEXT, 
+    start_at DATETIME)
+
+CREATE VIEW faction AS
+        SELECT * 
+        FROM factionRecords 
+        ORDER BY FactionSample_id DESC
+        LIMIT 1
+
+CREATE TABLE factionRecords (
+        FactionSample_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        faction_id INTEGER NOT NULL,    
+        faction_name TEXT NOT NULL,
+        faction_tag TEXT NOT NULL,
+        faction_tag_image TEXT NOT NULL,
+        leader_id INTEGER NOT NULL,
+        co_leader_id INTEGER NOT NULL,
+        respect INTEGER NOT NULL,
+        days_old INTEGER NOT NULL,
+        capacity INTEGER NOT NULL,
+        members INTEGER NOT NULL,
+        money INTEGER NOT NULL,
+        points INTEGER NOT NULL,
+        is_enlisted TEXT,
+        rank_level INTEGER NOT NULL,
+        rank_name TEXT NOT NULL,
+        rank_division INTEGER NOT NULL,
+        rank_position INTEGER NOT NULL,
+        rank_wins INTEGER NOT NULL,
+        best_chain INTEGER NOT NULL,
+        rank_rank TEXT NOT NULL,
+        rank_value INTEGER NOT NULL,
+        respect_rank TEXT NOT NULL,
+        respect_value INTEGER NOT NULL,
+        chain_rank TEXT NOT NULL,
+        chain_value INTEGER NOT NULL,
+        medicalitemsused INTEGER NOT NULL,
+        criminaloffences INTEGER NOT NULL,
+        organisedcrimerespect INTEGER NOT NULL,
+        organisedcrimemoney INTEGER NOT NULL,
+        organisedcrimesuccess INTEGER NOT NULL,
+        organisedcrimefail INTEGER NOT NULL,
+        attackswon INTEGER NOT NULL,
+        attackslost INTEGER NOT NULL,
+        attackschain INTEGER NOT NULL,
+        attacksleave INTEGER NOT NULL,
+        attacksmug INTEGER NOT NULL,
+        attackshosp INTEGER NOT NULL,
+        bestchain INTEGER NOT NULL,
+        busts INTEGER NOT NULL,
+        revives INTEGER NOT NULL,
+        jails INTEGER NOT NULL,
+        hosps INTEGER NOT NULL,
+        medicalitemrecovery INTEGER NOT NULL,
+        medicalcooldownused INTEGER NOT NULL,
+        gymtrains INTEGER NOT NULL,
+        gymstrength INTEGER NOT NULL,
+        gymspeed INTEGER NOT NULL,
+        gymdefense INTEGER NOT NULL,
+        gymdexterity INTEGER NOT NULL,
+        candyused INTEGER NOT NULL,
+        alcoholused INTEGER NOT NULL,
+        energydrinkused INTEGER NOT NULL,
+        drugsused INTEGER NOT NULL,
+        drugoverdoses INTEGER NOT NULL,
+        rehabs INTEGER NOT NULL,
+        caymaninterest INTEGER NOT NULL,
+        traveltimes INTEGER NOT NULL,
+        traveltime INTEGER NOT NULL,
+        hunting INTEGER NOT NULL,
+        attacksdamagehits INTEGER NOT NULL,
+        attacksdamage INTEGER NOT NULL,
+        hosptimegiven INTEGER NOT NULL,
+        hosptimereceived INTEGER NOT NULL,
+        attacksdamaging INTEGER NOT NULL,
+        attacksrunaway INTEGER NOT NULL,
+        highestterritories INTEGER NOT NULL,
+        territoryrespect INTEGER NOT NULL
+   )
+
+CREATE INDEX faction_id_index  ON factionRecords (FactionSample_id)
+
+CREATE INDEX idx_applications_status ON applications (status)
+
+CREATE INDEX idx_applications_user_id ON applications (user_id)
+
+CREATE INDEX idx_users_last_action ON users(last_action)
+
+CREATE INDEX idx_users_name ON users(name)
+
+CREATE INDEX idx_users_user_id ON users(user_id)
+
+CREATE TABLE preferences (
+    key TEXT PRIMARY KEY,
+    value TEXT)
+
+CREATE TABLE slot_assignments
+    (slot_assignment_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+     crime_slot_id INTEGER,
+     user_id INTEGER DEFAULT NULL, 
+     joined_at DATETIME, 
+     progress REAL,
+     success_chance REAL,
+     FOREIGN KEY (crime_slot_id) REFERENCES crime_slots (crime_slot_id), 
+     FOREIGN KEY (user_id) REFERENCES users(user_id)
+     )
+
+CREATE TABLE sqlite_sequence(name,seq)
+
+CREATE TABLE users
+        (user_id INTEGER PRIMARY KEY, 
+        name TEXT, 
+        level INTEGER, 
+        last_action DATETIME, 
+        user_status TEXT, 
+        life_current INTEGER, 
+        life_maximum INTEGER,
+        has_early_discharge BOOLEAN, 
+        until DATETIME, 
+        days_in_faction INTEGER,
+        position_in_faction TEXT, 
+        is_in_faction BOOLEAN DEFAULT 0,
+        is_in_oc BOOLEAN, 
+        is_revivable BOOLEAN
+    )

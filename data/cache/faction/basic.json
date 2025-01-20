@@ -1,0 +1,21 @@
+{
+  "id": 22631,
+  "name": "Halos Pulse",
+  "tag": "HLSP",
+  "tag_image": "22631-4933.png",
+  "leader_id": 1701621,
+  "co-leader_id": 3287241,
+  "respect": 265420,
+  "days_old": 4716,
+  "capacity": 100,
+  "members": 99,
+  "is_enlisted": null,
+  "rank": {
+    "level": 2,
+    "name": "Bronze",
+    "division": 0,
+    "position": 0,
+    "wins": 1
+  },
+  "best_chain": 100
+}

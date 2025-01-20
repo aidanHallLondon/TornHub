@@ -1,6 +1,6 @@
 # TornHub
-db/
-cache/
+./db/
+./cache/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
