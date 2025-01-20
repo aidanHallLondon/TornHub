@@ -1,11 +1,15 @@
 ![Torn hub for all your Torn scriping and data](./documents/banner.png) 
 
 # TornHub
-The data hub for all your Torn scripting needs in python with SQLite.
+The data hub for all your [Torn.com](https://www.torn.com/) scripting needs in Python with SQLite.
+
+Torn is a text-based, Crime RPG played by millions around the world. Their [APIv2](https://www.torn.com/swagger/index.html) allows players to write scipts to support decision making and planning in the game.  
 
 ## How to use Torn hub
 
-clone Torn hub into a folder on your machine and go through the setup process to install the dependencies. You need to run the code once to build the database and update it.  You will also get an up to date Scheam diagram and text file.
+You will need to clone the code from GitHub and then run it using Python3. Having installed it you wull be able to build scripts using SQL data queries without needing to manage pagingated API calls. Just provide an API key and let Torn hub do all the requests for you.
+
+Clone Torn hub into a folder on your machine and go through the setup process to install the dependencies. You need to run the code once to build the database and update it.  You will also get an up to date Scheam diagram and text file.
 
 You can run the code and pass in you API key or just enter it when prompted.
 

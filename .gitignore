@@ -1,8 +1,6 @@
 # TornHub
-
 db/
 cache/
-apiKey.md 
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
