@@ -1,6 +1,6 @@
 import sqlite3
 from datetime import datetime
-from Torn.api import getCrimes
+from Torn.api import cached_api_paged_call
 
 def create_crimes(cursor, force=False):
     if force:
@@ -172,8 +172,11 @@ def update_crimes( cursor):
     Args:
         db_path (str): Path to the SQLite database file.
     """
-
-    crimeInstances = getCrimes()  # Get the list of crimes directly
+    cache_age_limit=60
+    force=False
+   
+    crimeInstances= cached_api_paged_call(endpoint="faction/crimes",  params=None, 
+                                          dataKey="crimes", cache_age_limit=cache_age_limit, force=force) 
 
     # Insert or update crimes (ignore if crime ID already exists)
     for crime in crimeInstances:

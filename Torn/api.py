@@ -18,11 +18,6 @@ if not os.path.exists(CACHE_PATH):
 # Torn API call wrappers
 
 
-def getCrimes(params=None, cache_age_limit=3600, force=False):
-    crimes= cached_api_paged_call(endpoint="faction/crimes",  params=params, dataKey="crimes", cache_age_limit=cache_age_limit, force=force) 
-    return crimes 
-
-
 
 # def getAttacks(params=None, cache_age_limit=3600, force=False):
 #     attacks = cached_api_paged_call(endpoint="faction/attacks",  params=params, dataKey="attacks", cache_age_limit=cache_age_limit, force=force) 
