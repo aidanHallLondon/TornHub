@@ -2,6 +2,8 @@ import requests
 import time
 import os
 import json
+import re
+
 from Torn.api_keyHandler import get_api_key
 
 BASE_URL = "https://api.torn.com/v2"
@@ -156,16 +158,28 @@ if not os.path.exists(CACHE_PATH):
 
 # Interface functions
 
+# def _getCacheFilePath(endpoint, params=None):
+#     '''
+#     Returns the file path for cached data for an endpoint and params.
+#     '''
+#     global CACHE_PATH
+#     if params is None:
+#         return f"{CACHE_PATH}/{endpoint}.json"
+#     else:
+#         return f"{CACHE_PATH}/{endpoint}_{params}.json" 
+
 def _getCacheFilePath(endpoint, params=None):
     '''
     Returns the file path for cached data for an endpoint and params.
     '''
     global CACHE_PATH
+    endpoint = endpoint.replace("?", "/").replace("=", "/") 
     if params is None:
         return f"{CACHE_PATH}/{endpoint}.json"
-    else:
-        return f"{CACHE_PATH}/{endpoint}_{params}.json" 
-  
+    else: # Flatten the params dictionary into a string Replace non-alphanumeric characters with underscores
+        params_str = re.sub(r"[^a-zA-Z0-9]+", "_", json.dumps(params, sort_keys=True))
+        return f"{CACHE_PATH}/{endpoint}{params_str}.json"
+      
 def _saveData(endpoint, params=None, data=None):
     '''
     Saves API results data to a file in the cache.
