@@ -1,8 +1,5 @@
 from Torn.api import cached_api_paged_call
 
-def getApplications(params=None, cache_age_limit=3600, force=False):
-    applications = cached_api_paged_call(endpoint="faction/applications",  params=params, dataKey="applications", cache_age_limit=cache_age_limit, force=force) 
-    return applications
 
 def create_applications(cursor, force=False):
     if force:
@@ -32,11 +29,10 @@ def create_applications(cursor, force=False):
 
 
 def update_applications(cursor, cache_age_limit=3600, force=False):
-    data = getApplications(
-        params={"striptags": "false", "sort": "ASC"},
-        cache_age_limit=cache_age_limit,
-        force=force,
-    )
+
+    data =cached_api_paged_call(endpoint="faction/applications",  
+                                params={"striptags": "false", "sort": "ASC"}, 
+                                dataKey="applications", cache_age_limit=cache_age_limit, force=force) 
     for row in data:
         stats = row["user"]["stats"] if row["user"]["stats"] else {"strength":None, "speed":None, "dexterity":None, "defense":None}
         cursor.execute("""INSERT INTO applications (
