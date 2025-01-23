@@ -7,9 +7,9 @@ def create_faction(conn,cursor, force=False):
     """
     Create the faction table in the database.
     """
-    if force: cursor.execute("DROP TABLE IF EXISTS factionRecords;")
+    if force: cursor.execute("DROP TABLE IF EXISTS faction_records;")
     cursor.executescript(
-        """CREATE TABLE IF NOT EXISTS factionRecords (
+        """CREATE TABLE IF NOT EXISTS faction_records (
         FactionSample_id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         faction_id INTEGER NOT NULL,    
@@ -17,6 +17,7 @@ def create_faction(conn,cursor, force=False):
         faction_tag TEXT NOT NULL,
         faction_tag_image TEXT NOT NULL,
         leader_id INTEGER NOT NULL,
+        upgrades_state: TEXT,
         co_leader_id INTEGER NOT NULL,
         respect INTEGER NOT NULL,
         days_old INTEGER NOT NULL,
@@ -81,12 +82,12 @@ def create_faction(conn,cursor, force=False):
         territoryrespect INTEGER NOT NULL
    );
    
-   CREATE INDEX IF NOT EXISTS faction_id_index  ON factionRecords (FactionSample_id);"""
+   CREATE INDEX IF NOT EXISTS faction_id_index  ON faction_records (FactionSample_id);"""
     )
     cursor.executescript('''DROP VIEW IF EXISTS faction;
     CREATE VIEW faction AS
         SELECT * 
-        FROM factionRecords 
+        FROM faction_records 
         ORDER BY FactionSample_id DESC
         LIMIT 1;''')
 
@@ -102,7 +103,7 @@ def update_faction(conn,cursor, cache_age_limit=3600 * 12, force=False):
     stats = data["stats"]
     if data:
         cursor.execute(
-            """INSERT INTO factionRecords (
+            """INSERT INTO faction_records (
                 faction_id, faction_name, faction_tag, faction_tag_image, 
                 leader_id, co_leader_id, 
                 respect, days_old, capacity, members, 
