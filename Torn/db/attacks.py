@@ -13,7 +13,8 @@ ATTACK_CALLS = {
     "attacksFull": {"endpoint": "faction/attacksFull", "LIMIT": 1000},
 }
 
-def create_attacks(conn,cursor, force=False):
+
+def create_attacks(conn, cursor, force=False):
     if force:
         cursor.execute("DROP TABLE IF EXISTS attacks;")
 
@@ -54,10 +55,10 @@ def create_attacks(conn,cursor, force=False):
     )
 
 
-def update_attacks(conn,cursor, force=False):
+def update_attacks(conn, cursor, force=False):
     is_full_endpoint = True
     callType = ATTACK_CALLS["attacksFull" if is_full_endpoint else "attacks"]
-    endpoint =callType["endpoint"]  # if is_full_endpoint else "faction/attacks"
+    endpoint = callType["endpoint"]  # if is_full_endpoint else "faction/attacks"
     limit = callType["LIMIT"]  # if is_full_endpoint else 100
 
     if force:
@@ -70,15 +71,16 @@ def update_attacks(conn,cursor, force=False):
     # print(f"last_timestamp={last_timestamp}")
     attacksData = []
     attacksData = _paginated_api_calls(
-        conn,cursor, 
+        conn,
+        cursor,
         endpoint=endpoint,
         params=None,
         timestamp_field="started",
         last_timestamp=last_timestamp,
         dataKey="attacks",
         limit=limit,
-        callback = _insertAttacks_callback_fn, # callback
-        callback_parameters={"is_full_endpoint":is_full_endpoint}
+        callback=_insertAttacks_callback_fn,  # callback
+        callback_parameters={"is_full_endpoint": is_full_endpoint},
     )
     print(f"len data ={len(attacksData)}")
     # _insertAttacks(conn,cursor, attacksData, parameters={"is_full_endpoint":is_full_endpoint})
@@ -107,118 +109,101 @@ def update_attacks(conn,cursor, force=False):
 
 
 def _insertAttacks_callback_fn(conn, cursor, attacks, parameters):
-    ''' 
-    passed as a callback to paginated 
-    '''
-    is_full_endpoint = parameters["is_full_endpoint"] if "is_full_endpoint" in parameters else False
+    """
+    passed as a callback to paginated
+    """
+    is_full_endpoint = (
+        parameters["is_full_endpoint"] if "is_full_endpoint" in parameters else False
+    )
     _insert_attacks(conn, cursor, attacks, is_full_endpoint)
 
-def _insert_attacks(conn, cursor, attacks,is_full_endpoint):
-    for attackRow in attacks:
-        _insert_attack(conn, cursor, attackRow ,is_full_endpoint)
 
-def _insert_attack(conn, cursor, attackRow ,is_full_endpoint):
-        try:
-            started = datetime.fromtimestamp(attackRow["started"]).isoformat()
-            ended = datetime.fromtimestamp(attackRow["ended"]).isoformat()
-            # Extract attacker data, handling potential NULL
-            attacker_id = attackRow["attacker"]["id"] if attackRow.get("attacker") else None
-            attacker_name = (
-                attackRow["attacker"].get("name") if attackRow.get("attacker") else None
-            )
-            attacker_level = (
-                attackRow["attacker"].get("level") if attackRow.get("attacker") else None
-            )
-            attacker_faction_id = (
+def _insert_attacks(conn, cursor, attacks, is_full_endpoint):
+
+    cursor.executemany(
+        """
+        INSERT OR IGNORE INTO attacks (
+            attack_id, 
+            is_full_endpoint,
+            attack_code, 
+            started, 
+            ended, 
+            attacker_id, 
+            attacker_name, 
+            attacker_level, 
+            attacker_faction_id, 
+            defender_id, 
+            defender_name, 
+            defender_level, 
+            defender_faction_id, 
+            result, 
+            respect_gain, 
+            respect_loss, 
+            chain, 
+            is_interrupted, 
+            is_stealthed, 
+            is_raid, 
+            is_ranked_war,
+            modifier_fair_fight,
+            modifier_war,
+            modifier_retaliation,
+            modifier_group_attack,
+            modifier_overseas,
+            modifier_chain_modifier,
+            modifier_warlord,
+            finishing_hit_effects
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        [
+        (
+            attackRow["id"],
+            1 if is_full_endpoint else 0,
+            attackRow["code"],
+            datetime.fromtimestamp(attackRow["started"]).isoformat(),
+            datetime.fromtimestamp(attackRow["ended"]).isoformat(),
+            attackRow["attacker"]["id"] if attackRow.get("attacker") else None,
+            attackRow["attacker"].get("name") if attackRow.get("attacker") else None,
+            attackRow["attacker"].get("level") if attackRow.get("attacker") else None,
+            (
                 attackRow["attacker"].get("faction", {}).get("id")
-                if attackRow.get("attacker") and attackRow["attacker"].get("faction", {})
+                if attackRow.get("attacker")
+                and attackRow["attacker"].get("faction", {})
                 else None
-            )
-
-            # Extract defender data, handling potential NULL
-            defender_id = attackRow["defender"]["id"] if attackRow.get("defender") else None
-            defender_name = (
-                attackRow["defender"].get("name") if attackRow.get("defender") else None
-            )
-            defender_level = (
-                attackRow["defender"].get("level") if attackRow.get("defender") else None
-            )
-            defender_faction_id = (
+            ),
+            attackRow["defender"]["id"] if attackRow.get("defender") else None,
+            attackRow["defender"].get("name") if attackRow.get("defender") else None,
+            (
+                attackRow["defender"].get("level")
+                if attackRow.get("defender")
+                else None
+            ),
+            (
                 attackRow["defender"].get("faction", {}).get("id")
-                if attackRow.get("defender") and attackRow["defender"].get("faction", {})
+                if attackRow.get("defender")
+                and attackRow["defender"].get("faction", {})
                 else None
-            )
-            finishing_hit_effects = (
+            ),
+            attackRow["result"],
+            attackRow["respect_gain"],
+            attackRow["respect_loss"],
+            attackRow.get("chain"),
+            attackRow.get("is_interrupted"),
+            attackRow.get("is_stealthed"),
+            attackRow.get("is_raid"),
+            attackRow.get("is_ranked_war"),
+            attackRow.get("modifiers", {}).get("fair_fight"),
+            attackRow.get("modifiers", {}).get("war"),
+            attackRow.get("modifiers", {}).get("retaliation"),
+            attackRow.get("modifiers", {}).get("group"),
+            attackRow.get("modifiers", {}).get("overseas"),
+            attackRow.get("modifiers", {}).get("chain"),
+            attackRow.get("modifiers", {}).get("warlord"),
+            (
                 json.dumps(attackRow.get("finishing_hit_effects", {}))
                 if "finishing_hit_effects" in attackRow
                 else None
-            )
-            cursor.execute(
-                """
-            INSERT OR IGNORE INTO attacks (
-                attack_id, 
-                is_full_endpoint,
-                attack_code, 
-                started, 
-                ended, 
-                attacker_id, 
-                attacker_name, 
-                attacker_level, 
-                attacker_faction_id, 
-                defender_id, 
-                defender_name, 
-                defender_level, 
-                defender_faction_id, 
-                result, 
-                respect_gain, 
-                respect_loss, 
-                chain, 
-                is_interrupted, 
-                is_stealthed, 
-                is_raid, 
-                is_ranked_war,
-                modifier_fair_fight,
-                modifier_war,
-                modifier_retaliation,
-                modifier_group_attack,
-                modifier_overseas,
-                modifier_chain_modifier,
-                modifier_warlord,
-                finishing_hit_effects
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    attackRow["id"],
-                    1 if is_full_endpoint else 0,
-                    attackRow["code"],
-                    started,
-                    ended,
-                    attacker_id,
-                    attacker_name,
-                    attacker_level,
-                    attacker_faction_id,
-                    defender_id,
-                    defender_name,
-                    defender_level,
-                    defender_faction_id,
-                    attackRow["result"],
-                    attackRow["respect_gain"],
-                    attackRow["respect_loss"],
-                    attackRow.get("chain"),
-                    attackRow.get("is_interrupted"),
-                    attackRow.get("is_stealthed"),
-                    attackRow.get("is_raid"),
-                    attackRow.get("is_ranked_war"),
-                    attackRow.get("modifiers", {}).get("fair_fight"),
-                    attackRow.get("modifiers", {}).get("war"),
-                    attackRow.get("modifiers", {}).get("retaliation"),
-                    attackRow.get("modifiers", {}).get("group"),
-                    attackRow.get("modifiers", {}).get("overseas"),
-                    attackRow.get("modifiers", {}).get("chain"),
-                    attackRow.get("modifiers", {}).get("warlord"),
-                    finishing_hit_effects,
-                ),
-            )
-        except sqlite3.IntegrityError:
-            print("Err")
-            pass  # Ignore if attack ID already exists
+            ),
+        )
+        for attackRow in attacks
+    ],
+    )
