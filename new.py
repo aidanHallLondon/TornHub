@@ -1,5 +1,6 @@
 import sqlite3
 from Torn.db._globals import DB_CONNECTPATH
+from Torn.db.faction_upgrades import create_faction_upgrades, update_faction_upgrades
 from Torn.manageDB import  initDB, updateDB, dumpResults
 # from Torn.db.faction import create_faction, update_faction
 from Torn.api import cached_api_call, cached_api_paged_call
@@ -8,17 +9,17 @@ from Torn.db.attacks import create_attacks, update_attacks
 
 
 selectionsDone = [
-    "crimes",
+    "crimes", "crimeexp",
     "members",
     "basic","currency","hof","stats","timestamp","lookup",
+    "upgrades",
     "applications", 
     "armor", "boosters","medical","temporary","weapons", "drugs","caches","cesium",
+    "attacks", "attacksfull",
 ]
 selections = [
-    "upgrades",
     "territory",
     "contributors",  # members but nothing useful in the data so far
-    "crimeexp",
     "donations",
     "positions",
     "reports",
@@ -35,8 +36,6 @@ selections = [
     "chain",
     "chainreport",
     "chains",
-    "attacks",
-    "attacksfull",
     "rankedwars",
     "wars",
 
@@ -53,6 +52,11 @@ def main():
         DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES
     ) 
     cursor = conn.cursor()
+    create_faction_upgrades(conn,cursor, force=False)
+    conn.commit()
+    update_faction_upgrades(conn,cursor, force=False)
+    conn.commit()
+    
     initDB(conn,cursor)  # creates the database structure if not already done
     conn.commit()
     updateDB(conn,cursor)  # updates the data using the API
