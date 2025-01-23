@@ -52,10 +52,7 @@ def main():
         DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES
     ) 
     cursor = conn.cursor()
-    create_faction_upgrades(conn,cursor, force=False)
-    conn.commit()
-    update_faction_upgrades(conn,cursor, force=False)
-    conn.commit()
+
     
     initDB(conn,cursor)  # creates the database structure if not already done
     conn.commit()
@@ -69,11 +66,12 @@ def main():
 def loadit(conn,cursor):
     global _api_request_count
     # # cursor.execute("""SELECT * FROM applications """)
-    create_attacks(conn,cursor,force=False)
-    conn.commit()
-    update_attacks(conn,cursor,force=False)
-    conn.commit()
+    # create_faction_upgrades(conn,cursor, force=False)
+    # conn.commit()
+    # update_faction_upgrades(conn,cursor, force=False)
+    # conn.commit()
 
+  
 
 
 # cursor.execute("""SELECT * FROM _rowCounts """)

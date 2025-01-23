@@ -85,29 +85,6 @@ def update_attacks(conn, cursor, force=False):
     print(f"len data ={len(attacksData)}")
     # _insertAttacks(conn,cursor, attacksData, parameters={"is_full_endpoint":is_full_endpoint})
 
-
-# def _update_attacks_with_endpoint(
-#     cursor, is_full_endpoint=False, limit=100, force=False
-# ):
-#     """
-#     Fetches attack data using geAttacks() and updates the SQLite database.
-
-#     Args:
-#         db_path (str): Path to the SQLite database file.
-#     """
-#     endpoint = "faction/attacksFull" if is_full_endpoint else "faction/attacks"
-#     attacks = cached_api_paged_log_call(
-#         endpoint=endpoint,
-#         params=None,
-#         dataKey="attacks",
-#         limit=limit,
-#         force=force,
-#     )
-
-#     print("attacks ", len(attacks))
-#     _insertAttacks(cursor, attacks, is_full_endpoint)
-
-
 def _insertAttacks_callback_fn(conn, cursor, attacks, parameters):
     """
     passed as a callback to paginated

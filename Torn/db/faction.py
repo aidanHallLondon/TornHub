@@ -17,7 +17,7 @@ def create_faction(conn,cursor, force=False):
         faction_tag TEXT NOT NULL,
         faction_tag_image TEXT NOT NULL,
         leader_id INTEGER NOT NULL,
-        upgrades_state: TEXT,
+        faction_state TEXT,
         co_leader_id INTEGER NOT NULL,
         respect INTEGER NOT NULL,
         days_old INTEGER NOT NULL,

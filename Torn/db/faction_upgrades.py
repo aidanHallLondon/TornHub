@@ -11,7 +11,7 @@ def create_faction_upgrades(conn, cursor, force=False):
     cursor.executescript(
         """CREATE TABLE  IF NOT EXISTS faction_upgrades (
         upgrade_uid INTEGER PRIMARY KEY AUTOINCREMENT,
-        state TEXT NOT NULL,  -- 'peace', 'war', 'updgrade'.
+        faction_state TEXT NOT NULL,  -- 'peace', 'war', 'updgrade'.
         upgrade_id INTEGER NOT NULL,  -- '1', '2', '3', etc.
         branch TEXT NOT NULL,
         branchorder INTEGER,
@@ -49,17 +49,15 @@ def update_faction_upgrades(conn, cursor, force=False):
         _all_upgrades_append(all_upgrades, "peace", key, peace)
 
     cursor.execute(
-        """UPDATE factionRecords 
-        SET upgrades_state = '?' 
-        WHERE FactionSample_id = (SELECT FactionSample_id FROM factionRecords ORDER BY timestamp DESC LIMIT 1)
-        AND timestamp >= strftime('%Y-%m-%d %H:%M:%S', datetime('now', '-0.001 second'));  -- Adjust the time difference as needed""",
-        state,
+        f"""UPDATE faction_records 
+        SET faction_state = '{state}' 
+        WHERE FactionSample_id = (SELECT FactionSample_id FROM faction_records ORDER BY timestamp DESC LIMIT 1)
+        AND timestamp >= strftime('%Y-%m-%d %H:%M:%S', datetime('now', '1 second'));  -- Adjust the time difference as needed"""
     )
-    print(f"state update {cursor.lastrowid()}")
     cursor.executemany(
         """
             INSERT OR REPLACE INTO faction_upgrades (
-            state, upgrade_id, branch, branchorder, branchmultiplier, name, level, basecost, ability, unlocked)
+            faction_state, upgrade_id, branch, branchorder, branchmultiplier, name, level, basecost, ability, unlocked)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """, all_upgrades,
     )
