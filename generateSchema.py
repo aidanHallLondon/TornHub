@@ -7,9 +7,8 @@ from sqlalchemy import create_engine,MetaData
 initDB()
 updateDB()
 
-conn = sqlite3.connect(DB_CONNECTPATH)
+conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
 cursor = conn.cursor()
-
 
 cursor.execute('''SELECT schema.type, schema.name,row_count FROM sqlite_master AS Schema 
                LEFT JOIN _rowCounts as rc ON rc.name = Schema.name AND rc.type = Schema.type
