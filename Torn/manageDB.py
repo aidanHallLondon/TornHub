@@ -17,52 +17,36 @@ if not os.path.exists(DB_PATH):
     os.makedirs(DB_PATH)
 
 
-def initDB(force=False):
-    conn = sqlite3.connect(
-        DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES
-    )  # Add detect_types
-    cursor = conn.cursor()
-    create_users(cursor, force=force)
-    create_crimes(cursor, force=force)
-    create_faction(cursor, force=force)
-    create_applications(cursor, force=force)
-    create_armory(cursor)
-    create_admin(cursor, force=force)
+
+def initDB(conn,cursor,force=False):
+    create_admin(conn,cursor, force=force)
+    create_users(conn,cursor, force=force)
+    create_crimes(conn,cursor, force=force)
+    create_faction(conn,cursor, force=force)
+    create_applications(conn,cursor, force=force)
+    create_armory(conn,cursor,)
     cursor.execute("""PRAGMA optimize;""")
     conn.commit()
-    conn.close()
-
     db_initialised = True
-
     return db_initialised
 
-
-def updateDB():
-    conn = sqlite3.connect(
-        DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES
-    )  # Add detect_types
-    cursor = conn.cursor()
+def updateDB(conn,cursor):
+    update_faction_members(conn,cursor)
+    update_crimes(conn,cursor)
+    update_applications(conn,cursor)
+    update_faction(conn,cursor)
+    update_armory(conn, cursor)
     #
-    update_faction_members(cursor)
-    update_crimes(cursor)
-    update_applications(cursor)
-    update_faction(cursor)
-    update_armory(cursor)
-    #
-    cleamUpFKIssues(cursor)
-    #
-    conn.commit()
-    conn.close()
+    cleamUpFKIssues(conn,cursor)
 
-
-def dumpResults(cursor, tablefmt="simple"):
+def dumpResults(conn,cursor, tablefmt="simple"):
     results = cursor.fetchall()
     tableHeaders = [desc[0] for desc in cursor.description]
     table = tabulate(results, headers=tableHeaders, tablefmt=tablefmt)
     print(table)
 
 
-def cleamUpFKIssues(cursor):
+def cleamUpFKIssues(conn,cursor):
     cursor.execute(
         """ 
         UPDATE slot_assignments 

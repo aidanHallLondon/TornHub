@@ -1,7 +1,7 @@
-from Torn.api import cached_api_paged_call
+from Torn.api import cached_api_call, cached_api_paged_call
 
 
-def create_applications(cursor, force=False):
+def create_applications(conn,cursor, force=False):
     if force:
         cursor.execute("DROP TABLE IF EXISTS applications;")
     cursor.execute(
@@ -28,9 +28,9 @@ def create_applications(cursor, force=False):
     # cursor.execute("CREATE INDEX IF NOT EXISTS idx_applications_valid_until ON applications (valid_until);")
 
 
-def update_applications(cursor, cache_age_limit=3600, force=False):
+def update_applications(conn,cursor, cache_age_limit=3600, force=False):
 
-    data =cached_api_paged_call(endpoint="faction/applications",  
+    data =cached_api_call(conn,cursor,endpoint="faction/applications",  
                                 params={"striptags": "false", "sort": "ASC"}, 
                                 dataKey="applications", cache_age_limit=cache_age_limit, force=force) 
     for row in data:

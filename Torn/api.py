@@ -1,25 +1,61 @@
+from datetime import datetime
 import requests
 import time
 import os
 import json
 import re
-
+import sqlite3
+from Torn.db._globals import DB_CONNECTPATH
 from Torn.api_keyHandler import get_api_key
 
+VERBOSE = False
 BASE_URL = "https://api.torn.com/v2"
 headers = None # {"Authorization": f"ApiKey {api_key}"} # call getHeaders after Db initialised
-MAX_API_CALLS_ALLOWED = 50
-api_request_count = 0
-api_last_request_time = None
+API_SEMAPHORE_CALL_RATE = {"LIMIT":60,"WINDOW":60,"MINIMUM_PAUSE":2,"THROTTLE_LIMIT":30,"THROTTLE_TIME":1} # actual limit is 100 every 60s across all api_keys
 CACHE_PATH = "data/cache"  # Directory to store cached files
 JSON_INDENT = 2
 
 if not os.path.exists(CACHE_PATH):
     os.makedirs(CACHE_PATH)
 
+def api_semaphore_check(conn,cursor):  
+    '''
+    Pause if we have made too many calls in the last period (minute)
+    relies on API_SEMAPHORE_CALL_RATE for API_SEMAPHORE_CALL_RATE["LIMIT"] and API_SEMAPHORE_CALL_RATE["WINDOW"] 
+    '''
+    try:
+        while True:
+            semaphore_cutoff_time = time.time() - API_SEMAPHORE_CALL_RATE["WINDOW"]
+            cursor.execute("DELETE FROM apiSemaphores WHERE timestamp < ?", (semaphore_cutoff_time,))
+            conn.commit()  # Commit after deleting
+            cursor.execute("SELECT COUNT(*) AS call_count, MIN(timestamp) AS oldestTimeStamp FROM apiSemaphores")
+            semaphore_count, oldest_timestamp = cursor.fetchone()  
+
+            if semaphore_count >= API_SEMAPHORE_CALL_RATE["LIMIT"]:
+                time_to_pause = max(oldest_timestamp - semaphore_cutoff_time if oldest_timestamp is not None else 0,API_SEMAPHORE_CALL_RATE["MINIMUM_PAUSE"])
+                if VERBOSE:
+                    print(f"* Semaphore - 🛑 WAITING {round(time_to_pause*10)/10} seconds")
+                else:
+                    print("🛑",end="", flush=True)
+                time.sleep(time_to_pause)
+            else:
+                if semaphore_count >= API_SEMAPHORE_CALL_RATE["THROTTLE_LIMIT"]:
+                    if VERBOSE: print(f"* Semaphore - 🐌 Throttling {API_SEMAPHORE_CALL_RATE["THROTTLE_TIME"]} second")
+                    else:  print("🐌",end="", flush=True)
+                    time.sleep(API_SEMAPHORE_CALL_RATE["THROTTLE_TIME"])
+                cursor.execute("INSERT INTO apiSemaphores (timestamp) VALUES (?)", (time.time(),))
+                conn.commit()  # Commit after inserting
+                break  # Exit the loop when a semaphore is acquired
+    finally:  # Ensure connection is commited even if errors occur
+        conn.commit()
+
+def _DB_getCursor():
+    conn = sqlite3.connect( DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES )  # Add detect_types
+    cursor=conn.cursor()    
+    return conn, cursor
+
+
 # Torn API call wrappers
-
-
 
 # def getAttacks(params=None, cache_age_limit=3600, force=False):
 #     attacks = cached_api_paged_call(endpoint="faction/attacks",  params=params, dataKey="attacks", cache_age_limit=cache_age_limit, force=force) 
@@ -186,7 +222,6 @@ def _saveData(endpoint, params=None, data=None):
     '''
     filePath = _getCacheFilePath(endpoint, params)
     path = os.path.dirname(filePath)  
-    print(filePath,path)
     if not os.path.exists(path):
         os.makedirs(path)
     with open(filePath, "w") as file:
@@ -223,10 +258,11 @@ def _loadCachedData(endpoint, params=None, cache_age_limit=3600):
                 pass
     return None
     
+
 # API CALLS
 # API CALLS
       
-def _api_raw_call(url, params=None):
+def _api_raw_call(conn,cursor,url, params=None):
     """
     Makes a generic API call.
 
@@ -238,9 +274,9 @@ def _api_raw_call(url, params=None):
     Returns:
         dict: The JSON response from the API, or None if there was an error.
     """
-    global api_request_count, api_last_request_time, headers
-    api_last_request_time=time.time()
-    api_request_count+=1
+    global  headers
+
+    api_semaphore_check(conn,cursor)
 
     if headers==None:
         api_key = get_api_key() # Torn_limited_API_KEY # Torn_public_API_KEY
@@ -249,19 +285,22 @@ def _api_raw_call(url, params=None):
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
+        print('•', end='', flush=True)
         return response.json()
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
+        print(f"\nHTTP error occurred: {http_err}")
+        exit()
         return None
     except requests.exceptions.RequestException as req_err:
-        print(f"Request error occurred: {req_err}")
+        print(f"\nRequest error occurred: {req_err}")
+        exit()
         return None
     except ValueError as json_err:
-        print(f"Error decoding JSON response: {json_err} {url} ")
+        print(f"\nError decoding JSON response: {json_err} {url} ")
         exit()
         return None
 
-def cached_api_call(endpoint, params=None, dataKey=None, cache_age_limit=3600, force=False):
+def cached_api_call(conn,cursor,endpoint, params=None, dataKey=None, cache_age_limit=3600, force=False):
     """
     Makes an API call with caching.
 
@@ -274,23 +313,24 @@ def cached_api_call(endpoint, params=None, dataKey=None, cache_age_limit=3600, f
     Returns:
         dict: The JSON response from the API, or None if there was an error.
     """
-    print("URL",_getApiURL(endpoint), params)
+    # print("URL",_getApiURL(endpoint), params)
     if force:
         data = None
     else:
         data = _loadCachedData(endpoint, params=params, cache_age_limit=cache_age_limit)
     if data == None:
-        data = _api_raw_call(url=_getApiURL(endpoint), params=params)
+        data = _api_raw_call(conn,cursor,url=_getApiURL(endpoint), params=params)
         if dataKey:
             data = data[dataKey]
         _saveData(endpoint, params, data)
+    print('')
     return data
 
 # PAGED API CALLS
 # PAGED API CALLS
 # PAGED API CALLS
 # PAGED API CALLS
-def cached_api_paged_call(endpoint,  params=None, dataKey=None, cache_age_limit=3600, force=False):
+def cached_api_paged_call(conn,cursor,endpoint,  params=None, dataKey=None, cache_age_limit=3600, force=False):
     '''
         Makes a cached API call with pagination support.
         This function attempts to load cached data for the given API endpoint and parameters.
@@ -313,41 +353,63 @@ def cached_api_paged_call(endpoint,  params=None, dataKey=None, cache_age_limit=
             return data
 
     if data == None:
-        data = _paginated_api_calls(endpoint, dataKey=dataKey, params=params)
+        data = _paginated_api_calls(conn,cursor,endpoint, dataKey=dataKey, params=params)
         _saveData(endpoint, params, data)
     return data
 
-# def cached_api_paged_log_call(endpoint,  params=None, dataKey=None, cache_age_limit=3600, force=False):
-#     '''
-#     Fetches paged data from the Torn API and appends it to a file.
-#     '''
-#     offset=0 # assume none until we find cached data
-#     data = _loadCachedData(endpoint, params=params)
-#     data.extend( _paginated_api_calls(endpoint, dataKey=dataKey, offset= len(data), params=None))
-#     _saveData(endpoint, params, data)
-#     return data
+def cached_api_paged_log_call(conn,cursor,endpoint, timestamp_field="started", params=None, dataKey=None, limit=100, force=False):
+    """
+    Fetches paged log data from the Torn API using timestamps with dynamic field names.
+    Assumes duplicate handling is done in the database.
+    """
+    cache_data = _loadCachedData(endpoint, params=params)
 
-def _paginated_api_calls(endpoint, dataKey, offset=0, params=None,limit=1000):
-    '''
-    request data from a paged API call using offset 
-    if the data returns 100 or more records we need to make more calls to get all the data
-    Some records in the data have the same offset timestamp so we need to use offset to avoid missing or duplicating records
-    '''
-    global api_request_count, MAX_API_CALLS_ALLOWED,headers
-    data=[]
-    running=True
+    if force or cache_data is None:
+        last_timestamp = cache_data.get("last_timestamp", 0) if cache_data else 0
+        new_data = _paginated_api_calls(conn,cursor,endpoint=endpoint, dataKey=dataKey, timestamp_field=timestamp_field, last_timestamp=last_timestamp, limit=limit, params=params)
+
+        if cache_data is None:
+            cache_data = {"data": [], "last_updated": time.time()}
+
+        cache_data["data"].extend(new_data)
+        if new_data:
+            cache_data["last_timestamp"] = new_data[-1][timestamp_field] 
+        _saveData(endpoint, params, cache_data)
+        return cache_data["data"]
+    else:
+        return cache_data["data"]
+
+
+def _paginated_api_calls(conn,cursor,endpoint, dataKey, timestamp_field="created_at", last_timestamp=0, params=None, limit=100, 
+                         callback=None, callback_parameters={}):
+    """
+    Requests data from a paged API call using timestamps with dynamic field names.
+    """
+    global headers
+    data = []
+    running = True
     if params is None:
         params = {}
     params["sort"] = "ASC"
     params["limit"] = limit
+    
     while running:
-        print(offset) # progress indicator
-        params["offset"] = offset
-        new_data = _api_raw_call(url=_getApiURL(endpoint), params=params)[dataKey]
-        count=len(new_data) if new_data != None else 0
-        if count>0:
-            offset+=count
+        params["from"] = last_timestamp  # Assuming "from" parameter for timestamp in Torn API
+        try:
+            new_data = _api_raw_call(conn,cursor,url=_getApiURL(endpoint), params=params)[dataKey]
+        except Exception as e:
+            print(f"API call failed: {e}")
+            running = False
+            break
+
+        count = len(new_data) if new_data is not None else 0
+        if count > 0:
             data.extend(new_data)
-        if count<limit or api_request_count>MAX_API_CALLS_ALLOWED:
-            running=False   
-    return data    
+            last_timestamp = datetime.fromtimestamp(new_data[-1][timestamp_field]).isoformat()  # Access timestamp using dynamic field name
+            if callback is not None:
+                    callback(conn, cursor, new_data, callback_parameters)
+            
+        if count < limit:
+            running = False
+    print('')
+    return data

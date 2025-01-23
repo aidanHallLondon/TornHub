@@ -1,11 +1,22 @@
 
 
-def create_admin(cursor, force=False):
+def create_admin(conn,cursor, force=False):
     '''
     Create the admin tables and views
     '''
     if force:
-        cursor.execute("DROP TABLE IF EXISTS preferences;")
+        cursor.executescript('''
+            DROP TABLE IF EXISTS preferences;
+            DROP TABLE IF EXISTS apiSemaphores;
+        ''')
+
+    cursor.executescript('''CREATE TABLE IF NOT EXISTS apiSemaphores (
+        -- list of the latest API call timestamps to allow us to throttle the call rate
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timeStamp DATETIME NOT NULL);
+                         
+        CREATE INDEX IF NOT EXISTS idx_semaphore_timestamp ON apiSemaphores (timeStamp);
+    ''')
 
     cursor.executescript('''CREATE TABLE IF NOT EXISTS preferences (
     key TEXT PRIMARY KEY,

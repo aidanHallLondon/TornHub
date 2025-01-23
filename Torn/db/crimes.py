@@ -1,8 +1,8 @@
 import sqlite3
 from datetime import datetime
-from Torn.api import cached_api_paged_call
+from Torn.api import cached_api_call, cached_api_paged_call
 
-def create_crimes(cursor, force=False):
+def create_crimes(conn,cursor, force=False):
     if force:
         cursor.execute("DROP TABLE IF EXISTS crimes_version;")
         cursor.execute("DROP TABLE IF EXISTS crimeInstances;")
@@ -11,6 +11,8 @@ def create_crimes(cursor, force=False):
         cursor.execute("DROP TABLE IF EXISTS slot_assignments;")
         cursor.execute("DROP TABLE IF EXISTS crime_names;")
         cursor.execute("DROP TABLE IF EXISTS crime_positions;")
+        cursor.execute("DROP TABLE IF EXISTS crimeexp_ranks;")
+        
         cursor.execute("DROP VIEW IF EXISTS crime_slot_assignments_view;")
         cursor.execute("DROP VIEW IF EXISTS crime_name_positions_view;")
         cursor.execute("DROP VIEW IF EXISTS _rowCounts;")
@@ -27,6 +29,12 @@ def create_crimes(cursor, force=False):
             (2, 'Lowered successes for new crime instances','2025-01-09');                  
     ''')
 
+    cursor.execute('''CREATE TABLE IF NOT EXISTS crimeexp_ranks
+    (crimeexp_rank INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER UNIQUE NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    )''')
+ 
     cursor.execute('''CREATE TABLE IF NOT EXISTS crimeInstances
     (crimeInstance_id INTEGER PRIMARY KEY, 
     version_id INTEGER,
@@ -165,7 +173,7 @@ def create_crimes(cursor, force=False):
         users u ON sa.user_id = u.user_id;
     ''')
 
-def update_crimes( cursor):
+def update_crimes( conn,cursor):
     """
     Fetches crime data using getCrimes() and updates the SQLite database.
 
@@ -175,7 +183,9 @@ def update_crimes( cursor):
     cache_age_limit=60
     force=False
    
-    crimeInstances= cached_api_paged_call(endpoint="faction/crimes",  params=None, 
+    update_crimeexp_ranks(conn, cursor, force)
+
+    crimeInstances= cached_api_paged_call(conn,cursor,endpoint="faction/crimes",  params=None, 
                                           dataKey="crimes", cache_age_limit=cache_age_limit, force=force) 
 
     # Insert or update crimes (ignore if crime ID already exists)
@@ -212,23 +222,19 @@ def update_crimes( cursor):
                             slot['position'], 
                             item_requirement_id)
                         )
-
-            # Get the slot_id for the new slot
             crime_slot_id = cursor.lastrowid
-
             # Insert slot assignments (if user exists)
             if slot['user']:
-                cursor.execute('''INSERT OR REPLACE INTO slot_assignments (
-                               crime_slot_id, user_id, joined_at,  
-                               success_chance, progress
-                               )
-                                  VALUES (?, ?, ?, ?, ?)''', (
-                                crime_slot_id, 
-                                slot['user']['id'], 
-                                datetime.fromtimestamp(slot['user']['joined_at']).isoformat(), 
-                                slot['success_chance'],
-                                slot['user']['progress'])
-                                )
+                cursor.execute('''
+                        INSERT OR REPLACE INTO slot_assignments 
+                                (crime_slot_id, user_id, joined_at, success_chance, progress)
+                                VALUES (?, ?, ?, ?, ?)''', 
+                    (crime_slot_id, 
+                    slot['user']['id'], 
+                    datetime.fromtimestamp(slot['user']['joined_at']).isoformat(), 
+                    slot['success_chance'],
+                    slot['user']['progress'] )
+                )
 
     # Insert distinct crime names into crime_names table
     cursor.execute('''
@@ -240,7 +246,7 @@ def update_crimes( cursor):
             SELECT DISTINCT name FROM crimeInstances''')
 
     # # Insert positions for each crime name
-    cursor.execute(''' DELETE FROM crime_positions ''')
+    cursor.execute('''DELETE FROM crime_positions ''')
     cursor.execute('''
                     INSERT OR IGNORE INTO crime_positions (crime_name, position)
                         SELECT DISTINCT name, position FROM (
@@ -250,3 +256,12 @@ def update_crimes( cursor):
                         INNER JOIN crime_slots cs ON c.crimeInstance_id = cs.crimeInstance_id 
                         ) AS T1
      ''')
+    conn.commit()  
+
+def update_crimeexp_ranks(conn,cursor,force=False):
+    crimeexp_ranks = cached_api_call(conn,cursor,endpoint="faction?selections=crimeexp",  params=None, 
+                                          dataKey="crimeexp", force=force) 
+    cursor.execute('''DELETE FROM crimeexp_ranks''')
+    cursor.executemany('''INSERT INTO crimeexp_ranks (user_id) VALUES (?)''',  [(user,) for user in crimeexp_ranks] )
+    conn.commit()   
+  

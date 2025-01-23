@@ -13,7 +13,7 @@ class TypeID(Enum):
     CACHE = 1070
     CESIUM = 1080
 
-def create_armory(cursor,force=False):
+def create_armory(conn,cursor,force=False):
     if force:
         cursor.executescript('''
         DROP TABLE IF EXISTS armory_types;
@@ -61,7 +61,7 @@ def create_armory(cursor,force=False):
     ''')
    
 
-def insert_item(cursor, typeID,  item, item_type, available=None, loaned=None):
+def insert_item(conn,cursor, typeID,  item, item_type, available=None, loaned=None):
     try:
         cursor.execute('''
                 INSERT INTO armory_items (armory_type_id,item_id,item_name, item_type, quantity, available, loaned)
@@ -79,26 +79,26 @@ def insert_item(cursor, typeID,  item, item_type, available=None, loaned=None):
         pass  # Ignore if  already exists
 
 
-def update_armory(cursor, cache_age_limit=3600 * 12, force=False):
-    data = cached_api_call("faction?selections=weapons,armor,medical,drugs,temporary,boosters,caches,cesium", force=force )
+def update_armory(conn,cursor, cache_age_limit=3600 * 12, force=False):
+    data = cached_api_call(conn,cursor,"faction?selections=weapons,armor,medical,drugs,temporary,boosters,caches,cesium", force=force )
     # print(json.dumps(drugs, indent=2))
 
     for item in data["weapons"]:
-        insert_item(cursor, TypeID.WEAPPONS.value, item, item['type'], item["available"], item["loaned"])
+        insert_item(conn,cursor, TypeID.WEAPPONS.value, item, item['type'], item["available"], item["loaned"])
     for item in data["armor"]:
-        insert_item(cursor, TypeID.ARMOR.value, item, 'Armor',item["available"], item["loaned"])
+        insert_item(conn,cursor, TypeID.ARMOR.value, item, 'Armor',item["available"], item["loaned"])
     for item in  data["boosters"]:
-         insert_item(cursor, TypeID.BOOSTER.value, item , 'Booster')
+         insert_item(conn,cursor, TypeID.BOOSTER.value, item , 'Booster')
     for item in data["medical"]:
-         insert_item(cursor, TypeID.MEDICAL.value, item , 'Medical')
+         insert_item(conn,cursor, TypeID.MEDICAL.value, item , 'Medical')
     for item in data["temporary"]:
-        insert_item(cursor, TypeID.TEMPORARY.value, item, 'Temporary',item["available"], item["loaned"])
+        insert_item(conn,cursor, TypeID.TEMPORARY.value, item, 'Temporary',item["available"], item["loaned"])
     for item in data["drugs"]:
-         insert_item(cursor, TypeID.DRUGS.value, item , 'Drug')
+         insert_item(conn,cursor, TypeID.DRUGS.value, item , 'Drug')
     for item in data["caches"]:
-         insert_item(cursor, TypeID.CACHE.value, item , 'CACHE')
+         insert_item(conn,cursor, TypeID.CACHE.value, item , 'CACHE')
     for item in data["cesium"]:
-         insert_item(cursor, TypeID.CESIUM.value, item , 'Cesium')
+         insert_item(conn,cursor, TypeID.CESIUM.value, item , 'Cesium')
 
 
 

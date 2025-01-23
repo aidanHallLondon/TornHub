@@ -4,6 +4,7 @@ from Torn.manageDB import  initDB, updateDB, dumpResults
 # from Torn.db.faction import create_faction, update_faction
 from Torn.api import cached_api_call, cached_api_paged_call
 import json
+from Torn.db.attacks import create_attacks, update_attacks
 
 
 selectionsDone = [
@@ -46,26 +47,35 @@ selections = [
 # Applications ----------------------------------------------------------------
 
 
-initDB()  # creates the database if not already done
-updateDB()  # updates the data using the API
+
+def main():
+    conn = sqlite3.connect(
+        DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES
+    ) 
+    cursor = conn.cursor()
+    initDB(conn,cursor)  # creates the database structure if not already done
+    conn.commit()
+    updateDB(conn,cursor)  # updates the data using the API
+    conn.commit()
+    loadit(conn,cursor)
+    conn.commit()
+    conn.close()
 
 
-conn = sqlite3.connect(
-    DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES
-)  # Add detect_types
-cursor = conn.cursor()
-
-
-# # cursor.execute("""SELECT * FROM applications """)
-
-
+def loadit(conn,cursor):
+    global _api_request_count
+    # # cursor.execute("""SELECT * FROM applications """)
+    create_attacks(conn,cursor,force=False)
+    conn.commit()
+    update_attacks(conn,cursor,force=False)
+    conn.commit()
 
 
 
 # cursor.execute("""SELECT * FROM _rowCounts """)
 
-cursor.execute("""SELECT * FROM armory_items """)
-dumpResults(cursor)
+# cursor.execute("""SELECT * FROM armory_items """)
+# dumpResults(cursor)
 # cursor.execute("""SELECT * FROM armory_loans """)
 # dumpResults(cursor)
 # # data=getFaction()
@@ -73,5 +83,4 @@ dumpResults(cursor)
 
 # print(json.dumps(data, indent=2))
 
-conn.commit()
-conn.close()
+main()

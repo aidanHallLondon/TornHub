@@ -1,9 +1,9 @@
 from Torn.api import cached_api_call
  
-def getFaction(params=None, cache_age_limit=3600, force=False):
-    return cached_api_call("faction?selections=basic,currency,hof,stats", force=True )
+def getFaction(conn,cursor,params=None, cache_age_limit=3600, force=False):
+    return cached_api_call(conn,cursor,"faction?selections=basic,currency,hof,stats", force=True )
 
-def create_faction(cursor, force=False):
+def create_faction(conn,cursor, force=False):
     """
     Create the faction table in the database.
     """
@@ -90,8 +90,8 @@ def create_faction(cursor, force=False):
         ORDER BY FactionSample_id DESC
         LIMIT 1;''')
 
-def update_faction(cursor, cache_age_limit=3600 * 12, force=False):
-    data = getFaction(
+def update_faction(conn,cursor, cache_age_limit=3600 * 12, force=False):
+    data = getFaction(conn,cursor,
         params={"striptags": "false", "sort": "ASC"},
         cache_age_limit=cache_age_limit,
         force=force,
