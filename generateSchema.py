@@ -10,7 +10,7 @@ conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
 cursor = conn.cursor()
 initDB(conn,cursor)
 updateDB(conn,cursor)
-cursor.execute('''SELECT schema.type, schema.name,row_count FROM sqlite_master AS Schema 
+cursor.execute('''SELECT schema.type, schema.name,rows as row_count FROM sqlite_master AS Schema 
                LEFT JOIN _rowCounts as rc ON rc.name = Schema.name AND rc.type = Schema.type
                WHERE Schema.name NOT LIKE '[_]%' 
                ORDER BY 3 DESC,2,1''')
@@ -37,6 +37,19 @@ metadata = MetaData()
 metadata.reflect(bind=engine)
 
 render_er(metadata, 'data/db/schema_diagram.png') 
+
+# Generate the main diagram, excluding the large tables
+exclude_list = ['faction_records'] 
+filtered_metadata = MetaData()
+all_tables = metadata.tables.keys()  # Get names of all tables
+included_tables = [table for table in all_tables if table not in exclude_list]
+filtered_metadata.reflect(bind=engine, only=included_tables)
+render_er(filtered_metadata, 'data/db/schema_diagram_without_factionrecords.png')
+
+# Generate a separate diagram for the large table
+large_table_metadata = MetaData()
+large_table_metadata.reflect(bind=engine, only=[large_table_name])
+render_er(large_table_metadata, 'data/db/schema_diagram_for_factionrecords.png')
 
 print('')
 cursor.execute('''PRAGMA integrity_check;''')
