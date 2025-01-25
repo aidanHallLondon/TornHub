@@ -6,6 +6,7 @@ from Torn.api import (
     cached_api_paged_call,
     cached_api_paged_log_call,
     paginated_api_calls,
+    date_to_unix
 )
 
 REVIVES_CALLS = {
@@ -39,7 +40,6 @@ def create_revives(conn, cursor, force=False):
             is_success GENERATED ALWAYS AS (CASE WHEN result='success' THEN 1 ELSE 0 END),
             is_a_faction_revive GENERATED ALWAYS AS (CASE WHEN reviver_faction_id = 1234 THEN 1 ELSE 0 END),
             is_success_faction_revive GENERATED ALWAYS AS (CASE WHEN reviver_faction_id = 1234 AND result='success' THEN 1 ELSE 0 END)
-            --FOREIGN KEY (xxx) REFERENCES xxx(xxx)
         )"""
     )
 
@@ -50,17 +50,17 @@ def update_revives(conn, cursor, force=False):
     endpoint = callType["endpoint"]  # if is_full_endpoint else "faction/revives"
     limit = callType["LIMIT"]  # if is_full_endpoint else 100
     sort = "ASC"   
-    latest_timestamp = 'ssss'
-
+    latest_timestamp = fromTimestamp=date_to_unix('2014-01-01 00:00:00') # random early date
+ 
     if force:
         print("Force deleting revives")
         cursor.execute("DELETE FROM revives;")
-        latest_timestamp = None
     else:
         conn.commit()
         cursor.execute("SELECT MAX(timestamp) FROM revives;")
         latest_timestamp_datetime = cursor.fetchone()[0]
-        latest_timestamp =datetime.fromisoformat(latest_timestamp_datetime).timestamp() if latest_timestamp_datetime else None   
+        if latest_timestamp_datetime:
+            latest_timestamp =datetime.fromisoformat(latest_timestamp_datetime).timestamp()   
 
     paginated_api_calls(
         conn,

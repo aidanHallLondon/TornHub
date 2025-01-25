@@ -5,7 +5,7 @@ from Torn.db.faction_upgrades import create_faction_upgrades, update_faction_upg
 from Torn.db.revives import create_revives, update_revives
 from Torn.manageDB import  initDB, updateDB, dumpResults
 # from Torn.db.faction import create_faction, update_faction
-from Torn.api import _api_raw_call, _getApiURL, cached_api_call, cached_api_paged_call
+from Torn.api import _api_raw_call, _getApiURL, cached_api_call, cached_api_paged_call, date_to_unix
 import json
 from Torn.db.attacks import create_attacks, update_attacks
 import requests
@@ -69,9 +69,6 @@ def main():
     conn.commit()
     conn.close()
 
-
-def date_to_unix(date_str):
-    return int(datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").timestamp()) # date_to_unix('2014-01-01 00:00:00')
 
 def loadit(conn,cursor):
     global _api_request_count

@@ -41,12 +41,13 @@ def updateDB(conn,cursor,force=False):
     update_faction(conn,cursor)    
     conn.commit()    
     update_faction_members(conn,cursor)
+    update_revives(conn,cursor, force=force) # FORCE FORCE
     update_crimes(conn,cursor, force=force)
     update_applications(conn,cursor)
     update_armory(conn, cursor)
     update_faction_upgrades(conn,cursor,)
     update_attacks(conn,cursor, force=force)
-    update_revives(conn,cursor, force=force)
+
 
     conn.commit()
     print("\n < Updates done")

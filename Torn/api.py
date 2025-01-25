@@ -481,28 +481,30 @@ def paginated_api_calls(
     """
     Requests data from a paged API call using timestamps with dynamic field names.
     """
-    verbose=False
-    if short_name=='attacks!'  :
-        verbose=True
     global headers
+    verbose=False
     data = []
     running = True
     if params is None:
         params = {}
     if short_name=='':
         short_name=endpoint
+    if fromTimestamp: params["from"] = ( fromTimestamp )
+    if short_name=='verbose'  :
+        verbose=True
+        print(f"\n\nVerbose mode on for {short_name} !!!!!!!!!!!!!!!!!!!!!!!")
+        print(f"endpoint = {endpoint}")
+        print(f"params =  {params}")
     # if not fromTimestamp:
     #     fromTimestamp=int(datetime.strptime('2020-01-01 00:00:00', "%Y-%m-%d %H:%M:%S").timestamp())  
-    if verbose: print(f'fromTimestamp {fromTimestamp}') 
     print(f"[{short_name}{':' if short_name else ''}",end='',flush=True)
     while running:
         if fromTimestamp: params["from"] = ( fromTimestamp )
         new_data=[]
         # try:
-        if 1==1:
-            if verbose: print(f'url {_getApiURL(endpoint,params=params)}') 
- 
+        if 1==1: 
             new_data = _api_raw_call(conn, cursor, url=_getApiURL(endpoint,params=params), params=params)
+            if verbose: print(f'url {_getApiURL(endpoint,params=params)} : {len(new_data['revives'])}') 
             if dataKey and dataKey in new_data:
                 new_data = new_data[dataKey]
         # except Exception as e:
@@ -541,3 +543,6 @@ def paginated_api_calls(
             fromTimestamp = latestTimestamp+1
     print(len(data),"]",end='',flush=True)
     return data
+
+def date_to_unix(date_str):
+    return int(datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").timestamp()) # date_to_unix('2014-01-01 00:00:00')
