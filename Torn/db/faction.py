@@ -1,3 +1,4 @@
+import json
 from Torn.api import cached_api_call
  
 def getFaction(conn,cursor,params=None, cache_age_limit=3600, force=False):

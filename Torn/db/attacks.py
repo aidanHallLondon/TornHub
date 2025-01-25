@@ -5,12 +5,12 @@ from datetime import datetime
 from Torn.api import (
     cached_api_paged_call,
     cached_api_paged_log_call,
-    _paginated_api_calls,
+    paginated_api_calls,
 )
 
 ATTACK_CALLS = {
-    "attacks": {"endpoint": "faction/attacks", "LIMIT": 100},
-    "attacksFull": {"endpoint": "faction/attacksFull", "LIMIT": 1000},
+    "attacks": {"endpoint": "faction?selections=attacks", "LIMIT": 100},
+    "attacksFull": {"endpoint": "faction?selections=attacksFull", "LIMIT": 1000},
 }
 
 
@@ -63,32 +63,29 @@ def update_attacks(conn, cursor, force=False):
 
     if force:
         cursor.execute("DELETE FROM attacks;")
-        last_timestamp = None
+        latest_timestamp = None
     else:
         cursor.execute("SELECT MAX(started) AS last_timestamp FROM attacks;")
-        last_timestamp = cursor.fetchone()[0]
+        latest_timestamp_datetime = cursor.fetchone()[0]
+        print(latest_timestamp_datetime)
+        latest_timestamp =datetime.fromisoformat(latest_timestamp_datetime).timestamp()  if latest_timestamp_datetime else None  
 
-    # print(f"last_timestamp={last_timestamp}")
-    attacksData = []
-    attacksData = _paginated_api_calls(
+    paginated_api_calls(
         conn,
         cursor,
         endpoint=endpoint,
-        params=None,
+        params={"sort":"ASC"},
         timestamp_field="started",
-        last_timestamp=last_timestamp,
+        fromTimestamp=latest_timestamp,
         dataKey="attacks",
         limit=limit,
         callback=_insertAttacks_callback_fn,  # callback
         callback_parameters={"is_full_endpoint": is_full_endpoint},
+        short_name='attacks'    
     )
-    print(f"len data ={len(attacksData)}")
-    # _insertAttacks(conn,cursor, attacksData, parameters={"is_full_endpoint":is_full_endpoint})
-
+ 
 def _insertAttacks_callback_fn(conn, cursor, attacks, parameters):
-    """
-    passed as a callback to paginated
-    """
+    # TODO is_full_endpoint = parameters.get("is_full_endpoint", False)
     is_full_endpoint = (
         parameters["is_full_endpoint"] if "is_full_endpoint" in parameters else False
     )
