@@ -12,11 +12,18 @@
 <body>
 
 <h1>$page_title</h1>
-
+<h2>$image_title</h2>
+<div style="display: flex; justify-content: space-between;">
+  <div style="flex: 1; padding: 0 5%">
+    <a href="$image1_src"><img src="$image1_src" style="width: 100%;" /></a>
+  </div>
+  <div style="flex: 1; padding: 0 5%;">
+    <a href="$image2_src"> <img src="$image2_src" style="width: 100%;" /></a>
+  </div>
+</div>
+<h2>$table_title</h2>
 $table_html
 
-<h2>$image_title</h2>
-<div><img src="$image1_src"/></div>
-<div><img src="$image2_src"/></div>
+
 </body> 
 </html>

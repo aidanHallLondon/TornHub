@@ -1,10 +1,11 @@
 import os
+import re
 import sqlite3
 import copy
 from string import Template
 from bs4 import BeautifulSoup
 from tabulate import tabulate
-import datetime 
+import datetime
 
 from Torn.charts import draw_stackedarea_chart, plt_save_image
 from Torn.db._globals import DB_CONNECTPATH
@@ -23,11 +24,12 @@ def main():
     template_path = "templates/reports/revives/revivers_list.html"
 
     list_revivers_to_html_file(
-        conn,cursor,
+        conn,
+        cursor,
         template_path,
         path,
         title_str="Revivers",
-        out_filname="revivers_list.html"
+        out_filname="revivers_list.html",
     )
 
     template_path = "templates/reports/revives/pivot.html"
@@ -40,7 +42,10 @@ def main():
         periodName="date",
         title_str="Revives pivot by date",
         image_title="Charts",
-        image_list=['faction_revives_stacked_area_by_date.png','faction_revives_stacked_area_by_date_12weeks.png'],
+        image_list=[
+            "faction_revives_stacked_area_by_date.png",
+            "faction_revives_stacked_area_by_date_12weeks.png",
+        ],
         out_filname="revives_by_date.html",
     )
 
@@ -51,7 +56,10 @@ def main():
         periodName="week",
         title_str="Revives pivot by week",
         image_title="Charts",
-        image_list=['faction_revives_stacked_area_by_week.png','faction_revives_stacked_area_by_week_12weeks.png'],
+        image_list=[
+            "faction_revives_stacked_area_by_week.png",
+            "faction_revives_stacked_area_by_week_12weeks.png",
+        ],
         out_filname="revives_by_week.html",
     )
     # pivot_to_stacked_area_chart(
@@ -121,7 +129,7 @@ def revives_stackedarea_chart(
 
 
 def get_pivot_stackedarea_dataseries(periodAlias, periodName):
-    data, headers, colalign = get_requests_pivotted(periodAlias, periodName)
+    data, headers, colalign = get_requests_pivotted(periodAlias, periodName, totals=False)
     # Extract columns into separate lists
     xaxis_data = [row[0] for row in data]
     series_data = {}
@@ -133,21 +141,26 @@ def get_pivot_stackedarea_dataseries(periodAlias, periodName):
     return xaxis_data, series_data
 
 
-def get_requests_pivotted(periodAlias, periodName):
-    pivot_template = Template(
-        """
-      SELECT period as $periodAlias,$player_case_statements
+def get_requests_pivotted(periodAlias, periodName, totals=True):
+    pivot_template = Template(('''
+    SELECT 'Total' as $periodAlias,  
+             $player_case_statements       
+        FROM RevivesBy$periodName
+    UNION ALL ''' if totals else " ")+'''
+    SELECT period as $periodAlias,
+             $player_case_statements
         FROM RevivesBy$periodName 
         GROUP BY period 
-        ORDER BY 1 DESC;"""
-    )
+        ORDER BY 1 DESC;
+   '''
+)
     cursor.execute(
         f"SELECT DISTINCT user_name FROM revivesBy{periodName} ORDER BY 1 ASC"
     )
     players = [row[0] for row in cursor.fetchall()]
     player_case_statements = ", ".join(
         [
-            f"SUM(CASE WHEN user_name = '{player.replace('-', '')}' THEN successful_revives ELSE '0' END) AS {player.replace(' ', '').replace('-', '')}"
+            f"SUM(CASE WHEN user_name = '{player}' THEN successful_revives ELSE '0' END) AS {player.replace(' ', '').replace('-', '')}"
             for player in players
         ]
     )
@@ -157,55 +170,61 @@ def get_requests_pivotted(periodAlias, periodName):
         player_case_statements=player_case_statements,
     )
     #
+
     cursor.execute(pivot_sql)
     headers = [description[0] for description in cursor.description]
     colalign = ["right" for description in cursor.description]
     data = cursor.fetchall()
     return data, headers, colalign
 
+
 def list_revivers_to_html_file(
-        conn,
-        cursor,
-        template_path,
-        path,
-        title_str="Revivers",
-        out_filname="revives_by_date.html"
-    ):
-    cursor.execute('''SELECT * FROM revivers ORDER BY 3 DESC,4 DESC,2 ''')
+    conn,
+    cursor,
+    template_path,
+    path,
+    title_str="Revivers",
+    out_filname="revives_by_date.html",
+):
+    cursor.execute("""SELECT * FROM revivers ORDER BY 3 DESC,4 DESC,2 """)
 
     # user_id,user_name,revive_count,revive_skill
-    reviver_data = cursor.fetchall() # [[11111,'a',10,.1],[2222,'b',20,.2],[33333,'b',30,.3],[4444,'d',40,.4]]
+    reviver_data = (
+        cursor.fetchall()
+    )  # [[11111,'a',10,.1],[2222,'b',20,.2],[33333,'b',30,.3],[4444,'d',40,.4]]
     output_filename = os.path.join(path, out_filname)
     if not os.path.exists(path):
         os.makedirs(path)
 
     with open(template_path, "r") as f:
-        soup = BeautifulSoup(f.read(), 'html.parser')
-    soup.find('span', id='generated_date_field').string=datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M Torn time")
-    tbody = soup.find('tbody')
-    template_row = tbody.find('tr', class_='template')
+        soup = BeautifulSoup(f.read(), "html.parser")
+    soup.find("span", id="generated_date_field").string = datetime.datetime.now(
+        datetime.UTC
+    ).strftime("%Y-%m-%dT%H:%M Torn time")
+    tbody = soup.find("tbody")
+    template_row = tbody.find("tr", class_="template")
     # Iterate through the reviver data and create table rows
     for i, reviver in enumerate(reviver_data):
         user_id, user_name, count, skill = reviver  # Assuming your tuple structure
-        new_row = copy.copy(template_row) 
-        new_row['class']=f'appended{i}'
-        #new_row.clear() # Remove existing contents from the clone # This seems dumb
-        cells = new_row.find_all('td') 
+        new_row = copy.copy(template_row)
+        new_row["class"] = f"appended{i}"
+        # new_row.clear() # Remove existing contents from the clone # This seems dumb
+        cells = new_row.find_all("td")
         cells[0].string = str(i + 1)
         cells[1].string = str(user_name)
         cells[2].string = str(count)
-        cells[3].string = str(skill) 
-        # zebra stripe from second row in tbody 
+        cells[3].string = str(skill)
+        # zebra stripe from second row in tbody
         if i % 2 == 1:
             for cell in cells:
-                cell['style'] = cell['style'] + '; background-color:#e0e0e0;' 
+                cell["style"] = cell["style"] + "; background-color:#e0e0e0;"
 
         # Update the signature link and image source
-        anchor_tag = cells[4].find('a')
-        anchor_tag['href'] = str(anchor_tag['href']).replace('$user_id',str(user_id) )
-        img_tag = anchor_tag.find('img')
-        img_tag['src'] = str(img_tag['src']).replace('$user_id',str(user_id) )  
-        img_tag['alt'] = str(img_tag['alt']).replace('$user_id',str(user_id) )
+        anchor_tag = cells[4].find("a")
+        anchor_tag["href"] = str(anchor_tag["href"]).replace("$user_id", str(user_id))
+        img_tag = anchor_tag.find("img")
+        img_tag["src"] = str(img_tag["src"]).replace("$user_id", str(user_id))
+        img_tag["alt"] = str(img_tag["alt"]).replace("$user_id", str(user_id))
 
         tbody.append(new_row)
 
@@ -214,7 +233,7 @@ def list_revivers_to_html_file(
 
     # Update the page title
     soup.title.string = title_str
-    soup.find('h1').string = title_str
+    soup.find("h1").string = title_str
 
     final_html = str(soup)
 
@@ -224,12 +243,20 @@ def list_revivers_to_html_file(
 
 
 def pivot_to_html_file(
-    template_path, path, periodAlias, periodName, title_str, image_title, image_list, out_filname
+    template_path,
+    path,
+    periodAlias,
+    periodName,
+    title_str,
+    image_title,
+    image_list,
+    out_filname,
 ):
-    data, headers, colalign = get_requests_pivotted(periodAlias, periodName)
+    data, headers, colalign = get_requests_pivotted(periodAlias, periodName,totals=True)
 
     # Replace all instances of exactly 0 with None
-    data = [[None if value == 0 else value for value in row] for row in data]
+    data2 = [[None if value == 0 else value for value in row] for row in data]
+    data=data2
     table_html_str = generateStyledTable(data, headers, colalign)
     output_filename = os.path.join(path, out_filname)
     if not os.path.exists(path):
@@ -237,11 +264,12 @@ def pivot_to_html_file(
     with open(template_path, "r") as f:
         html_template = Template(f.read())
     final_html = html_template.substitute(
-        page_title=title_str, 
+        page_title=title_str,
         table_html=table_html_str,
-        image_title = image_title,
-        image1_src=image_list[0] if image_list and len(image_list)>=1 else None,
-        image2_src=image_list[1] if image_list and len(image_list)>=2 else None
+        image_title=image_title,
+        image1_src=image_list[0] if image_list and len(image_list) >= 1 else None,
+        image2_src=image_list[1] if image_list and len(image_list) >= 2 else None,
+        table_title='Table'
     )
     with open(output_filename, "w") as f:
         f.write(final_html)
@@ -249,31 +277,38 @@ def pivot_to_html_file(
 
 
 def generateStyledTable(data, headers, colalign):
+    # generate html table
     table_html_str = tabulate(
         data, headers=headers, colalign=("right",), tablefmt="html"
     )
     soup = BeautifulSoup(table_html_str, "html.parser")
-    # Add zebra stripes
+    
+    for table in soup.find_all("table"):
+        table["style"] =  "border-collapse: collapse; border: none;table-layout: fixed; width:95%;"
+
     rows = soup.find_all("tr")
-    for i, row in enumerate(rows):
-        if i % 2 == 1:  # Every other row starting with the second row
-            row["style"] = "background-color: #fff0f0;"  # Subtle darker color
+    for i, row in enumerate(rows): # Add zebra stripes
+        if i % 2 == 0: 
+            row["style"] = "background-color: #e0e0e0;"  
 
     # Set column widths
     num_cols = len(headers)  # Assuming headers represent the number of columns
     col_width_percent = 100 / num_cols
     for row in rows:
-        for cell in row.find_all(["th", "td"]):  # Target both header and data cells
+        for cell in row.find_all("th"):
+            cell["Style"]= (
+                f" text-align: center; border:none; border-right:1px dotted #b0b0b0; font-size:smaller"
+            )
+        for cell in row.find_all( "td"): 
             cell["style"] = (
-                f"width: {col_width_percent}%; text-align: right; border:none; border-right:1px dotted #708090"
+                f"border:none;"
             )
 
-    # Add border styling
-    table = soup.find("table")
-    table["style"] = "border-collapse: collapse; border: none;"  # Example border style
-
     # Get the modified HTML
-    return str(soup)
-
+    # return str(soup.prettify(formatter="minimal")).replace("\n","")
+    html_str = str(soup.prettify(formatter="minimal"))#.replace("\n", "")
+    # Remove whitespace around numbers
+    #html_str = re.sub(r"\s*(<|>)\s*", r"\1", html_str) 
+    return html_str
 
 main()
