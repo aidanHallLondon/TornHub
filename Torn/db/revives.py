@@ -43,6 +43,121 @@ def create_revives(conn, cursor, force=False):
         )"""
     )
 
+    # a view to see revives by user by date
+    cursor.executescript('''
+  DROP  VIEW IF EXISTS revivers;
+  DROP  VIEW IF EXISTS revivesByDate;
+  DROP  VIEW IF EXISTS revivesByWeek;
+
+ 
+  CREATE VIEW revivers AS 
+           SELECT
+                    revives.reviver_id AS user_id,
+                    r_user.name AS user_name,
+                    COUNT(*) AS successful_revives,
+                    CAST(ROUND((MAX(chance) - 90) * 10) AS INT) AS skill_est
+            FROM revives
+            INNER JOIN users AS r_user
+                    ON revives.reviver_id = r_user.user_id
+                    AND r_user.is_in_faction = 1
+            WHERE
+                    is_success = 1
+                    GROUP BY
+                        revives.reviver_id,
+                    r_user.name;                      
+
+  CREATE VIEW revivesByDate AS 
+        WITH RECURSIVE date_series(dt) AS (
+        SELECT MIN(dayDate) 
+        FROM (
+            SELECT
+            r_user.name AS user_name,
+            DATE(revives.timestamp) AS dayDate,
+            COUNT(*) AS successful_revives,
+            ROUND(AVG(chance), 1) AS avg_chance,
+            CAST(ROUND((MAX(chance) - 90) * 10) AS INT) AS skill_est
+            FROM revives
+            INNER JOIN users AS r_user
+            ON revives.reviver_id = r_user.user_id
+            AND r_user.is_in_faction = 1
+            WHERE
+            is_success = 1
+            GROUP BY
+            r_user.name,
+            dayDate
+        ) AS RevivesByDate
+        UNION 
+        SELECT date(dt, '+1 day')
+        FROM date_series
+        WHERE dt < (
+            SELECT MAX(dayDate) FROM (
+            SELECT
+                r_user.name AS user_name,
+                DATE(revives.timestamp) AS dayDate,
+                COUNT(*) AS successful_revives,
+                ROUND(AVG(chance), 1) AS avg_chance,
+                CAST(ROUND((MAX(chance) - 90) * 10) AS INT) AS skill_est
+            FROM revives
+            INNER JOIN users AS r_user
+                ON revives.reviver_id = r_user.user_id
+                AND r_user.is_in_faction = 1
+            WHERE
+                is_success = 1
+            GROUP BY
+                r_user.name,
+                dayDate
+            ) AS RevivesByDate
+        )
+        ), RevivesByDate AS (
+        SELECT
+            r_user.name AS user_name,
+            DATE(revives.timestamp) AS dayDate,
+            COUNT(*) AS successful_revives,
+            ROUND(AVG(chance), 1) AS avg_chance,
+            CAST(ROUND((MAX(chance) - 90) * 10) AS INT) AS skill_est
+        FROM revives
+        INNER JOIN users AS r_user
+            ON revives.reviver_id = r_user.user_id
+            AND r_user.is_in_faction = 1
+        WHERE
+            is_success = 1
+        GROUP BY
+            r_user.name,
+            dayDate
+        )
+        , DateSeries AS (
+        SELECT DISTINCT dayDate
+        FROM RevivesByDate
+        UNION 
+        SELECT dt FROM date_series
+        ), PlayerSeries AS (
+        SELECT DISTINCT user_name
+        FROM RevivesByDate
+        ), AllCombinations AS (
+        SELECT
+            ds.dayDate,
+            ps.user_name
+        FROM DateSeries AS ds
+        CROSS JOIN PlayerSeries AS ps
+        )
+        SELECT
+            ac.dayDate as period,
+            ac.user_name,
+            COALESCE(rbd.successful_revives, 0) AS successful_revives
+        FROM AllCombinations AS ac
+        LEFT JOIN RevivesByDate AS rbd
+        ON ac.dayDate = rbd.dayDate AND ac.user_name = rbd.user_name;
+    ''')
+    cursor.executescript('''
+        CREATE VIEW revivesByWeek AS
+            SELECT
+            STRFTIME('%Y-%W', period) AS period,  -- Extract year and week number (Monday as start of week)
+            user_name,
+            SUM(successful_revives) AS successful_revives  -- Sum revives for each player within the week
+            FROM revivesByDate
+            GROUP BY period, user_name;             
+    '''
+  )
 
 def update_revives(conn, cursor, force=False):
     is_full_endpoint = True
