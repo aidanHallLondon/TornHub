@@ -1,3 +1,4 @@
+from itertools import zip_longest
 import os
 import re
 import sqlite3
@@ -7,7 +8,12 @@ from bs4 import BeautifulSoup
 from tabulate import tabulate
 import datetime
 
-from Torn.charts import draw_stackedarea_chart, plt_save_image
+from Torn.charts import (
+    _make_autopct,
+    draw_donut_chart,
+    draw_stackedarea_chart,
+    plt_save_image,
+)
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import dumpResults, initDB
 
@@ -21,7 +27,12 @@ conn.commit()
 def main():
 
     path = "reports/faction/revives"
-    template_path = "templates/reports/revives/revivers_list.html"
+    template_path = "templates/reports/revives/revivers_forum_list.html"
+
+    revivers_share_donut(conn, cursor, title='Revivers total contributions', period=None,path=path,out_filename="contributions_all")
+    revivers_share_donut(conn, cursor, title='Revivers contributions over the last seven days',period="-7 days",path=path,out_filename="contributions_7days")
+    revivers_share_donut(conn, cursor, title='Revivers contributions over the last 30 days',period="-30 days",path=path,out_filename="contributions_30days")
+    revivers_share_donut(conn, cursor, title='Revivers contributions this month',period="-1 month",path=path,out_filename="contributions_month")
 
     list_revivers_to_html_file(
         conn,
@@ -29,7 +40,7 @@ def main():
         template_path,
         path,
         title_str="Revivers",
-        out_filname="revivers_list.html",
+        out_filename="revivers_forum_list.html",
     )
 
     template_path = "templates/reports/revives/pivot.html"
@@ -46,7 +57,7 @@ def main():
             "faction_revives_stacked_area_by_date.png",
             "faction_revives_stacked_area_by_date_12weeks.png",
         ],
-        out_filname="revives_by_date.html",
+        out_filename="by_date.html",
     )
 
     pivot_to_html_file(
@@ -60,7 +71,7 @@ def main():
             "faction_revives_stacked_area_by_week.png",
             "faction_revives_stacked_area_by_week_12weeks.png",
         ],
-        out_filname="revives_by_week.html",
+        out_filename="by_week.html",
     )
     # pivot_to_stacked_area_chart(
     revives_stackedarea_chart(
@@ -68,21 +79,21 @@ def main():
         "week",
         title="Revivers contributions by week",
         path=path,
-        filename="faction_revives_stacked_area_by_week",
+        filename="stacked_area_by_week",
     )
     revives_stackedarea_chart(
         "date",
         "date",
         title="Revivers contributions by day",
         path=path,
-        filename="faction_revives_stacked_area_by_date",
+        filename="stacked_area_by_date",
     )
     revives_stackedarea_chart(
         "week",
         "week",
         title="Revivers contributions by week over 12 weeks",
         path=path,
-        filename="faction_revives_stacked_area_by_week_12weeks",
+        filename="stacked_area_by_week_12weeks",
         truncate_after=12,
     )
     revives_stackedarea_chart(
@@ -90,9 +101,47 @@ def main():
         "date",
         title="Revivers contributions by day over 12 weeks",
         path=path,
-        filename="faction_revives_stacked_area_by_date_12weeks",
+        filename="stacked_area_by_date_12weeks",
         truncate_after=12 * 7,
     )
+
+
+def revivers_share_donut(conn, cursor, title=None, period=None,path=None,out_filename=None):
+    '''
+    period is a valid time period for SQLite DATE('now', ?) e.g. '-2 days'
+    '''
+    if period is None:
+        cursor.execute(
+            """SELECT user_name AS label, successful_revives AS size FROM revivers ORDER BY 2 ASC"""
+        )
+    else:
+        cursor.execute("""
+        SELECT
+                r_user.name AS label,
+                COUNT(*) AS size             
+            FROM
+                (SELECT * FROM revives WHERE timestamp >= DATE('now', ?)) as revives             
+            INNER JOIN users AS r_user                     
+                ON revives.reviver_id = r_user.user_id                     
+                AND r_user.is_in_faction = 1                           
+            WHERE is_success = 1    
+            GROUP BY
+                revives.reviver_id,
+                r_user.name   
+        """,(period,))
+    data = cursor.fetchall()
+    labels = [row[0] for row in data]
+    values = [row[1] for row in data]
+    # combine two lists in one list of tuples that the function prefers
+    series = [(l, s) for l, s in list(zip_longest(labels, values, fillvalue=None))]
+    draw_donut_chart(
+        series=series,
+        title=title if title else "Contributions by Revivers",
+        autopct=_make_autopct(values, format_string="{value:d}\n({percentage:.1f}%)"),
+        path=path,
+        out_filename=out_filename
+    )  # pie
+    # draw_donut_chart(series=values, labels=labels) # pie
 
 
 def revives_stackedarea_chart(
@@ -100,7 +149,7 @@ def revives_stackedarea_chart(
     periodAlias,
     title="Revivers contributions",
     path="reports/faction/revives",
-    filename="faction_revives_stacked_area",
+    filename="stacked_area",
     truncate_after=None,
 ):
     xaxis_data, series_data = get_pivot_stackedarea_dataseries(
@@ -114,7 +163,7 @@ def revives_stackedarea_chart(
     draw_stackedarea_chart(
         width_inches=12,
         height_inches=6,
-        title_str=title,
+        title=title,
         xaxis_title="Week number" if periodName == "week" else "Date",
         yaxis_title="Successful revives contributed",
         xaxis_label_scale=1.5 if periodName == "week" else 2,
@@ -123,13 +172,15 @@ def revives_stackedarea_chart(
     )
     plt_save_image(
         path=path,
-        out_filname=filename,
+        out_filename=filename,
         show_image=False,
     )
 
 
 def get_pivot_stackedarea_dataseries(periodAlias, periodName):
-    data, headers, colalign = get_requests_pivotted(periodAlias, periodName, totals=False)
+    data, headers, colalign = get_requests_pivotted(
+        periodAlias, periodName, totals=False
+    )
     # Extract columns into separate lists
     xaxis_data = [row[0] for row in data]
     series_data = {}
@@ -142,18 +193,24 @@ def get_pivot_stackedarea_dataseries(periodAlias, periodName):
 
 
 def get_requests_pivotted(periodAlias, periodName, totals=True):
-    pivot_template = Template(('''
+    pivot_template = Template(
+        (
+            """
     SELECT 'Total' as $periodAlias,  
              $player_case_statements       
         FROM RevivesBy$periodName
-    UNION ALL ''' if totals else " ")+'''
+    UNION ALL """
+            if totals
+            else " "
+        )
+        + """
     SELECT period as $periodAlias,
              $player_case_statements
         FROM RevivesBy$periodName 
         GROUP BY period 
         ORDER BY 1 DESC;
-   '''
-)
+   """
+    )
     cursor.execute(
         f"SELECT DISTINCT user_name FROM revivesBy{periodName} ORDER BY 1 ASC"
     )
@@ -184,7 +241,7 @@ def list_revivers_to_html_file(
     template_path,
     path,
     title_str="Revivers",
-    out_filname="revives_by_date.html",
+    out_filename="by_date.html",
 ):
     cursor.execute("""SELECT * FROM revivers ORDER BY 3 DESC,4 DESC,2 """)
 
@@ -192,7 +249,7 @@ def list_revivers_to_html_file(
     reviver_data = (
         cursor.fetchall()
     )  # [[11111,'a',10,.1],[2222,'b',20,.2],[33333,'b',30,.3],[4444,'d',40,.4]]
-    output_filename = os.path.join(path, out_filname)
+    output_filename = os.path.join(path, out_filename)
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -250,15 +307,17 @@ def pivot_to_html_file(
     title_str,
     image_title,
     image_list,
-    out_filname,
+    out_filename,
 ):
-    data, headers, colalign = get_requests_pivotted(periodAlias, periodName,totals=True)
+    data, headers, colalign = get_requests_pivotted(
+        periodAlias, periodName, totals=True
+    )
 
     # Replace all instances of exactly 0 with None
     data2 = [[None if value == 0 else value for value in row] for row in data]
-    data=data2
+    data = data2
     table_html_str = generateStyledTable(data, headers, colalign)
-    output_filename = os.path.join(path, out_filname)
+    output_filename = os.path.join(path, out_filename)
     if not os.path.exists(path):
         os.makedirs(path)
     with open(template_path, "r") as f:
@@ -269,7 +328,7 @@ def pivot_to_html_file(
         image_title=image_title,
         image1_src=image_list[0] if image_list and len(image_list) >= 1 else None,
         image2_src=image_list[1] if image_list and len(image_list) >= 2 else None,
-        table_title='Table'
+        table_title="Table",
     )
     with open(output_filename, "w") as f:
         f.write(final_html)
@@ -282,33 +341,34 @@ def generateStyledTable(data, headers, colalign):
         data, headers=headers, colalign=("right",), tablefmt="html"
     )
     soup = BeautifulSoup(table_html_str, "html.parser")
-    
+
     for table in soup.find_all("table"):
-        table["style"] =  "border-collapse: collapse; border: none;table-layout: fixed; width:95%;"
+        table["style"] = (
+            "border-collapse: collapse; border: none;table-layout: fixed; width:95%;"
+        )
 
     rows = soup.find_all("tr")
-    for i, row in enumerate(rows): # Add zebra stripes
-        if i % 2 == 0: 
-            row["style"] = "background-color: #e0e0e0;"  
+    for i, row in enumerate(rows):  # Add zebra stripes
+        if i % 2 == 0:
+            row["style"] = "background-color: #e0e0e0;"
 
     # Set column widths
     num_cols = len(headers)  # Assuming headers represent the number of columns
     col_width_percent = 100 / num_cols
     for row in rows:
         for cell in row.find_all("th"):
-            cell["Style"]= (
+            cell["Style"] = (
                 f" text-align: center; border:none; border-right:1px dotted #b0b0b0; font-size:smaller"
             )
-        for cell in row.find_all( "td"): 
-            cell["style"] = (
-                f"border:none;"
-            )
+        for cell in row.find_all("td"):
+            cell["style"] = f"border:none;"
 
     # Get the modified HTML
     # return str(soup.prettify(formatter="minimal")).replace("\n","")
-    html_str = str(soup.prettify(formatter="minimal"))#.replace("\n", "")
+    html_str = str(soup.prettify(formatter="minimal"))  # .replace("\n", "")
     # Remove whitespace around numbers
-    #html_str = re.sub(r"\s*(<|>)\s*", r"\1", html_str) 
+    # html_str = re.sub(r"\s*(<|>)\s*", r"\1", html_str)
     return html_str
+
 
 main()
