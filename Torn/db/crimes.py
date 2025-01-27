@@ -32,13 +32,29 @@ def create_crimes(conn, cursor, force=False):
     """
     )
 
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS crimeexp_ranks
-    (crimeexp_rank INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER UNIQUE NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-    )"""
-    )
+    cursor.executescript("""
+        CREATE TABLE IF NOT EXISTS crimeexp_ranks_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,  -- New primary key
+            batch_date DATE DEFAULT CURRENT_DATE,
+            user_id INTEGER NOT NULL,
+            crimeexp_rank INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(user_id),
+            UNIQUE (user_id, batch_date)  -- Ensure unique user rank per day
+            );
+        CREATE INDEX IF NOT EXISTS idx_crimeexp_ranks_batch_date 
+            ON crimeexp_ranks_history (batch_date DESC);
+        CREATE INDEX IF NOT EXISTS idx_crimeexp_ranks_rank 
+            ON crimeexp_ranks_history (crimeexp_rank ASC);                 
+        CREATE INDEX IF NOT EXISTS idx_crimeexp_ranks_batch_rank 
+            ON crimeexp_ranks_history (batch_date DESC, crimeexp_rank ASC);  
+
+        DROP VIEW IF EXISTS crimeexp_ranks;
+        CREATE VIEW crimeexp_ranks AS
+            SELECT ranks.*, users.name AS user_name, users.level as user_level
+            FROM crimeexp_ranks_history AS ranks
+            LEFT JOIN users ON users.user_id = ranks.user_id
+            WHERE batch_date = (SELECT MAX(batch_date) FROM crimeexp_ranks_history);                                                
+        """)
 
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS crimeInstances
@@ -335,7 +351,6 @@ def _insertCrimes_callback_fn(conn, cursor, crimeInstances, parameters):
     )
     conn.commit()
 
-
 def update_crimeexp_ranks(conn, cursor, force=False):
     crimeexp_ranks = cached_api_call(
         conn,
@@ -345,9 +360,21 @@ def update_crimeexp_ranks(conn, cursor, force=False):
         dataKey="crimeexp",
         force=force,
     )
-    cursor.execute("""DELETE FROM crimeexp_ranks""")
-    cursor.executemany(
-        """INSERT INTO crimeexp_ranks (user_id) VALUES (?)""",
-        [(user,) for user in crimeexp_ranks],
-    )
-    conn.commit()
+
+    if force:
+        cursor.execute("""DELETE FROM crimeexp_ranks_history""")  # Clear table if forced
+    else:
+        # Get the latest batch of rankings
+        cursor.execute("""SELECT user_id, crimeexp_rank, batch_date FROM crimeexp_ranks ORDER BY crimeexp_rank ASC""")
+        crimeexp_ranks = [row[0] for row in cursor.fetchall()]
+
+        # Compare rankings, insert only if different
+        # current_ranks = set(int(user) for user in crimeexp_ranks)  
+        # latest_ranks = set(int(row[0]) for row in cursor.fetchall())
+        if crimeexp_ranks != crimeexp_ranks: 
+            cursor.executemany(
+                """INSERT OR IGNORE INTO crimeexp_ranks_history (user_id, crimeexp_rank, batch_date) 
+                   VALUES (?, ?, CURRENT_DATE)""",
+                [(user, rank + 1) for rank, user in enumerate(crimeexp_ranks)], 
+            )
+            conn.commit()

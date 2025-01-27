@@ -1,10 +1,14 @@
 from itertools import zip_longest
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import os
 
-IMAGE_DEFAULT = {"WIDTH_INCHES": 12, "HEIGHT_INCHES": 6}
+# import numpy as np
 
+IMAGE_DEFAULT = {"WIDTH_INCHES": 12, "HEIGHT_INCHES": 6}
+user_colourList=None
 
 def plt_save_image(path, out_filename, show_image=False, clear_image=True):
     if path is not None and out_filename is not None:
@@ -15,8 +19,20 @@ def plt_save_image(path, out_filename, show_image=False, clear_image=True):
         plt.clf()
 
 
-import matplotlib.pyplot as plt
 
+
+def get_user_colourList(conn,cursor, cmap='magma'):
+    global user_colourList
+    cursor.execute('''SELECT crimeexp_rank AS rank, user_id, user_name FROM crimeexp_ranks ORDER BY 1 ASC''')
+    ranks= cursor.fetchall()
+    num_players = len(ranks)
+    cmap = cm.get_cmap(cmap)
+   # colors = cmap(np.linspace(0, 1, num_players))
+    colors = [cmap(i % cmap.N) for i in range(num_players)] 
+    
+    # Add colors to the rank data
+    user_colourList = [(rank[0], rank[1], rank[2], colors[i]) for i, rank in enumerate(ranks)]
+    return user_colourList
 
 def group_small_segments(
     labels, sizes, other_category_label="Others", other_threshold=0.05
@@ -68,6 +84,7 @@ def draw_donut_chart(
     out_filename=None,
     show_image=True,
 ):
+    global user_colourList
     if series is None:
         raise ValueError(
             "'series' is required : either a list of (size,label) tuples or values with the 'labels' in the labels param"
@@ -110,21 +127,34 @@ def draw_donut_chart(
     new_sizes = [size for label, size in series]
     if autopct is None:
         autopct = _make_autopct(new_sizes)
+    plt.figure()  # Create a new figure for the pie chart
+
+    # Get colors for the given labels (user_names)
+    colors = []
+    if user_colourList:
+        for label in new_labels:
+            for rank, user_id, user_name, color in user_colourList:
+                if user_name == label:
+                    colors.append(color)
+                    break
+            else:
+                colors.append('gray')  # You can change this to any default color
     plt.pie(
         new_sizes,
         labels=new_labels,
+        colors=colors ,  # Use the matched colors
         autopct=autopct,
         startangle=startangle,
         wedgeprops=dict(width=donut_width),
     )
     plt.title(title)
     plt.axis("equal")
+
     plt_save_image(
         path=path,
         out_filename=out_filename,
         show_image=False,
     )
-
 def _make_autopct(values, format_string = '{value:d}\n({percentage:.2f}%)'):
     def my_autopct(pct):
         total = sum(values)
@@ -185,6 +215,18 @@ def group_small_segments(
         # Not enough segments for "Other", return original list and empty other list
         return data_series, []
 
+def generate_colors_by_username(userLabels):
+  # Get colors for the given labels (user_names)
+    colors = []
+    if user_colourList:
+        for label in userLabels:
+            for rank, user_id, user_name, color in user_colourList:
+                if user_name == label:
+                    colors.append(color)
+                    break
+            else:
+                colors.append('gray')  # You can change this to any default color
+    return colors
 
 def draw_stackedarea_chart(
     width_inches=IMAGE_DEFAULT["WIDTH_INCHES"],
@@ -197,7 +239,9 @@ def draw_stackedarea_chart(
     series_data=[],
 ):
     fig, ax = plt.subplots(figsize=(width_inches, height_inches))  # Use plt.subplots()
-    ax.stackplot(xaxis_data, series_data.values(), labels=series_data.keys(), alpha=0.5)
+
+    colors=generate_colors_by_username(userLabels=series_data.keys())
+    ax.stackplot(xaxis_data, series_data.values(), labels=series_data.keys(),colors=colors, alpha=1)
     axes_box = ax.get_position()
     ax.set_position(
         [axes_box.x0 * 0.6, axes_box.y0, axes_box.width * 1, axes_box.height]

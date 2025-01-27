@@ -12,6 +12,7 @@ from Torn.charts import (
     _make_autopct,
     draw_donut_chart,
     draw_stackedarea_chart,
+    get_user_colourList,
     plt_save_image,
 )
 from Torn.db._globals import DB_CONNECTPATH
@@ -21,6 +22,7 @@ from Torn.manageDB import dumpResults, initDB
 conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
 cursor = conn.cursor()
 initDB(conn, cursor)  # creates the database structure if not already done
+get_user_colourList(conn,cursor, cmap='tab20c')
 conn.commit()
 
 
