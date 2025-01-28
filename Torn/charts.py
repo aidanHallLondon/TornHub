@@ -10,6 +10,9 @@ import os
 IMAGE_DEFAULT = {"WIDTH_INCHES": 12, "HEIGHT_INCHES": 6}
 user_colourList=None
 
+def init(conn,cursor):
+    load_user_colourList_for_charts(conn, cursor, cmap="tab20c")
+
 def plt_save_image(path, out_filename, show_image=False, clear_image=True):
     if path is not None and out_filename is not None:
         plt.savefig(os.path.join(path, out_filename), bbox_inches="tight")
@@ -18,10 +21,7 @@ def plt_save_image(path, out_filename, show_image=False, clear_image=True):
     if clear_image:
         plt.clf()
 
-
-
-
-def get_user_colourList(conn,cursor, cmap='magma'):
+def load_user_colourList_for_charts(conn,cursor, cmap='magma'):
     global user_colourList
     cursor.execute('''SELECT crimeexp_rank AS rank, user_id, user_name FROM crimeexp_ranks ORDER BY 1 ASC''')
     ranks= cursor.fetchall()
