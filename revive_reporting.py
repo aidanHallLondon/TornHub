@@ -2,7 +2,7 @@ import sqlite3
 from Torn.charts import init as charts_init, load_user_colourList_for_charts
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import dumpResults, initDB
-from reporting.faction_revives import (
+from Torn.reporting.faction_revives import (
     list_revivers_to_html_file,
     revivers_share_donut,
     revives_pivot_to_html_file,
