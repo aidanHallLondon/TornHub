@@ -352,7 +352,7 @@ def _insertCrimes_callback_fn(conn, cursor, crimeInstances, parameters):
     conn.commit()
 
 def update_crimeexp_ranks(conn, cursor, force=False):
-    crimeexp_ranks = cached_api_call(
+    crimeexp_ranks_from_api = cached_api_call(
         conn,
         cursor,
         endpoint="faction?selections=crimeexp",
@@ -360,21 +360,23 @@ def update_crimeexp_ranks(conn, cursor, force=False):
         dataKey="crimeexp",
         force=force,
     )
-
+    '''
+    Load the crimeExperience ranks from the api and check them against the view that filters out the latest batch 
+    If they are differnt insert tham as today's data. Ignore changes on any one day.
+    The table crimeexp_ranks_history data will include at most one batch per day and no two batches will be the same.
+    The view crimeexp_ranks just returns the newest batch.
+    '''
     if force:
         cursor.execute("""DELETE FROM crimeexp_ranks_history""")  # Clear table if forced
     else:
         # Get the latest batch of rankings
         cursor.execute("""SELECT user_id, crimeexp_rank, batch_date FROM crimeexp_ranks ORDER BY crimeexp_rank ASC""")
-        crimeexp_ranks = [row[0] for row in cursor.fetchall()]
-
-        # Compare rankings, insert only if different
-        # current_ranks = set(int(user) for user in crimeexp_ranks)  
-        # latest_ranks = set(int(row[0]) for row in cursor.fetchall())
-        if crimeexp_ranks != crimeexp_ranks: 
+        crimeexp_ranks_from_db = [row[0] for row in cursor.fetchall()]
+        if crimeexp_ranks_from_api != crimeexp_ranks_from_db: 
+            print("Crime Exp inject")
             cursor.executemany(
                 """INSERT OR IGNORE INTO crimeexp_ranks_history (user_id, crimeexp_rank, batch_date) 
                    VALUES (?, ?, CURRENT_DATE)""",
-                [(user, rank + 1) for rank, user in enumerate(crimeexp_ranks)], 
+                [(user, rank + 1) for rank, user in enumerate(crimeexp_ranks_from_api)], 
             )
             conn.commit()
