@@ -17,7 +17,6 @@ conn.commit()
 
 def main():
     path = "reports/faction/revives"
-    template_path = "templates/reports/revives/revivers_forum_list.html"
 
     revivers_share_donut(
         conn,
@@ -55,20 +54,20 @@ def main():
     list_revivers_to_html_file(
         conn,
         cursor,
-        template_path,
-        path,
+        template_file_path="templates/reports/revives/revivers_forum_list.html",
+        path=path,
         title_str="Revivers",
         out_filename="revivers_forum_list.html",
     )
 
-    template_path = "templates/reports/revives/pivot.html"
+    template_revives_pivot_to_html_file_path = "templates/reports/revives/pivot.html"
     path = "reports/faction/revives"
 
     revives_pivot_to_html_file(
         conn,
         cursor,
-        template_path,
-        path,
+        template_revives_pivot_to_html_file_path,
+        path=path,
         periodAlias="date",
         periodName="date",
         title_str="Revives pivot by date",
@@ -83,7 +82,7 @@ def main():
     revives_pivot_to_html_file(
         conn,
         cursor,
-        template_path,
+        template_revives_pivot_to_html_file_path,
         path,
         periodAlias="week",
         periodName="week",
@@ -95,7 +94,7 @@ def main():
         ],
         out_filename="by_week.html",
     )
-    # pivot_to_stacked_area_chart(
+
     revives_stackedarea_chart(
         conn,
         cursor,

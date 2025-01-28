@@ -147,7 +147,7 @@ def get_revives_pivotted(conn,cursor,periodAlias, periodName, totals=True):
 def list_revivers_to_html_file(
     conn,
     cursor,
-    template_path,
+    template_file_path,
     path,
     title_str="Revivers",
     out_filename="by_date.html",
@@ -162,7 +162,7 @@ def list_revivers_to_html_file(
     if not os.path.exists(path):
         os.makedirs(path)
 
-    with open(template_path, "r") as f:
+    with open(template_file_path, "r") as f:
         soup = BeautifulSoup(f.read(), "html.parser")
     soup.find("span", id="generated_date_field").string = datetime.datetime.now(
         datetime.UTC
@@ -210,7 +210,7 @@ def list_revivers_to_html_file(
 
 def revives_pivot_to_html_file(
     conn,cursor,
-    template_path,
+    template_file_path,
     path,
     periodAlias,
     periodName,
@@ -230,7 +230,7 @@ def revives_pivot_to_html_file(
     output_filename = os.path.join(path, out_filename)
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(template_path, "r") as f:
+    with open(template_file_path, "r") as f:
         html_template = Template(f.read())
     final_html = html_template.substitute(
         page_title=title_str,
