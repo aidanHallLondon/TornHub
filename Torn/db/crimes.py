@@ -101,8 +101,12 @@ def create_crimes(conn, cursor, force=False):
     )
 
     # Create the crime_names table with generated id
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS crime_names (name TEXT PRIMARY KEY);"""
+    cursor.executescript(
+        """DROP TABLE IF EXISTS crime_names;
+        CREATE TABLE IF NOT EXISTS crime_names (
+            name TEXT PRIMARY KEY,
+            level INTEGER
+        );"""
     )
 
     # Create the crime_positions table

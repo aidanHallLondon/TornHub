@@ -331,7 +331,9 @@ def _api_raw_call(conn, cursor, url, params=None):
 
         data = response.json()
         if "error" in data:
+            print('\n\nError ',data)
             raise APIError(data["error"])  # Raise a custom APIError
+        # 
         print(TEXT["API_CALL"],end='',flush=True)
         return data
 

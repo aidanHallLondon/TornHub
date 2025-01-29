@@ -8,14 +8,64 @@ from Torn.reporting.faction_revives import (
     revives_pivot_to_html_file,
     revives_stackedarea_chart,
 )
+from Torn.reporting.crimes import crimeexp_rank_bump_plot
 
 conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
 cursor = conn.cursor()
 initDB(conn, cursor)  # creates the database structure if not already done
-charts_init(conn, cursor)
+charting_meta_data = charts_init(conn, cursor)
+user_colourList = charting_meta_data["colourList"]
 conn.commit()
 
+
 def main():
+    faction_revive_reporting()
+    faction_crime_reporting()
+
+
+def faction_crime_reporting():
+    path = "reports/faction/crimes"
+    out_filename = "bumps3"
+    #
+    crimeexp_rank_bump_plot(
+        conn,
+        cursor,
+        user_colourList,
+        limit_window=(1, 100),
+        path=path,
+        out_filename="Crime_experience_ranks_all",
+        show_image=False,
+    )
+    crimeexp_rank_bump_plot(
+        conn,
+        cursor,
+        user_colourList,
+        limit_window=(1, 25),
+        path=path,
+        out_filename="Crime_experience_ranks_top25",
+        show_image=False,
+    )
+    crimeexp_rank_bump_plot(
+        conn,
+        cursor,
+        user_colourList,
+        limit_window=(1, 50),
+        path=path,
+        out_filename="Crime_experience_ranks_top50",
+        show_image=False,
+    )
+    crimeexp_rank_bump_plot(
+        conn,
+        cursor,
+        user_colourList,
+        limit_window=( 50,100),
+        path=path,
+        out_filename="Crime_experience_ranks_bottom50",
+        show_image=False,
+    )
+
+
+def faction_revive_reporting():
     path = "reports/faction/revives"
 
     revivers_share_donut(
@@ -94,7 +144,7 @@ def main():
         ],
         out_filename="by_week.html",
     )
-
+    # pivot_to_stacked_area_chart(
     revives_stackedarea_chart(
         conn,
         cursor,

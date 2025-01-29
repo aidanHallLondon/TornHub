@@ -1,7 +1,6 @@
 from itertools import zip_longest
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import os
 
@@ -11,10 +10,12 @@ IMAGE_DEFAULT = {"WIDTH_INCHES": 12, "HEIGHT_INCHES": 6}
 user_colourList=None
 
 def init(conn,cursor):
-    load_user_colourList_for_charts(conn, cursor, cmap="tab20c")
+    return {'colourList':load_user_colourList_for_charts(conn, cursor, cmap="tab20c")}
 
 def plt_save_image(path, out_filename, show_image=False, clear_image=True):
     if path is not None and out_filename is not None:
+        if not os.path.exists(path):
+            os.makedirs(path)
         plt.savefig(os.path.join(path, out_filename), bbox_inches="tight")
     if show_image:
         plt.show()
@@ -22,17 +23,19 @@ def plt_save_image(path, out_filename, show_image=False, clear_image=True):
         plt.clf()
 
 def load_user_colourList_for_charts(conn,cursor, cmap='magma'):
+    '''
+    color_for_named_user = user_colour_dict.get(user_name, "grey")
+    '''
     global user_colourList
     cursor.execute('''SELECT crimeexp_rank AS rank, user_id, user_name FROM crimeexp_ranks ORDER BY 1 ASC''')
     ranks= cursor.fetchall()
     num_players = len(ranks)
     cmap = cm.get_cmap(cmap)
-   # colors = cmap(np.linspace(0, 1, num_players))
+    # colors = cmap(np.linspace(0, 1, num_players))
     colors = [cmap(i % cmap.N) for i in range(num_players)] 
-    
     # Add colors to the rank data
     user_colourList = [(rank[0], rank[1], rank[2], colors[i]) for i, rank in enumerate(ranks)]
-    return user_colourList
+    return user_colourList # [ (rank, user_id, user_name, color),...]
 
 def group_small_segments(
     labels, sizes, other_category_label="Others", other_threshold=0.05
