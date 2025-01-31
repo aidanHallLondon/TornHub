@@ -4,32 +4,55 @@ from Torn.api import paginated_api_calls, cached_api_call, cached_api_paged_call
 
 
 def create_crimes(conn, cursor, force=False):
+
     if force:
-        cursor.execute("DROP TABLE IF EXISTS crimes_version;")
-        cursor.execute("DROP TABLE IF EXISTS crimeInstances;")
-        cursor.execute("DROP TABLE IF EXISTS crime_status;")
-        cursor.execute("DROP TABLE IF EXISTS crime_slots;")
-        cursor.execute("DROP TABLE IF EXISTS slot_assignments;")
-        cursor.execute("DROP TABLE IF EXISTS crime_names;")
-        cursor.execute("DROP TABLE IF EXISTS crime_positions;")
-        cursor.execute("DROP TABLE IF EXISTS crimeexp_ranks;")
+        print("Warning: create_crimes force=True")
+        cursor.execute("DROP TABLE IF EXISTS oc_crime_instances;")
+        cursor.execute("DROP TABLE IF EXISTS oc_versions;")
+        cursor.execute("DROP TABLE IF EXISTS oc_statuses;")
+        cursor.execute("DROP TABLE IF EXISTS oc_slots;")
+        cursor.execute("DROP TABLE IF EXISTS oc_assignments;")
+        cursor.execute("DROP TABLE IF EXISTS oc_assignments_history;")
+        cursor.execute("DROP TABLE IF EXISTS oc_names;")
+        cursor.execute("DROP TABLE IF EXISTS oc_positions;")
 
-        cursor.execute("DROP VIEW IF EXISTS crime_slot_assignments_view;")
-        cursor.execute("DROP VIEW IF EXISTS crime_name_positions_view;")
-        cursor.execute("DROP VIEW IF EXISTS _rowCounts;")
-        cursor.execute("DROP VIEW IF EXISTS crimeInstance_cube;")
-
-    cursor.executescript(
-        """CREATE TABLE IF NOT EXISTS crimes_version
-    (version_id INTEGER PRIMARY KEY, 
-    name TEXT, 
-    start_at DATETIME);
+        cursor.execute("DROP VIEW IF EXISTS oc_assignments_view;")
+        cursor.execute("DROP VIEW IF EXISTS oc_name_positions_view;")
+        cursor.execute("DROP VIEW IF EXISTS oc_crime_instances_cube;")
+    cursor.executescript("""          
+        CREATE TABLE IF NOT EXISTS oc_assignments_history (
+            assignment_history_id INTEGER PRIMARY KEY AUTOINCREMENT,  
+            batch_id INTEGER NOT NULL, 
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, -- time captured
+            version_id INTEGER,
+            crime_instance_id INTEGER NOT NULL,
+            created DATETIME NOT NULL,
+            oc_name TEXT NOT NULL,
+            difficulty INTEGER NOT NULL,
+            status TEXT NOT NULL,                
+            slot_id INTEGER NOT NULL,  
+            position TEXT NOT NULL,  
+            item_requirement_id INTEGER,
+            joined_at DATETIME,
+            success_chance REAL NOT NULL,
+            progress REAL NOT NULL,
+            user_id INTEGER,
+            user_name TEXT
+        );
     
-    INSERT OR IGNORE INTO crimes_version (version_id, name, start_at) 
-    VALUES 
-            (1, 'orginal high success chances','2024-12-31'), 
-            (2, 'Lowered successes for new crime instances','2025-01-09');                  
-    """
+        """)
+    
+    cursor.executescript("""
+    CREATE TABLE IF NOT EXISTS oc_versions
+        (version_id INTEGER PRIMARY KEY, 
+        name TEXT, 
+        start_at DATETIME);
+        
+        INSERT OR IGNORE INTO oc_versions (version_id, name, start_at) 
+        VALUES 
+                (1, 'orginal high success chances','2024-12-31'), 
+                (2, 'Lowered successes for new crime instances','2025-01-09');                  
+        """
     )
 
     cursor.executescript("""
@@ -57,76 +80,78 @@ def create_crimes(conn, cursor, force=False):
         """)
 
     cursor.execute(
-        """CREATE TABLE IF NOT EXISTS crimeInstances
-    (crimeInstance_id INTEGER PRIMARY KEY, 
+        """CREATE TABLE IF NOT EXISTS oc_crime_instances
+    (crime_instance_id INTEGER PRIMARY KEY, 
     version_id INTEGER,
     name TEXT, 
     difficulty INTEGER,
-    crime_status TEXT, 
+    status TEXT, 
     created_at DATETIME, 
     initiated_at DATETIME,
     planning_at DATETIME, 
     ready_at DATETIME, 
     expired_at DATETIME,
-    FOREIGN KEY (name) REFERENCES crime_names(name)
-    FOREIGN KEY (version_id) REFERENCES crimes_version(version_id),
-    FOREIGN KEY (crime_status) REFERENCES crime_status(crime_status)
+    FOREIGN KEY (name) REFERENCES oc_names(name)
+    FOREIGN KEY (version_id) REFERENCES oc_versions(version_id),
+    FOREIGN KEY (status) REFERENCES oc_statuses(status)
     )"""
     )
 
     cursor.execute(
-        """CREATE TABLE IF NOT EXISTS crime_status (crime_status TEXT PRIMARY KEY)"""
+        """CREATE TABLE IF NOT EXISTS oc_statuses (
+        status TEXT PRIMARY KEY
+        )"""
     )
 
     cursor.execute(
-        """CREATE TABLE IF NOT EXISTS crime_slots
+        """CREATE TABLE IF NOT EXISTS oc_slots
     (crime_slot_id INTEGER PRIMARY KEY AUTOINCREMENT, 
-    crimeInstance_id INTEGER,
+    crime_instance_id INTEGER,
     position TEXT, item_requirement_id INTEGER, 
-    FOREIGN KEY (crimeInstance_id) REFERENCES crimeInstances (crimeInstance_id)
+    FOREIGN KEY (crime_instance_id) REFERENCES oc_crime_instances (crime_instance_id)
     )"""
     )
 
     cursor.execute(
-        """CREATE TABLE IF NOT EXISTS slot_assignments
+        """CREATE TABLE IF NOT EXISTS oc_assignments
     (slot_assignment_id INTEGER PRIMARY KEY AUTOINCREMENT, 
      crime_slot_id INTEGER,
      user_id INTEGER DEFAULT NULL, 
      joined_at DATETIME, 
      progress REAL,
      success_chance REAL,
-     FOREIGN KEY (crime_slot_id) REFERENCES crime_slots (crime_slot_id), 
+     FOREIGN KEY (crime_slot_id) REFERENCES oc_slots (crime_slot_id), 
      FOREIGN KEY (user_id) REFERENCES users(user_id)
      );"""
     )
 
-    # Create the crime_names table with generated id
+    # Create the oc_names table with generated id
     cursor.executescript(
-        """DROP TABLE IF EXISTS crime_names;
-        CREATE TABLE IF NOT EXISTS crime_names (
+        """DROP TABLE IF EXISTS oc_names;
+        CREATE TABLE IF NOT EXISTS oc_names (
             name TEXT PRIMARY KEY,
             level INTEGER
         );"""
     )
 
-    # Create the crime_positions table
+    # Create the oc_positions table
     cursor.execute(
-        """CREATE TABLE IF NOT EXISTS crime_positions (
+        """CREATE TABLE IF NOT EXISTS oc_positions (
     crime_position_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    crime_name TEXT,  
+    name TEXT,  
     position TEXT,
-    FOREIGN KEY (crime_name) REFERENCES crime_names (name)
+    FOREIGN KEY (name) REFERENCES oc_names (name)
     )"""
     )
 
     cursor.executescript(
-        """DROP VIEW IF EXISTS crime_slot_assignments_view;
-    CREATE VIEW crime_slot_assignments_view AS
+        """DROP VIEW IF EXISTS oc_assignments_view;
+    CREATE VIEW oc_assignments_view AS
     SELECT
-        ci.crimeInstance_id,
-        ci.name AS crime_name,
+        ci.crime_instance_id,
+        ci.name AS name,
         ci.difficulty AS crime_difficulty,
-        ci.crime_status,                
+        ci.status,                
         cs.crime_slot_id,
         cs.position AS slot_position,  -- Rename to avoid ambiguity
         cs.item_requirement_id,
@@ -139,48 +164,33 @@ def create_crimes(conn, cursor, force=False):
         users.position_in_faction ,   
         users.last_action AS user_last_action,
         users.is_in_faction AS user_is_in_faction           
-    FROM crimeInstances ci 
-    LEFT JOIN crime_slots cs ON cs.crimeInstance_id = ci.crimeInstance_id
-    LEFT JOIN slot_assignments sa ON cs.crime_slot_id = sa.crime_slot_id
+    FROM oc_crime_instances ci 
+    LEFT JOIN oc_slots cs ON cs.crime_instance_id = ci.crime_instance_id
+    LEFT JOIN oc_assignments sa ON cs.crime_slot_id = sa.crime_slot_id
     LEFT JOIN users ON sa.user_id = users.user_id;
         """
     )
 
     cursor.executescript(
-        """DROP VIEW IF EXISTS crime_name_positions_view;
-    CREATE VIEW crime_name_positions_view AS
+        """DROP VIEW IF EXISTS oc_name_positions_view;
+    CREATE VIEW oc_name_positions_view AS
     SELECT
         cn.name AS crime_name,
         cp.position
-    FROM crime_names cn
-    INNER JOIN crime_positions cp ON cn.name = cp.crime_name;"""
+    FROM oc_names cn
+    INNER JOIN oc_positions cp ON cn.name = cp.name;"""
     )
 
-    cursor.executescript(
-        """DROP VIEW IF EXISTS _rowCounts ;
-    CREATE VIEW _rowCounts AS
-        SELECT 'crime_name_positions_view' AS "name", 'view' AS "type", COUNT(*) AS "rows" FROM "crime_name_positions_view"
-        UNION SELECT 'crime_names' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crime_names"
-        UNION SELECT 'crime_positions' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crime_positions"
-        UNION SELECT 'crime_slot_assignments_view' AS "name", 'view' AS "type", COUNT(*) AS "rows" FROM "crime_slot_assignments_view"
-        UNION SELECT 'crime_slots' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crime_slots"
-        UNION SELECT 'crimeInstances' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crimeInstances"
-        UNION SELECT 'crimes_version' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "crimes_version"
-        UNION SELECT 'preferences' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "preferences"
-        UNION SELECT 'slot_assignments' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "slot_assignments"
-        UNION SELECT 'sqlite_sequence' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "sqlite_sequence"
-        UNION SELECT 'users' AS "name", 'table' AS "type", COUNT(*) AS "rows" FROM "users"
-      """
-    )
+  
 
     cursor.executescript(
-        """DROP VIEW IF EXISTS crimeInstance_cube ;
-    CREATE VIEW crimeInstance_cube AS
+        """DROP VIEW IF EXISTS oc_crime_instances_cube ;
+    CREATE VIEW oc_crime_instances_cube AS
     SELECT
-        ci.crimeInstance_id,
+        ci.crime_instance_id,
         ci.name AS crime_name,
         ci.difficulty AS crime_difficulty,
-        ci.crime_status AS crime_status,
+        ci.status AS status,
         ci.created_at AS crime_created_at,
         ci.initiated_at AS crime_initiated_at,
         ci.planning_at AS crime_planning_at,
@@ -208,11 +218,11 @@ def create_crimes(conn, cursor, force=False):
         u.is_in_oc AS user_is_in_oc,
         u.is_revivable AS user_is_revivable
     FROM
-        crimeInstances ci
+        oc_crime_instances ci
     LEFT JOIN
-        crime_slots cs ON ci.crimeInstance_id = cs.crimeInstance_id
+        oc_slots cs ON ci.crime_instance_id = cs.crime_instance_id
     LEFT JOIN
-        slot_assignments sa ON cs.crime_slot_id = sa.crime_slot_id
+        oc_assignments sa ON cs.crime_slot_id = sa.crime_slot_id
     LEFT JOIN
         users u ON sa.user_id = u.user_id;
     """
@@ -228,18 +238,21 @@ def update_crimes(conn, cursor,force=False):
     """
     timestamp_field="created_at"
     if force:
-        cursor.execute("DELETE FROM crimeInstances;")
-        cursor.execute("DELETE FROM crimeexp_ranks;")
+        cursor.execute("DELETE FROM oc_crime_instances;")
         latest_timestamp = None
+        assigments_batch_id=1000
         print("!",end="")
     else:
-        cursor.execute(f"SELECT MAX({timestamp_field}) AS last_timestamp FROM crimeInstances;")
+        cursor.execute(f"SELECT MAX({timestamp_field}) AS last_timestamp FROM oc_crime_instances;")
         latest_timestamp_datetime = cursor.fetchone()[0]
         latest_timestamp =datetime.fromisoformat(latest_timestamp_datetime).timestamp() if latest_timestamp_datetime else None   
-
+        cursor.execute(f"SELECT MAX(batch_id) AS last_batch_id FROM oc_assignments_history;")
+        latest_batch_id = cursor.fetchone()[0]
+        assigments_batch_id = latest_batch_id if latest_batch_id else 1000 
+        assigments_batch_id += 1
     update_crimeexp_ranks(conn, cursor, force)
 
-    crimeInstances = paginated_api_calls(
+    oc_crime_instances = paginated_api_calls(
         conn,
         cursor,
         endpoint="faction/crimes",
@@ -248,13 +261,20 @@ def update_crimes(conn, cursor,force=False):
         fromTimestamp=latest_timestamp,
         dataKey="crimes",
         callback=_insertCrimes_callback_fn,  # callback
-        callback_parameters=None,
+        callback_parameters={"assigments_batch_id":assigments_batch_id},
         short_name="crimes",
     )
+    add_item_requirement_ids_to_items_table(conn,cursor)
 
+def add_item_requirement_ids_to_items_table(conn,cursor):
+    cursor.execute("""
+        INSERT OR IGNORE INTO items (item_id) 
+        SELECT DISTINCT item_requirement_id FROM oc_slots;
+    """)
 
-def _insertCrimes_callback_fn(conn, cursor, crimeInstances, parameters):
-    for crime in crimeInstances:
+def _insertCrimes_callback_fn(conn, cursor, oc_crime_instances, parameters):
+    assigments_batch_id = parameters["assigments_batch_id"]
+    for crime in oc_crime_instances:
         try:
             created_at = datetime.fromtimestamp(crime["created_at"]).isoformat()
             version_id = (
@@ -264,7 +284,7 @@ def _insertCrimes_callback_fn(conn, cursor, crimeInstances, parameters):
             )
             cursor.execute(
                 """
-                    INSERT INTO crimeInstances (crimeInstance_id, version_id, name, difficulty, crime_status, created_at, 
+                    INSERT INTO oc_crime_instances (crime_instance_id, version_id, name, difficulty, status, created_at, 
                                initiated_at, planning_at, ready_at, expired_at)
                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
@@ -305,8 +325,8 @@ def _insertCrimes_callback_fn(conn, cursor, crimeInstances, parameters):
                 slot["item_requirement"]["id"] if slot["item_requirement"] else None
             )
             cursor.execute(
-                """INSERT OR REPLACE INTO crime_slots 
-                              (crimeInstance_id, position, item_requirement_id)
+                """INSERT OR REPLACE INTO oc_slots 
+                              (crime_instance_id, position, item_requirement_id)
                               VALUES (?, ?, ?)""",
                 (crime["id"], slot["position"], item_requirement_id),
             )
@@ -315,7 +335,7 @@ def _insertCrimes_callback_fn(conn, cursor, crimeInstances, parameters):
             if slot["user"]:
                 cursor.execute(
                     """
-                        INSERT OR REPLACE INTO slot_assignments 
+                        INSERT OR REPLACE INTO oc_assignments 
                                 (crime_slot_id, user_id, joined_at, success_chance, progress)
                                 VALUES (?, ?, ?, ?, ?)""",
                     (
@@ -326,30 +346,50 @@ def _insertCrimes_callback_fn(conn, cursor, crimeInstances, parameters):
                         slot["user"]["progress"],
                     ),
                 )
-
-    # Insert distinct crime names into crime_names table
+                
+                cursor.execute("""
+                    INSERT INTO oc_assignments_history (
+                        batch_id,
+                        crime_instance_id, version_id,
+                        created, status,  
+                        oc_name, difficulty,              
+                        slot_id, position, item_requirement_id,
+                        joined_at, success_chance, progress,
+                        user_id)            
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """,(
+                        assigments_batch_id,
+                        crime["id"],version_id,
+                        created_at, crime["status"],
+                        crime["name"], crime["difficulty"],
+                        crime_slot_id, slot["position"], item_requirement_id,
+                        datetime.fromtimestamp(slot["user"]["joined_at"]).isoformat(), slot["success_chance"], slot["user"]["progress"],
+                        slot["user"]["id"]
+                ))
+          
+    # Insert distinct crime names into oc_names table
     cursor.execute(
         """
-            INSERT OR IGNORE INTO crime_status (crime_status)
-            SELECT DISTINCT crime_status FROM crimeInstances"""
+            INSERT OR IGNORE INTO oc_statuses (status)
+            SELECT DISTINCT status FROM oc_crime_instances"""
     )
 
     cursor.execute(
         """
-            INSERT OR IGNORE INTO crime_names (name) 
-            SELECT DISTINCT name FROM crimeInstances"""
+            INSERT OR IGNORE INTO oc_names (name) 
+            SELECT DISTINCT name FROM oc_crime_instances"""
     )
 
     # # Insert positions for each crime name
-    cursor.execute("""DELETE FROM crime_positions """)
+    cursor.execute("""DELETE FROM oc_positions """)
     cursor.execute(
         """
-                    INSERT OR IGNORE INTO crime_positions (crime_name, position)
+                    INSERT OR IGNORE INTO oc_positions (name, position)
                         SELECT DISTINCT name, position FROM (
                         SELECT DISTINCT cn.name, cs.position
-                        FROM crimeInstances c 
-                        INNER JOIN crime_names cn ON cn.name = c.name
-                        INNER JOIN crime_slots cs ON c.crimeInstance_id = cs.crimeInstance_id 
+                        FROM oc_crime_instances c 
+                        INNER JOIN oc_names cn ON cn.name = c.name
+                        INNER JOIN oc_slots cs ON c.crime_instance_id = cs.crime_instance_id 
                         ) AS T1
      """
     )
@@ -371,7 +411,7 @@ def update_crimeexp_ranks(conn, cursor, force=False):
     The view crimeexp_ranks just returns the newest batch.
     '''
     if force:
-        cursor.execute("""DELETE FROM crimeexp_ranks_history""")  # Clear table if forced
+        cursor.execute("""--DELETE FROM crimeexp_ranks_history""")  # Clear table if forced
     else:
         # Get the latest batch of rankings
         cursor.execute("""SELECT user_id, crimeexp_rank, batch_date FROM crimeexp_ranks ORDER BY crimeexp_rank ASC""")

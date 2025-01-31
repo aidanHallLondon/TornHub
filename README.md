@@ -32,7 +32,7 @@ Then pick a script and run it like this
 
 The hub contains a number of views that join the main tables to make it easier to query the data. You can look at the schema and copy these to make you own queries or use them as a starting point and filter the results as you need.
 
-* crimeInstance_cube              | A huge table of all the crimeInstances, role slots and assignments
+* oc_crime_instances_cube              | A huge table of all the crimeInstances, role slots and assignments
 * crime_name_positions_view       | Crime Names and positions for each are in two tables, this is a single view to help iterate
 * crime_slot_assignments_view     | All assigned users and details
 

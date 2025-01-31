@@ -1,6 +1,22 @@
 from bs4 import BeautifulSoup
 from tabulate import tabulate
 
+
+def html_table(cursor,data=None):
+    colalign = {  # Define alignments directly
+        'date': 'left',
+        'amount': 'right',
+        'balance': 'right', #Example of multiple columns
+}
+    if data is None:
+        data=cursor.fetchall()
+    if not data: return
+    headers = [description[0] for description in cursor.description]
+    colalign_list = [colalign.get(h.lower(), 'center') for h in headers] # Concise list creation
+    table_html_str = tabulate(data,headers,tablefmt="html",colalign=colalign_list)
+    return table_html_str
+
+
 def generateStyledTable(data, headers, colalign):
     # generate html table
     table_html_str = tabulate(

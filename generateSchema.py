@@ -11,7 +11,7 @@ cursor = conn.cursor()
 initDB(conn,cursor)
 updateDB(conn,cursor)
 cursor.execute('''SELECT schema.type, schema.name,rows as row_count FROM sqlite_master AS Schema 
-               LEFT JOIN _rowCounts as rc ON rc.name = Schema.name AND rc.type = Schema.type
+               LEFT JOIN _row_counts as rc ON rc.name = Schema.name AND rc.type = Schema.type
                WHERE Schema.name NOT LIKE '[_]%' 
                ORDER BY 3 DESC,2,1''')
 print(tabulate(cursor.fetchall(), headers= [desc[0] for desc in cursor.description], tablefmt="simple"))

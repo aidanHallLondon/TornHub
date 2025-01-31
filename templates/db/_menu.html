@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Torn hub</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif; /* Apply sans-serif font to the entire body */
+        color: #444; /* Set default text color to #444 */
+      }
+      ul {
+        list-style: none;  
+        padding: 0; 
+        margin: 0 0 0 0;  
+      }
+      ul ul {
+        margin: 0 0 0 1em;  
+      }
+
+      li {
+        padding: 0.125em 0;  
+      }
+      li:not(:has(ul)) {
+            margin: 0 0 0 1em;
+            /* Styles for li elements that do NOT contain a ul */
+        }
+      a {
+        text-decoration: none; /* Remove underlines by default */
+      }
+
+      a:hover {
+        text-decoration: underline; /* Add underline on hover */
+      }
+
+      li a .row_count{
+        font-size: 8pt;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="menu">$content_html</div>
+  </body>
+</html>

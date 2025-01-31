@@ -107,7 +107,7 @@ def get_revives_pivotted(conn,cursor,periodAlias, periodName, totals=True):
             """
     SELECT 'Total' as $periodAlias,  
              $player_case_statements       
-        FROM RevivesBy$periodName
+        FROM revives_by_$periodName
     UNION ALL """
             if totals
             else " "
@@ -115,13 +115,13 @@ def get_revives_pivotted(conn,cursor,periodAlias, periodName, totals=True):
         + """
     SELECT period as $periodAlias,
              $player_case_statements
-        FROM RevivesBy$periodName 
+        FROM revives_by_$periodName 
         GROUP BY period 
         ORDER BY 1 DESC;
    """
     )
     cursor.execute(
-        f"SELECT DISTINCT user_name FROM revivesBy{periodName} ORDER BY 1 ASC"
+        f"SELECT DISTINCT user_name FROM revives_by_{periodName} ORDER BY 1 ASC"
     )
     players = [row[0] for row in cursor.fetchall()]
     player_case_statements = ", ".join(

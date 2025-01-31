@@ -36,12 +36,12 @@ def api_semaphore_check(conn, cursor):
         while True:
             semaphore_cutoff_time = time.time() - API_SEMAPHORE_CALL_RATE["WINDOW"]
             cursor.execute(
-                "DELETE FROM apiSemaphores WHERE timestamp < ?",
+                "DELETE FROM api_semaphores WHERE timestamp < ?",
                 (semaphore_cutoff_time,),
             )
             conn.commit()  # Commit after deleting
             cursor.execute(
-                "SELECT COUNT(*) AS call_count, MIN(timestamp) AS oldestTimeStamp FROM apiSemaphores"
+                "SELECT COUNT(*) AS call_count, MIN(timestamp) AS oldestTimeStamp FROM api_semaphores"
             )
             semaphore_count, oldest_timestamp = cursor.fetchone()
 
@@ -71,7 +71,7 @@ def api_semaphore_check(conn, cursor):
                         print(TEXT["PAUSE"], end="", flush=True)
                     time.sleep(API_SEMAPHORE_CALL_RATE["THROTTLE_TIME"])
                 cursor.execute(
-                    "INSERT INTO apiSemaphores (timestamp) VALUES (?)", (time.time(),)
+                    "INSERT INTO api_semaphores (timestamp) VALUES (?)", (time.time(),)
                 )
                 conn.commit()  # Commit after inserting
                 break  # Exit the loop when a semaphore is acquired
@@ -331,7 +331,7 @@ def _api_raw_call(conn, cursor, url, params=None):
 
         data = response.json()
         if "error" in data:
-            print('\n\nError ',data)
+            print(f'\n\nError url={url} \ndata={data}')
             raise APIError(data["error"])  # Raise a custom APIError
         # 
         print(TEXT["API_CALL"],end='',flush=True)

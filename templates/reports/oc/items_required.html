@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>$page_title</title>
+    <style>
+      body {
+        font-family: sans-serif; /* Apply sans-serif font to the entire body */
+        color: #444; /* Set default text color to #444 */
+      }
+
+      table {
+        border-collapse: collapse; /* Collapse borders for consistent striping */
+        border: 1px dotted #1115;
+      }
+      table thead tr{ background-color:#ddf8 ; font-weight: bold; border-bottom: 1px dotted #1115;}
+      table tr:nth-child(even) { background-color: #ddf6; /* Light gray for even rows */}
+
+      table td:nth-child(even),table th:nth-child(even) {  background-color: #ddf4;   }
+
+      th,
+      td {
+        border: none;
+        padding: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>$page_title</h1>
+    <h2>$table_title</h2>
+    $table_html
+  </body>
+</html>

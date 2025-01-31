@@ -2,6 +2,7 @@ import sqlite3
 from Torn.charts import init as charts_init, load_user_colourList_for_charts
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import dumpResults, initDB
+from Torn.reporting.all_tables import browse_tables
 from Torn.reporting.faction_revives import (
     list_revivers_to_html_file,
     revivers_share_donut,
@@ -9,6 +10,7 @@ from Torn.reporting.faction_revives import (
     revives_stackedarea_chart,
 )
 from Torn.reporting.crimes import crimeexp_rank_bump_plot
+from Torn.reporting.oc import oc_item_requirements
 
 conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
 cursor = conn.cursor()
@@ -19,8 +21,26 @@ conn.commit()
 
 
 def main():
+    print("Db------------")
+    db_reporting()
     faction_revive_reporting()
     faction_crime_reporting()
+    faction_oc_reporting()
+    conn.close()
+
+def db_reporting():
+    browse_tables(conn,cursor)
+              
+def faction_oc_reporting():
+    path = "reports/faction/oc"
+    template_path="templates/reports/oc"
+    #
+   #
+    oc_item_requirements(conn,cursor,
+                        template_file_path="templates/reports/oc/items_required.html",
+                        title_str="Items Required",
+                        path =path,
+                        out_filename="items_required.html",)
 
 
 def faction_crime_reporting():

@@ -10,6 +10,7 @@ from Torn.db.attacks import create_attacks, update_attacks
 from Torn.db.crimes import create_crimes, update_crimes
 from Torn.db.faction import create_faction, update_faction
 from Torn.db.faction_upgrades import create_faction_upgrades, update_faction_upgrades
+from Torn.db.items import create_items, update_items
 from Torn.db.revives import create_revives, update_revives
 from Torn.db.users import create_users, update_faction_members
 from Torn.db._globals import DB_PATH, DB_NAME, DB_CONNECTPATH
@@ -23,6 +24,7 @@ if not os.path.exists(DB_PATH):
 
 
 def initDB(conn,cursor,force=False):
+    create_items(conn,cursor, force=force)
     create_faction(conn,cursor, force=force)
     conn.commit()
     create_admin(conn,cursor, force=force)
@@ -43,6 +45,7 @@ def updateDB(conn,cursor,force=False):
     update_faction_members(conn,cursor)
     update_revives(conn,cursor, force=force) # FORCE FORCE
     update_crimes(conn,cursor, force=force)
+    update_items(conn,cursor, force=force) # should occur AFTER crimes may add new items to be looked up
     update_applications(conn,cursor)
     update_armory(conn, cursor)
     update_faction_upgrades(conn,cursor,)
@@ -66,7 +69,7 @@ def dumpResults(conn,cursor, tablefmt="simple"):
 def cleanUpFKIssues(conn,cursor):
     cursor.execute(
         """ 
-        UPDATE slot_assignments 
+        UPDATE oc_assignments 
             SET user_id = NULL 
                 WHERE user_id NOT IN (SELECT user_id FROM users);
     """

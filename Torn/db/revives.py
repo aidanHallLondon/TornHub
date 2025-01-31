@@ -46,6 +46,8 @@ def create_revives(conn, cursor, force=False):
     # a view to see revives by user by date
     cursor.executescript('''
   DROP  VIEW IF EXISTS revivers;
+  DROP  VIEW IF EXISTS revives_by_date;
+  DROP  VIEW IF EXISTS revives_by_week;
   DROP  VIEW IF EXISTS revivesByDate;
   DROP  VIEW IF EXISTS revivesByWeek;
 
@@ -66,7 +68,7 @@ def create_revives(conn, cursor, force=False):
                         revives.reviver_id,
                     r_user.name;                      
 
-  CREATE VIEW revivesByDate AS 
+  CREATE VIEW revives_by_date AS 
         WITH RECURSIVE date_series(dt) AS (
         SELECT MIN(dayDate) 
         FROM (
@@ -85,7 +87,7 @@ def create_revives(conn, cursor, force=False):
             GROUP BY
             r_user.name,
             dayDate
-        ) AS RevivesByDate
+        ) AS revives_by_date
         UNION 
         SELECT date(dt, '+1 day')
         FROM date_series
@@ -106,9 +108,9 @@ def create_revives(conn, cursor, force=False):
             GROUP BY
                 r_user.name,
                 dayDate
-            ) AS RevivesByDate
+            ) AS revives_by_date
         )
-        ), RevivesByDate AS (
+        ), revives_by_date AS (
         SELECT
             r_user.name AS user_name,
             DATE(revives.timestamp) AS dayDate,
@@ -127,12 +129,12 @@ def create_revives(conn, cursor, force=False):
         )
         , DateSeries AS (
         SELECT DISTINCT dayDate
-        FROM RevivesByDate
+        FROM revives_by_date
         UNION 
         SELECT dt FROM date_series
         ), PlayerSeries AS (
         SELECT DISTINCT user_name
-        FROM RevivesByDate
+        FROM revives_by_date
         ), AllCombinations AS (
         SELECT
             ds.dayDate,
@@ -145,16 +147,16 @@ def create_revives(conn, cursor, force=False):
             ac.user_name,
             COALESCE(rbd.successful_revives, 0) AS successful_revives
         FROM AllCombinations AS ac
-        LEFT JOIN RevivesByDate AS rbd
+        LEFT JOIN revives_by_date AS rbd
         ON ac.dayDate = rbd.dayDate AND ac.user_name = rbd.user_name;
     ''')
     cursor.executescript('''
-        CREATE VIEW revivesByWeek AS
+        CREATE VIEW revives_by_week AS
             SELECT
             STRFTIME('%Y-%W', period) AS period,  -- Extract year and week number (Monday as start of week)
             user_name,
             SUM(successful_revives) AS successful_revives  -- Sum revives for each player within the week
-            FROM revivesByDate
+            FROM revives_by_date
             GROUP BY period, user_name;             
     '''
   )
