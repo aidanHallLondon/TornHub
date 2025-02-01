@@ -111,6 +111,10 @@ def generate_menu_html(menu_list):
             if not "children" in node or len(node["children"]) == 0:
                 return node
             if len(node["children"]) == 1 and not "href" in node:
+                # node_href = (1 if "href" in node else 0) 
+                # child_href =(1 if "href" in node["children"][0] else 0)
+                # if (node_href + child_href)==1:
+                #     pass
                 child = node["children"][0]
                 node["label"] = f"{node['label']}_{child['label']}"
                 node["href"] = child["href"] if "href" in child else None
@@ -142,21 +146,23 @@ def generate_menu_html(menu_list):
         ):  # == 'folder':
             html += "<ul>"
             for child in menu_tree["children"]:
-                icon = ""
+                prefix=""
+                class_name="leaf"
                 entity_type = child["type"] if "type" in child else "table"
                 row_count = child["row_count"] if "row_count" in child else None
                 f_row_count = f"({row_count:,})" if row_count else ""
                 if "children" in child and child["children"]:
-                    icon = "📁 "
-                html += f"<li>{icon}"
+                    class_name='folder-toggle'
+                    prefix='''<svg width="14" height="14"><use href="#chevron"></use></svg>&nbsp;'''
                 if "href" in child:
-                    html += f"""<a href='{entity_type}_{child['href']}.html' 
-                        onclick=\"parent.frames['main-content'].location.href='{entity_type}_{child['href']}.html'; return false;\" 
-                        title='{child['href']}'>{child['label']} <span class="row_count">{f_row_count}</span></a>"""
+                   href= f"""{entity_type}_{child['href']}.html"""
+                   anchor_el=f"""<a class="{class_name}" href="{href}"
+                        onclick="parent.frames['main-content'].location.href='{href}'; return false;" 
+                        title="{child['href']}">"""   
                 else:
-                    html += child["label"]
-                html += tree_to_html(child)
-                html += "</li>"
+                    anchor_el=f'''<a class="{class_name}" href="#' title="{child['label']}">'''
+                row_count_span  = f"""<span class="row_count">{f_row_count}</span>"""
+                html += f"<li>{anchor_el}{prefix}{child['label']} {row_count_span}</a>{tree_to_html(child)}</li>"""
             html += "</ul>"
         return html
 

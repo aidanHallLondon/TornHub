@@ -1,43 +1,88 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Torn hub</title>
+    <meta charset="UTF-8" />
+    <title>Torn Hub</title>
     <style>
       body {
         margin: 0;
-        font-family: sans-serif; /* Apply sans-serif font to the entire body */
-        color: #444; /* Set default text color to #444 */
+        font-family: sans-serif;
+        color: #444;
       }
+
       ul {
-        list-style: none;  
-        padding: 0; 
-        margin: 0 0 0 0;  
+        list-style: none;
+        padding: 0;
+        margin: 0;
       }
+
       ul ul {
-        margin: 0 0 0 1em;  
+        margin-left: 1em;
+        display: none; /* Initially hide nested lists */
       }
 
       li {
-        padding: 0.125em 0;  
+        padding: 0.125em 0;
       }
+
+      /* Style for li elements that do NOT have a nested ul */
       li:not(:has(ul)) {
-            margin: 0 0 0 1em;
-            /* Styles for li elements that do NOT contain a ul */
-        }
+        margin-left: 1em;
+      }
+
       a {
-        text-decoration: none; /* Remove underlines by default */
+        text-decoration: none;
       }
 
       a:hover {
-        text-decoration: underline; /* Add underline on hover */
+        text-decoration: underline;
       }
 
-      li a .row_count{
+      li span.row_count {
         font-size: 8pt;
+      }
+
+   
+      /* Rotate the chevron when expanded */
+      .folder-toggle SVG {
+        transform: rotate(-90deg);
+      }  
+      .folder-toggle.expanded SVG {
+        transform: rotate(0deg);
+      }
+      /* Optional: Add a transition for a smoother visual effect */
+      .folder-toggle SVG {
+        transition: rotation 1s ease;
+      }
+      ul ul {
+        margin-left: 1em;
+        display: block; /* Change to block to allow for height transitions */
+        max-height: 0; /* Initially collapse the list */
+        overflow: hidden; /* Hide any content that overflows */
+        transition: max-height 0.3s ease-in-out; /* Add the transition */
+      }
+      .folder-toggle.expanded + ul {
+        max-height: 500px; /* Adjust this value as needed */
       }
     </style>
   </head>
   <body>
+    <svg style="display: none;"> 
+      <symbol id="chevron" viewBox="0 0 14 14">
+        <polyline points="2,6 7,11 13,6" stroke="#444" stroke-width="2" fill="none" />
+      </symbol>
+    </svg>
     <div class="menu">$content_html</div>
+
+    <script>
+      // JavaScript to handle the expand/collapse functionality
+      const folders = document.querySelectorAll(".folder-toggle");
+
+      folders.forEach((folder) => {
+        folder.addEventListener("click", () => {
+          folder.classList.toggle("expanded");
+        });
+      });
+    </script>
   </body>
 </html>

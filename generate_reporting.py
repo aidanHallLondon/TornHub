@@ -1,4 +1,7 @@
+import os
+import shutil
 import sqlite3
+from Torn.browse import open_webapp
 from Torn.charts import init as charts_init, load_user_colourList_for_charts
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import dumpResults, initDB
@@ -22,11 +25,35 @@ conn.commit()
 
 def main():
     print("Db------------")
+    copy_assets_from_template_folder()
     db_reporting()
     faction_revive_reporting()
     faction_crime_reporting()
     faction_oc_reporting()
     conn.close()
+    open_webapp(quiet=True)
+
+def copy_assets_from_template_folder():
+    _copy_folder('templates/assets','reports/assets')
+    _copy_file('templates/db','schema.html','reports/db')
+
+
+def _copy_file(source_path, file_name, destination_path):
+    """Copies a folder and its contents to the destination, creating the target path if needed."""
+    if not os.path.exists(destination_path): os.makedirs(destination_path)
+    try:
+        shutil.copy(os.path.join(source_path,file_name), os.path.join(destination_path, file_name))
+    except OSError as e:
+        print(f"Error copying file: {e}")
+
+def _copy_folder(source, destination):
+    """Copies a folder and its contents to the destination, creating the target path if needed."""
+    if not os.path.exists(destination): os.makedirs(destination)
+    try:
+        shutil.copytree(source, destination, dirs_exist_ok=True)
+        print(f"Successfully copied files from '{source}' to '{destination}'")
+    except OSError as e:
+        print(f"Error copying files: {e}")
 
 def db_reporting():
     save_browsable_tables(conn,cursor)
