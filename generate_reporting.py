@@ -2,7 +2,7 @@ import sqlite3
 from Torn.charts import init as charts_init, load_user_colourList_for_charts
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import dumpResults, initDB
-from Torn.reporting.all_tables import browse_tables
+from Torn.reporting.all_tables import move_template_file_with_subs, save_browsable_tables
 from Torn.reporting.faction_revives import (
     list_revivers_to_html_file,
     revivers_share_donut,
@@ -29,8 +29,16 @@ def main():
     conn.close()
 
 def db_reporting():
-    browse_tables(conn,cursor)
-              
+    save_browsable_tables(conn,cursor)
+    move_template_file_with_subs( template_file_path="templates/db/_home.html",
+        out_path= "reports/db",
+        out_filename ="_home.html",
+        substitutions=None)
+    move_template_file_with_subs( template_file_path="templates/db/index.html",
+        out_path= "reports/db",
+        out_filename ="index.html",
+        substitutions=None)                
+           
 def faction_oc_reporting():
     path = "reports/faction/oc"
     template_path="templates/reports/oc"
