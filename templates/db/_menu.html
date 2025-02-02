@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>Torn Hub</title>
     <style>
+      
       body {
         margin: 0;
         font-family: sans-serif;
@@ -18,7 +19,8 @@
 
       ul ul {
         margin-left: 1em;
-        display: none; /* Initially hide nested lists */
+        overflow: hidden; /* Hide any content that overflows */
+        transition: max-height 0.3s ease-in-out; /* Add the transition */
       }
 
       li {
@@ -32,38 +34,41 @@
 
       a {
         text-decoration: none;
+        color:#008
       }
 
       a:hover {
         text-decoration: underline;
+        color:#228
       }
 
-      li span.row_count {
-        font-size: 8pt;
-      }
+      li > .label .part { font-weight:800;color:#008}
+      li > .label .label_part {font-weight: 400;color:#555}
+      li > .label .separator {font-weight: 400; color:#555}
+      li > .label  .row_count { font-weight: 400;font-size: 8pt;}
 
    
       /* Rotate the chevron when expanded */
-      .folder-toggle SVG {
+      li.folder-toggle > .label svg {
         transform: rotate(-90deg);
+        transition: transform 0.3s ease-in-out; /* Add the transition to transform */
       }  
-      .folder-toggle.expanded SVG {
+      li.folder-toggle.expanded > .label svg {
         transform: rotate(0deg);
       }
-      /* Optional: Add a transition for a smoother visual effect */
-      .folder-toggle SVG {
-        transition: rotation 1s ease;
+
+
+      
+      li.folder-toggle > ul {
+        max-height: 0; /* Adjust this value as needed */
+        display: none; /* Change to block to allow for height transitions */
       }
-      ul ul {
-        margin-left: 1em;
-        display: block; /* Change to block to allow for height transitions */
-        max-height: 0; /* Initially collapse the list */
-        overflow: hidden; /* Hide any content that overflows */
-        transition: max-height 0.3s ease-in-out; /* Add the transition */
-      }
-      .folder-toggle.expanded + ul {
+
+      li.folder-toggle.expanded > ul {
         max-height: 500px; /* Adjust this value as needed */
+        display: block; /* Change to block to allow for height transitions */
       }
+
     </style>
   </head>
   <body>
@@ -74,15 +79,20 @@
     </svg>
     <div class="menu">$content_html</div>
 
+ 
     <script>
       // JavaScript to handle the expand/collapse functionality
-      const folders = document.querySelectorAll(".folder-toggle");
-
-      folders.forEach((folder) => {
-        folder.addEventListener("click", () => {
-          folder.classList.toggle("expanded");
+      const folders = document.querySelectorAll(".folder-toggle .label"); // Select the span.label within .folder-toggle
+      folders.forEach((labelSpan) => {
+        labelSpan.addEventListener("click", (event) => {
+          const parentLi = labelSpan.closest("li.folder-toggle"); // Find the parent li.folder-toggle
+          if (parentLi) {
+            parentLi.classList.toggle("expanded");
+          }
+          event.stopPropagation(); // Prevent event bubbling
         });
       });
     </script>
+
   </body>
 </html>

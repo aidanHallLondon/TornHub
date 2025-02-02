@@ -58,154 +58,6 @@ def iterate_tables(
  
 
 
-def generate_menu_html(menu_list):
-    def _find_object_match(objects, key, value):
-        for obj in objects:
-            if key in obj and obj[key] == value:
-                return obj
-        return None
-
-    def menu_list_to_tree(menu_items):
-        tree_root = {
-            "label": "root",
-            "href": "root",
-            "type": "root",
-            "children": [],
-        }
-        for item in menu_items:
-            name = item["name"]
-            entity_type = item["type"]
-            row_count = item["row_count"]
-            # split name into parts but skip the first char to ignore any leading "_"
-            parts = name[1:].split("_")
-            parts[0] = name[0] + parts[0]
-            node = tree_root
-            for index, part in enumerate(parts):
-                is_last_part = index == len(parts) - 1
-                #
-                match = (
-                    _find_object_match(node["children"], "label", part)
-                    if "children" in node
-                    else None
-                )
-                if match:
-                    if is_last_part:
-                        match["href"] = name
-                        match["type"] = entity_type
-                        match["row_count"] = row_count
-                    node = match
-                else:  # create a new match node
-                    match = {
-                        "label": part,
-                    }
-                    if is_last_part:
-                        match["href"] = name
-                        match["type"] = entity_type
-                        match["row_count"] = row_count
-                    node.setdefault("children", []).append(match)
-                    node = match
-        return tree_root
-
-    def collapse_single_parents_tree(tree):
-        def recursive_collapse(node):
-            if not "children" in node or len(node["children"]) == 0:
-                return node
-            if len(node["children"]) == 1 and not "href" in node:
-                # node_href = (1 if "href" in node else 0) 
-                # child_href =(1 if "href" in node["children"][0] else 0)
-                # if (node_href + child_href)==1:
-                #     pass
-                child = node["children"][0]
-                node["label"] = f"{node['label']}_{child['label']}"
-                node["href"] = child["href"] if "href" in child else None
-                node["icon"] = child["icon"] if "icon" in child else None
-                node["type"] = (
-                    child["type"] if "href" in child and "type" in child else None
-                )
-                node["row_count"] = (
-                    child["row_count"]
-                    if "href" in child and "row_count" in child
-                    else None
-                )
-                node["children"] = child["children"] if "children" in child else None
-            else:
-                children_list = [
-                    recursive_collapse(child) for child in node["children"]
-                ]
-                node["children"] = children_list
-            return node
-
-        return recursive_collapse(tree)
-
-    def tree_to_html(menu_tree):
-        html = ""
-        if (
-            "children" in menu_tree
-            and menu_tree["children"]
-            and len(menu_tree["children"]) > 0
-        ):  # == 'folder':
-            html += "<ul>"
-            for child in menu_tree["children"]:
-                prefix=""
-                class_name="leaf"
-                entity_type = child["type"] if "type" in child else "table"
-                row_count = child["row_count"] if "row_count" in child else None
-                f_row_count = f"({row_count:,})" if row_count else ""
-                if "children" in child and child["children"]:
-                    class_name='folder-toggle'
-                    prefix='''<svg width="14" height="14"><use href="#chevron"></use></svg>&nbsp;'''
-                if "href" in child:
-                   href= f"""{entity_type}_{child['href']}.html"""
-                   anchor_el=f"""<a class="{class_name}" href="{href}"
-                        onclick="parent.frames['main-content'].location.href='{href}'; return false;" 
-                        title="{child['href']}">"""   
-                else:
-                    anchor_el=f'''<a class="{class_name}" href="#' title="{child['label']}">'''
-                row_count_span  = f"""<span class="row_count">{f_row_count}</span>"""
-                html += f"<li>{anchor_el}{prefix}{child['label']} {row_count_span}</a>{tree_to_html(child)}</li>"""
-            html += "</ul>"
-        return html
-
-    # return build_html_tree(collapse_single_item_folders(build_hierarchy(menu_items)))
-    menu_tree = menu_list_to_tree(menu_list)
-    menu_tree = collapse_single_parents_tree(menu_tree)
-    return tree_to_html(menu_tree)
-
-    # def collapse_single_item_folders(tree):
-    #     def recursive_collapse(node):
-    #         if node["type"] == "leaf":
-    #             return node
-
-    #         if len(node["children"]) == 1 and node["children"]["type"] == "folder":
-    #             child = node["children"]
-    #             return {
-    #                 "name": f"{node['name']}_{child['name']}",
-    #                 "type": "folder",
-    #                 "children": child["children"],
-    #             }
-    #         else:
-    #             node["children"] = [recursive_collapse(child) for child in node["children"]]
-    #             return node
-
-    #     return recursive_collapse(tree)
-
-    # def build_html_tree(data):
-    #     html = "<ul>"
-    #     if data["type"] == "folder":
-    #         for child in data["children"]:
-    #             if child["type"] == "folder":
-    #                 html += f"<li>📁 {child['name']}"
-    #                 html += build_html_tree(child)
-    #                 html += "</li>"
-    #             else:
-    #                 hrefpath = f"table_{child['name']}.html"
-    #                 label = child.get("label", child["name"])
-    #                 html += f"<li><a href='{hrefpath}' onclick=\"parent.frames['main-content'].location.href='{hrefpath}'; return false;\" title='{child['name']}'>{label}</a></li>"
-    #     html += "</ul>"
-    #     return html
-
-    # return build_html_tree(collapse_single_item_folders(build_hierarchy(menu_items)))
-
 
 def save_table_or_view_as_html(
     conn,
@@ -260,3 +112,138 @@ def save_data_as_html(
     )
 
 
+
+
+def generate_menu_html(menu_list):
+
+    def menu_list_to_tree(menu_items):
+        tree_root = {
+            "parts": [{"label": "root", "href": "root", "type": "root", "row_count": None}],
+            "children": [],
+        }
+        for item in menu_items:
+            name = item["name"]
+            entity_type = item["type"]
+            row_count = item["row_count"]
+            # split name into parts but skip the first char to ignore any leading "_"
+            parts = name[1:].split("_")
+            parts[0] = name[0] + parts[0]
+            node = tree_root
+            for index, part in enumerate(parts):
+                is_last_part = index == len(parts) - 1
+                
+                
+                # Search for a matching child node based on the current part
+                match = None
+                if "children" in node:
+                    for child in node["children"]:
+                        if child["parts"][-1]["label"] == part:
+                            match = child
+                            break
+
+                if match:
+                    if is_last_part:
+                         match["parts"].append({"label": part, "href": name, "type": entity_type, "row_count": row_count})
+                    node = match
+                
+                else:  # create a new match node
+                    new_part = {"label": part}
+                    if is_last_part:
+                        new_part.update({"href": name, "type": entity_type, "row_count": row_count})
+
+                    
+                    
+                    # Check if the current node already has parts
+                    if "parts" in node and node["parts"] and node["parts"][-1]["label"] == part :
+                       node["parts"].append(new_part)
+                       
+                    else:    
+                       match = {
+                           "parts": [new_part],
+                           "children": []
+                       }
+                       node.setdefault("children", []).append(match)
+                       node = match
+        return tree_root
+
+    def collapse_single_parents_tree(tree):
+        def recursive_collapse(node):
+            if not node.get("children"):
+                return node
+
+            # Modified while loop condition: Only check for single child
+            while len(node["children"]) == 1:
+                child = node["children"][0]
+                node["parts"].extend(child["parts"])
+                node["children"] = child.get("children", [])
+
+            node["children"] = [recursive_collapse(child) for child in node.get("children", [])]
+            return node
+
+        return recursive_collapse(tree)
+
+    def tree_to_html(menu_tree):
+        def render_parts(parts, is_folder):
+            """Renders a list of parts into HTML.
+            """
+            html_parts = []
+            for i, part in enumerate(parts):
+                if "href" in part:
+                    entity_type = part.get("type", "table")
+                    row_count = part.get("row_count")
+                    f_row_count = f"({row_count:,})" if row_count else ""
+                    class_name = "part"
+                    href = f"{entity_type}_{part['href']}.html"
+                    html = f"""<a class="{class_name}" href="{href}"
+                        onclick="parent.frames['main-content'].location.href='{href}';  event.stopPropagation(); return false;" 
+                        title="{part['href']}">{part['label']}</a>"""
+                else:
+                    # If it's not an href, but it is a folder, add the folder-toggle class
+                    html = f"""<span class="label_part">{part['label']}</span>"""
+                    f_row_count=""
+                if i==len(parts)-1:
+                    html += f""" <span class="row_count">{f_row_count}</span>"""
+                else:
+                    html+= '<span class="separator">_</span>'
+                html_parts.append(html)
+            return "".join(html_parts)
+
+        def recursive_to_html(node):
+            """Recursively converts a node and its children to HTML.
+            """
+            html = ""
+            is_folder = bool(node.get("children"))
+            
+            li_class = "folder-toggle" if is_folder else ""
+            
+            html += f'<li class="{li_class}"><span class="label">'
+            
+            # Add the chevron only if it's a folder
+            if is_folder:
+                prefix='''<svg width="14" height="14"><use href="#chevron"></use></svg>&nbsp;'''
+            else:
+                prefix=""
+                
+            html += prefix + render_parts(node["parts"], is_folder)
+            html+="</span>"
+            if is_folder:
+                html += "<ul>"
+                for child in node["children"]:
+                    html += recursive_to_html(child)
+                html += "</ul>"
+
+            html += "</li>"
+            return html
+        
+        html=""
+        if "children" in menu_tree and menu_tree["children"]:
+           html += "<ul>"
+           for child in menu_tree["children"]:
+              html += recursive_to_html(child)
+           html += "</ul>"
+        return html
+
+    # return build_html_tree(collapse_single_item_folders(build_hierarchy(menu_items)))
+    menu_tree = menu_list_to_tree(menu_list)
+    menu_tree = collapse_single_parents_tree(menu_tree)
+    return tree_to_html(menu_tree)
