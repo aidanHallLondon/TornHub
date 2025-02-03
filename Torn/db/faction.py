@@ -83,13 +83,13 @@ def create_faction(conn,cursor, force=False):
         territoryrespect INTEGER NOT NULL
    );
    
-   CREATE INDEX IF NOT EXISTS faction_id_index  ON faction_history (batch_id);"""
+   CREATE INDEX IF NOT EXISTS faction_id_index  ON faction_history (batch_date);"""
     )
     cursor.executescript('''DROP VIEW IF EXISTS faction;
     CREATE VIEW faction AS
         SELECT * 
         FROM faction_history 
-        ORDER BY FactionSample_id DESC
+        ORDER BY batch_date DESC
         LIMIT 1;''')
 
 def update_faction(conn,cursor, cache_age_limit=3600 * 12, force=False):
