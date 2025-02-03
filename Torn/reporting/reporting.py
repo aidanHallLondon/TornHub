@@ -11,8 +11,10 @@ def move_template_file_with_subs(
     final_html = html_template.safe_substitute(substitutions)
     #
     out_filepath = os.path.join(out_path, out_filename)
-    if not os.path.exists(out_path):
+    
+    if out_path>"" and not os.path.exists(out_path):
         os.makedirs(out_path)
+    print(out_filepath)
     with open(out_filepath, "w") as f:
         f.write(final_html)
 

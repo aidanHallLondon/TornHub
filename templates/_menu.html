@@ -9,6 +9,27 @@
         margin: 0;
         font-family: sans-serif;
         color: #444;
+        background-color: #fff;
+        padding:0;
+      }
+      
+      .menu{ padding:1em;}
+
+      .menu_title{
+        color:#fff;
+        padding:0.5em;
+        font-size: 12px;
+        font-weight: 700;
+        margin: 0 ;
+        padding-left: 10px;
+        text-shadow: 0 1px 0 #333;
+        align-items: center;
+        background: repeating-linear-gradient(90deg,#2e2e2e,#2e2e2e 2px,#282828 0,#282828 4px);
+        border-bottom-right-radius: 5px;
+        border-top-right-radius: 5px;
+        cursor: default;
+        display: flex;
+        justify-content: space-between;
       }
 
       ul {
@@ -52,6 +73,8 @@
       }
       /* Rotate the chevron when expanded */
       li.folder-toggle > .label svg {
+        stroke:black;
+        stroke-width: 2;
         transform: rotate(-90deg);
         transition: transform 0.3s ease-in-out; /* Add the transition to transform */
       }  
@@ -76,12 +99,11 @@
   <body>
     <svg style="display: none;"> 
       <symbol id="chevron" viewBox="0 0 14 14">
-        <polyline points="2,6 7,11 13,6" stroke="#444" stroke-width="2" fill="none" />
+        <polyline points="2,6 7,11 13,6" fill="none" />
       </symbol>
     </svg>
-    <div class="menu">$content_html</div>
-
- 
+    $content_html
+    
     <script>
       // JavaScript to handle the expand/collapse functionality
       const folders = document.querySelectorAll(".folder-toggle .label"); // Select the span.label within .folder-toggle

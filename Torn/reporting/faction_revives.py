@@ -12,9 +12,10 @@ from Torn.charts import (
     load_user_colourList_for_charts,
     plt_save_image,
 )
+from Torn.reporting.build_menus import _menu_item_for_file
 from Torn.tables import generateStyledTable
 
-def revivers_share_donut(conn, cursor, title=None, period=None,path=None,out_filename=None):
+def revivers_share_donut(conn, cursor, title=None, name=None, period=None,path=None,out_filename=None):
     '''
     period is a valid time period for SQLite DATE('now', ?) e.g. '-2 days'
     '''
@@ -50,13 +51,13 @@ def revivers_share_donut(conn, cursor, title=None, period=None,path=None,out_fil
         out_filename=out_filename
     )  # pie
     # draw_donut_chart(series=values, labels=labels) # pie
-
+    return _menu_item_for_file(path, name=name if name else out_filename, href=out_filename)
 
 def revives_stackedarea_chart(
     conn,cursor,
     periodName,
     periodAlias,
-    title="Revivers contributions",
+    title="Revivers_contributors",
     path="reports/faction/revives",
     filename="stacked_area",
     truncate_after=None,
@@ -84,6 +85,7 @@ def revives_stackedarea_chart(
         out_filename=filename,
         show_image=False,
     )
+    return _menu_item_for_file(path,name=filename,href=filename)
 
 
 def revives_pivot_stackedarea_dataseries(conn,cursor,periodAlias, periodName):
@@ -158,9 +160,6 @@ def list_revivers_to_html_file(
     reviver_data = (
         cursor.fetchall()
     )  # [[11111,'a',10,.1],[2222,'b',20,.2],[33333,'b',30,.3],[4444,'d',40,.4]]
-    output_filename = os.path.join(path, out_filename)
-    if not os.path.exists(path):
-        os.makedirs(path)
 
     with open(template_file_path, "r") as f:
         soup = BeautifulSoup(f.read(), "html.parser")
@@ -203,14 +202,18 @@ def list_revivers_to_html_file(
 
     final_html = str(soup)
 
+    output_filename = os.path.join(path, out_filename)
+    if not os.path.exists(path):
+        os.makedirs(path)
     with open(output_filename, "w") as f:
         f.write(final_html)
     print(f"{title_str} saved in {output_filename}")
-
+    return _menu_item_for_file(path,out_filename,out_filename)
 
 def revives_pivot_to_html_file(
     conn,cursor,
     template_file_path,
+    name,
     path,
     periodAlias,
     periodName,
@@ -243,3 +246,4 @@ def revives_pivot_to_html_file(
     with open(output_filename, "w") as f:
         f.write(final_html)
     print(f"{title_str} saved in {output_filename}")
+    return  _menu_item_for_file(path, name, output_filename)

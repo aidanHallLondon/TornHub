@@ -49,10 +49,10 @@ def update_faction_upgrades(conn, cursor, force=False):
         _all_upgrades_append(all_upgrades, "peace", key, peace)
 
     cursor.execute(
-        f"""UPDATE faction_records 
+        f"""UPDATE faction_history 
         SET faction_state = '{state}' 
-        WHERE FactionSample_id = (SELECT FactionSample_id FROM faction_records ORDER BY timestamp DESC LIMIT 1)
-        AND timestamp >= strftime('%Y-%m-%d %H:%M:%S', datetime('now', '1 second'));  -- Adjust the time difference as needed"""
+        WHERE batch_date = (SELECT batch_date FROM faction_history ORDER BY timestamp DESC LIMIT 1)
+        AND timestamp >= strftime('%Y-%m-%d %H:%M:%S', datetime('now', '47 hours'));  -- Adjust the time difference as needed"""
     )
     cursor.executemany(
         """

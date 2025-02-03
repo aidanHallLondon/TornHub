@@ -158,6 +158,8 @@ def draw_donut_chart(
         out_filename=out_filename,
         show_image=False,
     )
+
+    
 def _make_autopct(values, format_string = '{value:d}\n({percentage:.2f}%)'):
     def my_autopct(pct):
         total = sum(values)

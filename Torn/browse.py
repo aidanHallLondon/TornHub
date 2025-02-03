@@ -3,7 +3,7 @@ import socketserver
 import threading
 import webbrowser
 
-def open_webapp(directory='reports', file_path='db/index.html', port=8000, quiet=False):
+def open_webapp(directory='reports', file_path='index.html', port=8000, quiet=False):
     """Starts a web server and opens the specified file in the browser."""
 
     class QuietHandler(http.server.SimpleHTTPRequestHandler):

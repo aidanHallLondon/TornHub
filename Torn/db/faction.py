@@ -8,10 +8,10 @@ def create_faction(conn,cursor, force=False):
     """
     Create the faction table in the database.
     """
-    if force: cursor.execute("DROP TABLE IF EXISTS faction_records;")
+    if force: cursor.execute("DROP TABLE IF EXISTS faction_history;")
     cursor.executescript(
-        """CREATE TABLE IF NOT EXISTS faction_records (
-        FactionSample_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        """CREATE TABLE IF NOT EXISTS faction_history (
+        batch_date DATE PRIMARY KEY DEFAULT CURRENT_DATE,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         faction_id INTEGER NOT NULL,    
         faction_name TEXT NOT NULL,
@@ -83,12 +83,12 @@ def create_faction(conn,cursor, force=False):
         territoryrespect INTEGER NOT NULL
    );
    
-   CREATE INDEX IF NOT EXISTS faction_id_index  ON faction_records (FactionSample_id);"""
+   CREATE INDEX IF NOT EXISTS faction_id_index  ON faction_history (batch_id);"""
     )
     cursor.executescript('''DROP VIEW IF EXISTS faction;
     CREATE VIEW faction AS
         SELECT * 
-        FROM faction_records 
+        FROM faction_history 
         ORDER BY FactionSample_id DESC
         LIMIT 1;''')
 
@@ -104,38 +104,41 @@ def update_faction(conn,cursor, cache_age_limit=3600 * 12, force=False):
     stats = data["stats"]
     if data:
         cursor.execute(
-            """INSERT INTO faction_records (
-                faction_id, faction_name, faction_tag, faction_tag_image, 
-                leader_id, co_leader_id, 
-                respect, days_old, capacity, members, 
-                money, points,    
-                is_enlisted, rank_level, rank_name, rank_division, rank_position, rank_wins, 
+            """
+            INSERT OR REPLACE INTO faction_history (
+                batch_date, faction_id, faction_name, faction_tag, faction_tag_image,
+                leader_id, co_leader_id,
+                respect, days_old, capacity, members,
+                money, points,
+                is_enlisted, rank_level, rank_name, rank_division, rank_position, rank_wins,
                 best_chain,
                 rank_rank, rank_value,
                 respect_rank, respect_value,
                 chain_rank, chain_value,
-                medicalitemsused, 
-                criminaloffences, organisedcrimerespect, organisedcrimemoney, 
+                medicalitemsused,
+                criminaloffences, organisedcrimerespect, organisedcrimemoney,
                 organisedcrimesuccess, organisedcrimefail, attackswon, attackslost,
                 attackschain, attacksleave, attacksmug, attackshosp,
-                bestchain, busts, revives, jails, hosps, 
-                medicalitemrecovery, medicalcooldownused, gymtrains, 
-                gymstrength, gymspeed, gymdefense, gymdexterity, 
-                candyused, alcoholused, energydrinkused, drugsused, 
+                bestchain, busts, revives, jails, hosps,
+                medicalitemrecovery, medicalcooldownused, gymtrains,
+                gymstrength, gymspeed, gymdefense, gymdexterity,
+                candyused, alcoholused, energydrinkused, drugsused,
                 drugoverdoses, rehabs, caymaninterest, traveltimes,
                 traveltime, hunting, attacksdamagehits, attacksdamage,
-                hosptimegiven, hosptimereceived, attacksdamaging, 
+                hosptimegiven, hosptimereceived, attacksdamaging,
                 attacksrunaway, highestterritories, territoryrespect
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                ?, ?, ?, ?, ?, ?, ?); """,
+                CURRENT_DATE, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?
+            ); """,
             (
                 data["faction_id"],
+
                 basic["name"],
                 basic["tag"],
                 basic["tag_image"],

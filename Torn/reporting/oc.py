@@ -1,6 +1,8 @@
 import os
 from string import Template
 from tabulate import tabulate
+from Torn.reporting.build_menus import _menu_item_for_file
+from Torn.reporting.faction_revives import get_revives_pivotted
 from Torn.tables import generateStyledTable, html_table
 
 
@@ -82,41 +84,4 @@ def oc_item_requirements(conn,cursor,
     with open(output_filename, "w") as f:
         f.write(final_html)
     print(f"{title_str} saved in {output_filename}")  
-
-
-def revives_pivot_to_html_file(
-    conn,cursor,
-    template_file_path,
-    path,
-    periodAlias,
-    periodName,
-    title_str,
-    image_title,
-    image_list,
-    out_filename,
-):
-    data, headers, colalign = get_revives_pivotted(
-        conn,cursor,periodAlias, periodName, totals=True
-    )
-
-    # Replace all instances of exactly 0 with None
-    data2 = [[None if value == 0 else value for value in row] for row in data]
-    data = data2
-    table_html_str = generateStyledTable(data, headers, colalign)
-    output_filename = os.path.join(path, out_filename)
-    if not os.path.exists(path):
-        os.makedirs(path)
-    with open(template_file_path, "r") as f:
-        html_template = Template(f.read())
-    # Inject into the template
-    final_html = html_template.substitute(
-        page_title=title_str,
-        table_html=table_html_str,
-        image_title=image_title,
-        image1_src=image_list[0] if image_list and len(image_list) >= 1 else None,
-        image2_src=image_list[1] if image_list and len(image_list) >= 2 else None,
-        table_title="Table",
-    )
-    with open(output_filename, "w") as f:
-        f.write(final_html)
-    print(f"{title_str} saved in {output_filename}")
+    return  _menu_item_for_file(path,name="oc_crimes_items_required", href=out_filename)
