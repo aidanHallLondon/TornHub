@@ -16,7 +16,7 @@ def open_webapp(directory='reports', file_path='index.html', port=8000, quiet=Fa
 
     with socketserver.TCPServer(("", port), QuietHandler) as httpd:
         threading.Thread(target=httpd.serve_forever, daemon=True).start()
-        webbrowser.open_new_tab(f'http://localhost:{port}/{file_path}')
+        webbrowser.open(f'http://localhost:{port}/{file_path}')
         input("Press Enter to stop the server...")
         httpd.shutdown()
 
