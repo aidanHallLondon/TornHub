@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>$page_title</title>
+    <style>
+      body {
+        font-family: sans-serif; /* Apply sans-serif font to the entire body */
+        color: #444; /* Set default text color to #444 */
+      }
+
+      table {
+        border-collapse: collapse; /* Collapse borders for consistent striping */
+        border: 1px dotted #1115;
+        background-color: #f8f8f8;
+      }
+      table thead tr {
+        background-color: #ddf8;
+        font-weight: bold;
+        border-bottom: 1px dotted #1115;
+      }
+      table tr:nth-child(even) {
+        background-color: #ddf6; /* Light gray for even rows */
+      }
+
+      table td:nth-child(even),
+      table th:nth-child(even) {
+        background-color: #ddf4;
+      }
+
+      th,
+      td {
+        border: none;
+        padding: 8px;
+      }
+
+      .data-grid {
+        display: flex;
+        flex-wrap: wrap; /* Allow items to wrap onto multiple lines */
+        justify-content: space-between; /* Distribute items evenly */
+      }
+
+      /* Individual data box */
+      .datum {
+        flex: 0 0 calc(20% - 20px); /* Adjust percentage for desired number of columns, and subtract margin */
+        box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        margin: 10px; /* Adjust spacing as needed */
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center; /* Center text within the box */
+        background-color: #f5f5f5; /* Light background */
+      }
+
+      /* Label (title) styles */
+      .datum .label {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      /* Value styles */
+      .datum .value {
+        font-size: 16px;
+      }
+      .datum .value .ref{
+        font-size: 12px;
+        color:#888;
+      }
+      .datum .value .ref.positive{ color:green}
+      .datum .value .ref.negative{ color:red}
+      .datum .value .ref.positive::before {  content: "+";}
+      /* Responsive adjustments (optional) */
+      @media (max-width: 768px) {
+        .datum {
+          flex: 0 0 calc(33% - 20px); /* 2 columns on smaller screens */
+        }
+      }
+
+      @media (max-width: 480px) {
+        .datum {
+          flex: 0 0 calc(50% - 20px); /* 1 column on very small screens */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>$page_title</h1>
+    <h2>$sub_title</h2>
+    $content_html
+  </body>
+</html>

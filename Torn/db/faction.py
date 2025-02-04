@@ -33,12 +33,12 @@ def create_faction(conn,cursor, force=False):
         rank_position INTEGER NOT NULL,
         rank_wins INTEGER NOT NULL,
         best_chain INTEGER NOT NULL,
-        rank_rank TEXT NOT NULL,
-        rank_value INTEGER NOT NULL,
-        respect_rank TEXT NOT NULL,
-        respect_value INTEGER NOT NULL,
-        chain_rank TEXT NOT NULL,
-        chain_value INTEGER NOT NULL,
+        hof_rank_rank INTEGER NOT NULL,
+        hof_rank_value TEXT NOT NULL,
+        hof_respect_rank INTEGER NOT NULL,
+        hof_respect_value INTEGER NOT NULL,
+        hof_chain_rank INTEGER NOT NULL,
+        hof_chain_value INTEGER NOT NULL,
         medicalitemsused INTEGER NOT NULL,
         criminaloffences INTEGER NOT NULL,
         organisedcrimerespect INTEGER NOT NULL,
@@ -106,15 +106,21 @@ def update_faction(conn,cursor, cache_age_limit=3600 * 12, force=False):
         cursor.execute(
             """
             INSERT OR REPLACE INTO faction_history (
-                batch_date, faction_id, faction_name, faction_tag, faction_tag_image,
+                batch_date, 
+                faction_id, faction_name, faction_tag, faction_tag_image,
                 leader_id, co_leader_id,
                 respect, days_old, capacity, members,
                 money, points,
-                is_enlisted, rank_level, rank_name, rank_division, rank_position, rank_wins,
+                is_enlisted, 
+                
+                rank_level, rank_name, rank_division, 
+                rank_position, rank_wins,
                 best_chain,
-                rank_rank, rank_value,
-                respect_rank, respect_value,
-                chain_rank, chain_value,
+
+                hof_rank_rank, hof_rank_value,
+                hof_respect_rank, hof_respect_value,
+                hof_chain_rank, hof_chain_value,
+
                 medicalitemsused,
                 criminaloffences, organisedcrimerespect, organisedcrimemoney,
                 organisedcrimesuccess, organisedcrimefail, attackswon, attackslost,
@@ -128,7 +134,8 @@ def update_faction(conn,cursor, cache_age_limit=3600 * 12, force=False):
                 hosptimegiven, hosptimereceived, attacksdamaging,
                 attacksrunaway, highestterritories, territoryrespect
             ) VALUES (
-                CURRENT_DATE, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                CURRENT_DATE, 
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,

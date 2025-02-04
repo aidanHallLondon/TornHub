@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Faction data</title>
+    <style>
+      body {
+        font-family: sans-serif; /* Apply sans-serif font to the entire body */
+        color: #444; /* Set default text color to #444 */
+      }
+
+      table {
+        border-collapse: collapse; /* Collapse borders for consistent striping */
+        border: 1px dotted #1115;
+        background-color: #f8f8f8;
+      }
+      table thead tr {
+        background-color: #ddf8;
+        font-weight: bold;
+        border-bottom: 1px dotted #1115;
+      }
+      table tr:nth-child(even) {
+        background-color: #ddf6; /* Light gray for even rows */
+      }
+
+      table td:nth-child(even),
+      table th:nth-child(even) {
+        background-color: #ddf4;
+      }
+
+      th,
+      td {
+        border: none;
+        padding: 8px;
+      }
+
+      .data-grid {
+        display: flex;
+        flex-wrap: wrap; /* Allow items to wrap onto multiple lines */
+        justify-content: space-between; /* Distribute items evenly */
+      }
+
+      /* Individual data box */
+      .datum {
+        flex: 0 0 calc(33.33% - 20px); /* Adjust percentage for desired number of columns, and subtract margin */
+        box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        margin: 10px; /* Adjust spacing as needed */
+        border: 1px solid #ccc;
+        padding: 15px;
+        text-align: center; /* Center text within the box */
+        background-color: #f5f5f5; /* Light background */
+      }
+
+      /* Label (title) styles */
+      .datum .label {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      /* Value styles */
+      .datum .value {
+        font-size: 16px;
+      }
+
+      /* Responsive adjustments (optional) */
+      @media (max-width: 768px) {
+        .datum {
+          flex: 0 0 calc(50% - 20px); /* 2 columns on smaller screens */
+        }
+      }
+
+      @media (max-width: 480px) {
+        .datum {
+          flex: 0 0 calc(100% - 20px); /* 1 column on very small screens */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Faction data</h1>
+    <h2>Faction_history</h2>
+    <div class="datum">
+        <div class="label">faction_id</div>
+        <div class="value">22631</div>
+        </div><div class="datum">
+        <div class="label">faction_name</div>
+        <div class="value">Halos Pulse</div>
+        </div><div class="datum">
+        <div class="label">faction_tag</div>
+        <div class="value">HLSP</div>
+        </div><div class="datum">
+        <div class="label">faction_state</div>
+        <div class="value">peace</div>
+        </div><div class="datum">
+        <div class="label">leader_id</div>
+        <div class="value">1701621</div>
+        </div><div class="datum">
+        <div class="label">co_leader_id</div>
+        <div class="value">3287241</div>
+        </div><div class="datum">
+        <div class="label">respect</div>
+        <div class="value">269120</div>
+        </div><div class="datum">
+        <div class="label">days_old</div>
+        <div class="value">4724</div>
+        </div><div class="datum">
+        <div class="label">capacity</div>
+        <div class="value">100</div>
+        </div><div class="datum">
+        <div class="label">members</div>
+        <div class="value">98</div>
+        </div><div class="datum">
+        <div class="label">money</div>
+        <div class="value">1137665124</div>
+        </div><div class="datum">
+        <div class="label">points</div>
+        <div class="value">148</div>
+        </div><div class="datum">
+        <div class="label">is_enlisted</div>
+        <div class="value">0</div>
+        </div><div class="datum">
+        <div class="label">rank_level</div>
+        <div class="value">2</div>
+        </div><div class="datum">
+        <div class="label">rank_name</div>
+        <div class="value">Bronze</div>
+        </div><div class="datum">
+        <div class="label">rank_division</div>
+        <div class="value">0</div>
+        </div><div class="datum">
+        <div class="label">rank_position</div>
+        <div class="value">0</div>
+        </div><div class="datum">
+        <div class="label">rank_wins</div>
+        <div class="value">1</div>
+        </div><div class="datum">
+        <div class="label">best_chain</div>
+        <div class="value">100</div>
+        </div><div class="datum">
+        <div class="label">rank_rank</div>
+        <div class="value">1018</div>
+        </div><div class="datum">
+        <div class="label">rank_value</div>
+        <div class="value">Bronze</div>
+        </div><div class="datum">
+        <div class="label">respect_rank</div>
+        <div class="value">682</div>
+        </div><div class="datum">
+        <div class="label">respect_value</div>
+        <div class="value">269120</div>
+        </div><div class="datum">
+        <div class="label">chain_rank</div>
+        <div class="value">121396</div>
+        </div><div class="datum">
+        <div class="label">chain_value</div>
+        <div class="value">100</div>
+        </div><div class="datum">
+        <div class="label">medicalitemsused</div>
+        <div class="value">53495</div>
+        </div><div class="datum">
+        <div class="label">criminaloffences</div>
+        <div class="value">439518</div>
+        </div><div class="datum">
+        <div class="label">organisedcrimerespect</div>
+        <div class="value">10913</div>
+        </div><div class="datum">
+        <div class="label">organisedcrimemoney</div>
+        <div class="value">171551000</div>
+        </div><div class="datum">
+        <div class="label">organisedcrimesuccess</div>
+        <div class="value">3496</div>
+        </div><div class="datum">
+        <div class="label">organisedcrimefail</div>
+        <div class="value">405</div>
+        </div><div class="datum">
+        <div class="label">attackswon</div>
+        <div class="value">47311</div>
+        </div><div class="datum">
+        <div class="label">attackslost</div>
+        <div class="value">17464</div>
+        </div><div class="datum">
+        <div class="label">attackschain</div>
+        <div class="value">0</div>
+        </div><div class="datum">
+        <div class="label">attacksleave</div>
+        <div class="value">28401</div>
+        </div><div class="datum">
+        <div class="label">attacksmug</div>
+        <div class="value">13817</div>
+        </div><div class="datum">
+        <div class="label">attackshosp</div>
+        <div class="value">3528</div>
+        </div><div class="datum">
+        <div class="label">bestchain</div>
+        <div class="value">100</div>
+        </div><div class="datum">
+        <div class="label">busts</div>
+        <div class="value">71</div>
+        </div><div class="datum">
+        <div class="label">revives</div>
+        <div class="value">6724</div>
+        </div><div class="datum">
+        <div class="label">jails</div>
+        <div class="value">4115</div>
+        </div><div class="datum">
+        <div class="label">hosps</div>
+        <div class="value">49589</div>
+        </div><div class="datum">
+        <div class="label">medicalitemrecovery</div>
+        <div class="value">3658799</div>
+        </div><div class="datum">
+        <div class="label">medicalcooldownused</div>
+        <div class="value">60484800</div>
+        </div><div class="datum">
+        <div class="label">gymtrains</div>
+        <div class="value">523415</div>
+        </div><div class="datum">
+        <div class="label">gymstrength</div>
+        <div class="value">678030</div>
+        </div><div class="datum">
+        <div class="label">gymspeed</div>
+        <div class="value">911235</div>
+        </div><div class="datum">
+        <div class="label">gymdefense</div>
+        <div class="value">910170</div>
+        </div><div class="datum">
+        <div class="label">gymdexterity</div>
+        <div class="value">856850</div>
+        </div><div class="datum">
+        <div class="label">candyused</div>
+        <div class="value">36668</div>
+        </div><div class="datum">
+        <div class="label">alcoholused</div>
+        <div class="value">35060</div>
+        </div><div class="datum">
+        <div class="label">energydrinkused</div>
+        <div class="value">345</div>
+        </div><div class="datum">
+        <div class="label">drugsused</div>
+        <div class="value">6948</div>
+        </div><div class="datum">
+        <div class="label">drugoverdoses</div>
+        <div class="value">151</div>
+        </div><div class="datum">
+        <div class="label">rehabs</div>
+        <div class="value">655</div>
+        </div><div class="datum">
+        <div class="label">caymaninterest</div>
+        <div class="value">4085575</div>
+        </div><div class="datum">
+        <div class="label">traveltimes</div>
+        <div class="value">8230</div>
+        </div><div class="datum">
+        <div class="label">traveltime</div>
+        <div class="value">108361284</div>
+        </div><div class="datum">
+        <div class="label">hunting</div>
+        <div class="value">8087</div>
+        </div><div class="datum">
+        <div class="label">attacksdamagehits</div>
+        <div class="value">167568</div>
+        </div><div class="datum">
+        <div class="label">attacksdamage</div>
+        <div class="value">31890725</div>
+        </div><div class="datum">
+        <div class="label">hosptimegiven</div>
+        <div class="value">111585180</div>
+        </div><div class="datum">
+        <div class="label">hosptimereceived</div>
+        <div class="value">58036748</div>
+        </div><div class="datum">
+        <div class="label">attacksdamaging</div>
+        <div class="value">21865</div>
+        </div><div class="datum">
+        <div class="label">attacksrunaway</div>
+        <div class="value">159</div>
+        </div><div class="datum">
+        <div class="label">highestterritories</div>
+        <div class="value">3</div>
+        </div><div class="datum">
+        <div class="label">territoryrespect</div>
+        <div class="value">6931</div>
+        </div>
+  </body>
+</html>

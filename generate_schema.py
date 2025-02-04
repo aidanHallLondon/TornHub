@@ -5,8 +5,6 @@ from tabulate import tabulate
 from eralchemy import render_er
 from sqlalchemy import create_engine,MetaData
 
-
-
 conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
 cursor = conn.cursor()
 initDB(conn,cursor)
@@ -44,7 +42,7 @@ metadata.reflect(bind=engine)
 render_er(metadata, 'reports/db/images/schema_diagram.png') 
 
 # Generate the main diagram, excluding the large tables
-exclude_list = ['faction_records'] 
+exclude_list = ['faction_history'] 
 filtered_metadata = MetaData()
 all_tables = metadata.tables.keys()  # Get names of all tables
 included_tables = [table for table in all_tables if table not in exclude_list]

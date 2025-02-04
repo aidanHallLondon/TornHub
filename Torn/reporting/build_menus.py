@@ -107,7 +107,7 @@ def _collapse_single_parents_tree(tree):
                 "row_count": node["parts"][-1].get("row_count") # Keep row_count from the last part
             }
             node["parts"] = [merged_part]  # Replace all parts with the merged part
-            print(f"""MERGER {node["parts"]}""")
+            # print(f"""MERGER {node["parts"]}""")
 
         return node
 

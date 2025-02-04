@@ -10,6 +10,7 @@ from Torn.reporting.all_tables import (
     save_browsable_tables,
 )
 from Torn.reporting.build_menus import _menu_item_for_file, save_menus_as_html
+from Torn.reporting.faction import faction_data_page
 from Torn.reporting.faction_revives import (
     list_revivers_to_html_file,
     revivers_share_donut,
@@ -99,6 +100,7 @@ def _copy_folder(source, destination):
 
 def faction_reporting():
     fmenu = []
+    fmenu.append(faction_data_page(conn,cursor))
     fmenu = faction_revive_reporting(fmenu)
     fmenu = faction_crime_reporting(fmenu)
     fmenu = faction_oc_reporting(fmenu)
