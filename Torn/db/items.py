@@ -20,29 +20,6 @@ def create_items(conn, cursor, force=False):
         );
         """)
     
-    
-#     {
-#   "itemmarket": {
-#     "item": {
-#       "id": 1362,
-#       "name": "Net",
-#       "type": "Tool",
-#       "average_price": 4572554
-#     },
-#     "listings": [
-#       {
-#         "id": 9830442,
-#         "price": 4499000,
-#         "amount": 2
-#       },
-#     ]
-#   }
-
-# }
-
-
-#  https://api.torn.com/v2/market?selections=itemmarket&id=1362%2C668
-
 def getItem(conn,cursor,params=None, cache_age_limit=3600, force=False):
     return cached_api_call(conn,cursor,"market?selections=itemmarket",params=params, force=force )
 
@@ -59,6 +36,8 @@ def update_item(conn,cursor, item_id, cache_age_limit=3600 * 12, force=False):
         force=force,
     )
     # print(json.dumps(data, indent=2))
+    if "error" in data:
+        return
     itemmarket = data["itemmarket"]
 
     if itemmarket:

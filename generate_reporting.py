@@ -2,9 +2,9 @@ import os
 import shutil
 import sqlite3
 from Torn.browse import open_webapp
-from Torn.charts import init as charts_init, load_user_colourList_for_charts
+from Torn.charts import init as charts_init
 from Torn.db._globals import DB_CONNECTPATH
-from Torn.manageDB import dumpResults, initDB
+from Torn.manageDB import initDB, updateDB
 from Torn.reporting.all_tables import (
     move_template_file_with_subs,
     save_browsable_tables,
@@ -21,19 +21,28 @@ from Torn.reporting.crimes import crimeexp_rank_bump_plot
 from Torn.reporting.oc import oc_item_requirements
 
 imageExtension=".png"
-conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
-cursor = conn.cursor()
-initDB(conn, cursor)  # creates the database structure if not already done
-charting_meta_data = charts_init(conn, cursor)
-user_colourList = charting_meta_data["colourList"]
-conn.commit()
+charting_meta_data = None
+user_colourList = None
 
-def main():
-    print("Db------------")
+
+def main(fast=False):
+    conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
+    cursor = conn.cursor()
+    if not fast: initDB(conn, cursor)  # creates the database structure if not already done
+    if not fast: updateDB(conn,cursor)
+    # 
+    generate_reporting(conn,cursor)
+    open_webapp(quiet=True)
+
+def generate_reporting(conn,cursor):
+    global user_colourList
+    charting_meta_data = charts_init(conn, cursor)
+    user_colourList = charting_meta_data["colourList"]
+    # print("Db reports and schema")
     copy_assets_from_template_folder()
-    db_menu = db_reporting()
-    f_menu = faction_reporting()
-    conn.close()
+    db_menu = db_reporting(conn, cursor)
+    f_menu = faction_reporting(conn, cursor)
+
     save_menus_as_html(
         menus=[
             {
@@ -50,12 +59,9 @@ def main():
         out_filename="_menu.html",
     )
 
-    open_webapp(quiet=True)
-
-def db_reporting():
+def db_reporting(conn, cursor):
     db_menu = save_browsable_tables(conn, cursor)
     return db_menu
-
 
 def copy_assets_from_template_folder():
     _copy_folder("templates/assets", "reports/assets")
@@ -98,24 +104,17 @@ def _copy_folder(source, destination):
         print(f"Error copying files: {e}")
 
 
-def faction_reporting():
-    fmenu = []
-    fmenu.append(faction_data_page(conn,cursor))
-    fmenu = faction_revive_reporting(fmenu)
-    fmenu = faction_crime_reporting(fmenu)
-    fmenu = faction_oc_reporting(fmenu)
-    return fmenu
-    # menu.append(
-    #     {
-    #         "name": name,
-    #         "icon": "•" if entity_type == "table" else "°",
-    #         "type": entity_type,
-    #         "row_count": row_count,
-    #     },
-    # )
+def faction_reporting(conn, cursor):
+    # global user_colourList
+    f_menu = []
+    f_menu.append(faction_data_page(conn,cursor))
+    f_menu = faction_revive_reporting(conn, cursor,f_menu)
+    f_menu = faction_crime_reporting(conn, cursor,f_menu)
+    f_menu = faction_oc_reporting(conn, cursor,f_menu)
+    return f_menu
 
-
-def faction_oc_reporting(f_menu):
+def faction_oc_reporting(conn, cursor, f_menu):
+    # global user_colourList
     path = "reports/faction/oc"
     template_path = "templates/reports/oc"
     #
@@ -132,7 +131,9 @@ def faction_oc_reporting(f_menu):
     return f_menu
 
 
-def faction_crime_reporting(f_menu):
+def faction_crime_reporting(conn, cursor,f_menu):
+    global user_colourList
+    # 
     path = "reports/faction/crimes"
     out_filename = "bumps3"+imageExtension
     #
@@ -182,7 +183,7 @@ def faction_crime_reporting(f_menu):
 
     return f_menu
 
-def faction_revive_reporting(f_menu):
+def faction_revive_reporting(conn, cursor,f_menu):
     path = "reports/faction/revives"
 
     mi=revivers_share_donut(
