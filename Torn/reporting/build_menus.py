@@ -1,6 +1,7 @@
 import os
 from Torn.reporting.reporting import move_template_file_with_subs
 
+PARTS_SEPARATOR_STR=" | "
 
 def _menu_item_for_file(path, name, href):
     if path:
@@ -96,18 +97,20 @@ def _collapse_single_parents_tree(tree):
 
         node["children"] = new_children
 
-        # merge parts where there is only on href
-        if len(node["parts"]) > 1 and node["parts"][-1].get("href")  and all(p.get("label") for p in node["parts"]):
+        # merge parts where 
+        #     there is only on href at the end so the parts can be merged back into one name
+        #     or there are not hrefs
+        if_href_its_at_end = len(node["parts"]) > 1 and all(p.get("href", "") == "" for p in node["parts"][:-1]) #and node["parts"][-1].get("href", "") != ""
+        if if_href_its_at_end: # merge parts into one name
             last_part_href = node["parts"][-1].get("href")  # Get href from the last part
             merged_label = "_".join(p["label"] for p in node["parts"])
             merged_part = {
                 "label": merged_label,
                 "href": last_part_href,
-                "type": node["parts"][-1]["type"],  # Keep type from the last part
+                "type": node["parts"][-1].get("type"),  # Keep type from the last part
                 "row_count": node["parts"][-1].get("row_count") # Keep row_count from the last part
             }
             node["parts"] = [merged_part]  # Replace all parts with the merged part
-            # print(f"""MERGER {node["parts"]}""")
 
         return node
 
@@ -136,7 +139,7 @@ def _tree_to_html(path, menu_tree):
             if i == len(parts) - 1:
                 html += f""" <span class="row_count">{f_row_count}</span>"""
             else:
-                html += '<span class="separator">_</span>'
+                html += f'<span class="separator">{PARTS_SEPARATOR_STR}</span>'
             html_parts.append(html)
         return "".join(html_parts)
 
