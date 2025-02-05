@@ -9,6 +9,7 @@ from Torn.reporting.all_tables import (
     move_template_file_with_subs,
     save_browsable_tables,
 )
+from Torn.reporting.attacks import attacks_overview, incoming_attack_chart
 from Torn.reporting.build_menus import _menu_item_for_file, save_menus_as_html
 from Torn.reporting.faction import faction_data_page
 from Torn.reporting.faction_revives import (
@@ -41,8 +42,8 @@ def generate_reporting(conn,cursor):
     # print("Db reports and schema")
     copy_assets_from_template_folder()
     db_menu = db_reporting(conn, cursor)
-    f_menu = faction_reporting(conn, cursor)
-
+    f_menu = []
+    f_menu = faction_reporting(conn, cursor, f_menu)
     save_menus_as_html(
         menus=[
             {
@@ -58,6 +59,11 @@ def generate_reporting(conn,cursor):
         template_file="templates/_menu.html",
         out_filename="_menu.html",
     )
+
+def attacks_reporting(conn, cursor, f_menu):
+    f_menu = attacks_overview(conn,cursor,f_menu=f_menu)
+    f_menu = incoming_attack_chart(conn,cursor,f_menu=f_menu)
+    return f_menu
 
 def db_reporting(conn, cursor):
     db_menu = save_browsable_tables(conn, cursor)
@@ -104,9 +110,9 @@ def _copy_folder(source, destination):
         print(f"Error copying files: {e}")
 
 
-def faction_reporting(conn, cursor):
+def faction_reporting(conn, cursor,f_menu):
     # global user_colourList
-    f_menu = []
+    f_menu = attacks_reporting(conn,cursor, f_menu)
     f_menu.append(faction_data_page(conn,cursor))
     f_menu = faction_revive_reporting(conn, cursor,f_menu)
     f_menu = faction_crime_reporting(conn, cursor,f_menu)

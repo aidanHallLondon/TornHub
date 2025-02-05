@@ -51,7 +51,154 @@ def create_attacks(conn, cursor, force=False):
         finishing_hit_effects TEXT
     
         -- FOREIGN KEY (xxx) REFERENCES xxx(xxx)
-    )"""
+    );
+    
+    
+    
+    DROP VIEW IF EXISTS attack_events;
+    CREATE VIEW attack_events AS
+    SELECT
+        DATE(a.started) as event_date,
+        CASE
+            WHEN u.user_id = a.attacker_id THEN 'attack'
+            ELSE 'defend'
+        END as event_type,
+        u.user_id,
+        u.name as user_name,
+        CASE
+            WHEN u.user_id = a.attacker_id THEN a.defender_id
+            ELSE a.attacker_id
+        END as opponent_id,
+        a.result AS attack_result, -- Retain original result field
+        CASE
+            WHEN u.user_id = a.attacker_id THEN
+                CASE a.result
+                    WHEN 'Arrested' THEN -1
+                    WHEN 'Timeout' THEN -1
+                    WHEN 'Lost' THEN -1
+                    WHEN 'Interrupted' THEN 0
+                    WHEN 'Special' THEN 0
+                    WHEN 'Escape' THEN 0
+                    WHEN 'Stalemate' THEN 0
+                    WHEN 'Assist' THEN 1
+                    WHEN 'Attacked' THEN 1
+                    WHEN 'Mugged' THEN 1
+                    WHEN 'Hospitalized' THEN 1
+                    ELSE 0 -- Default to draw if unknown
+                END
+            ELSE -- User is defender
+                CASE a.result
+                    WHEN 'Arrested' THEN 1
+                    WHEN 'Timeout' THEN 1
+                    WHEN 'Lost' THEN 1
+                    WHEN 'Interrupted' THEN 1
+                    WHEN 'Special' THEN 1
+                    WHEN 'Escape' THEN 1
+                    WHEN 'Stalemate' THEN 1
+                    WHEN 'Assist' THEN -1
+                    WHEN 'Attacked' THEN -1
+                    WHEN 'Mugged' THEN -1
+                    WHEN 'Hospitalized' THEN -1
+                    ELSE 0 -- Default to draw if unknown
+                END
+        END as result,
+        CASE
+            WHEN u.user_id = a.attacker_id THEN a.respect_gain
+            ELSE a.respect_loss * -1
+        END as respect_change,
+        a.chain,
+        a.is_interrupted,
+        CASE
+            WHEN u.user_id = a.attacker_id THEN a.is_stealthed
+            ELSE FALSE
+        END as is_stealthed,
+        CASE
+            WHEN u.user_id = a.defender_id THEN a.is_stealthed
+            ELSE FALSE
+        END as is_opponent_stealthed,
+        a.is_raid,
+        a.is_ranked_war,
+        CASE
+            WHEN u.user_id = a.attacker_id AND a.result = 'Assist' THEN TRUE
+            ELSE FALSE
+        END as is_assist,
+            a.started,
+        a.ended,
+        a.modifier_fair_fight,
+        a.modifier_war,
+        a.modifier_retaliation,
+        a.modifier_group_attack,
+        a.modifier_overseas,
+        a.modifier_chain_modifier,
+        a.modifier_warlord,
+        a.finishing_hit_effects,
+        a.attack_id,
+        a.attack_code
+    FROM
+        attacks a
+    LEFT JOIN
+        users u ON (a.attacker_id = u.user_id OR a.defender_id = u.user_id)
+    WHERE
+        u.is_in_faction = 1
+    ORDER BY
+        a.started DESC;
+    """)
+
+    cursor.executescript(
+        """   
+    DROP VIEW IF EXISTS attacks_incoming;
+    
+    CREATE VIEW attacks_incoming AS
+    WITH
+        Attacks7d AS (
+            SELECT
+                opponent_id,
+                SUM(CASE WHEN event_type = 'defend' THEN 1 ELSE 0 END) AS attacks_7d,
+                SUM(CASE WHEN event_type = 'defend' THEN respect_change ELSE 0 END) AS respect_lost_7d,
+                COUNT(DISTINCT user_id) AS members_attacked_7d,
+                MAX(CASE WHEN event_type = 'defend' THEN event_date ELSE NULL END) AS last_incoming_attack_date, -- Filter for 'defend' events
+                JULIANDAY('now') - JULIANDAY(MAX(CASE WHEN event_type = 'defend' THEN event_date ELSE NULL END)) AS days_since_last_incoming_attack -- Filter for 'defend' events
+            FROM
+                attack_events
+            WHERE
+                opponent_id IS NOT NULL
+                AND event_date >= DATE('now', '-7 days')
+            GROUP BY
+                opponent_id
+        ),
+        AttacksAllTime AS (
+            SELECT
+                opponent_id,
+                SUM(CASE WHEN event_type = 'defend' THEN respect_change ELSE 0 END) AS overall_respect_lost
+            FROM
+                attack_events
+            WHERE
+                opponent_id IS NOT NULL
+            GROUP BY
+                opponent_id
+        )
+    SELECT
+        COALESCE(a7d.opponent_id, aAll.opponent_id) AS opponent_id,
+        COALESCE(a7d.attacks_7d, 0) AS attacks_7d,
+        COALESCE(a7d.respect_lost_7d, 0) AS respect_lost_7d,
+        COALESCE(a7d.members_attacked_7d, 0) AS members_attacked_7d,
+        COALESCE(a7d.days_since_last_incoming_attack, 9999) AS days_since_last_incoming_attack, -- Use a large value if no recent attacks
+        a7d.last_incoming_attack_date,
+        COALESCE(aAll.overall_respect_lost, 0) AS overall_respect_lost,
+        (
+            (
+                COALESCE(ABS(a7d.respect_lost_7d), 0) * 1.1 +
+                COALESCE(a7d.members_attacked_7d, 0) * 1 
+                ) * (7 - COALESCE(a7d.days_since_last_incoming_attack, 7)) 
+        ) AS threat_score
+    FROM
+        Attacks7d a7d
+    FULL OUTER JOIN
+        AttacksAllTime aAll ON a7d.opponent_id = aAll.opponent_id
+    ORDER BY
+        threat_score DESC;
+
+    """
     )
 
 

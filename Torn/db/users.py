@@ -22,7 +22,8 @@ def create_users(conn,cursor, force=False):
         );
         CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id);                                               
         CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
-        CREATE INDEX IF NOT EXISTS idx_users_last_action ON users(last_action);    
+        CREATE INDEX IF NOT EXISTS idx_users_last_action ON users(last_action);  
+        CREATE INDEX IF NOT EXISTS idx_users_is_in_faction ON users (is_in_faction);                           
         ''')  
     
 def getFactionMembers(conn,cursor,params={"striptags": "false"}, cache_age_limit=3600*24, force=False):
