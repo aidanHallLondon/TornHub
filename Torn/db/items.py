@@ -10,9 +10,10 @@ def create_items(conn, cursor, force=False):
  
 
     cursor.executescript("""
-                                                  
+        DROP TABLE IF EXISTS items;                          
         CREATE TABLE IF NOT EXISTS items (
-            item_id INTEGER PRIMARY KEY,  
+            id_pk INTEGER PRIMARY KEY,  
+            item_id INTEGER UNIQUE,
             item_name TEXT, 
             item_type TEXT,
             average_price INTEGER,
@@ -30,6 +31,8 @@ def update_items(conn,cursor, force=False):
         update_item(conn,cursor, item_id=item_id)
 
 def update_item(conn,cursor, item_id, cache_age_limit=3600 * 12, force=False):
+    if not item_id: 
+        return
     data = getItem(conn,cursor,
         params={"id":item_id},
         cache_age_limit=cache_age_limit,
@@ -44,6 +47,9 @@ def update_item(conn,cursor, item_id, cache_age_limit=3600 * 12, force=False):
         item = itemmarket["item"]
         listings = itemmarket["listings"]
         # 
+        if not item["id"]:
+            return
+ 
         cursor.execute(
             """INSERT OR REPLACE INTO items (
                 item_id ,  
