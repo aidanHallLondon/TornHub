@@ -215,7 +215,7 @@ def incoming_attack_chart(
     print(f"{title_str} saved in {output_filename}")
 
     # Menu Item (if needed)
-    f_menu.append(_menu_item_for_file(path=path, name="attacks_incoming", href=out_filename))
+    f_menu.append(_menu_item_for_file(path=path, name="attacks_incomingChart", href=out_filename))
     return f_menu
 
 
