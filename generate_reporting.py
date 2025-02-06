@@ -1,7 +1,8 @@
 import os
 import shutil
 import sqlite3
-from Torn.browse import open_webapp
+import time
+from Torn.threads import run_background_threads_and_exit, start_httpd_server, stop_hhtpd_server
 from Torn.charts import init as charts_init
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import initDB, updateDB
@@ -33,8 +34,14 @@ def main(fast=False):
     if not fast: updateDB(conn,cursor)
     # 
     generate_reporting(conn,cursor)
-    open_webapp(quiet=True)
+    
+    run_background_threads_and_exit(background_func,conn,cursor)
 
+def background_func(conn,cursor):
+        """Example task - replace with your API calling function."""
+        print(f"Task running:")
+        time.sleep(4)
+        
 def generate_reporting(conn,cursor):
     global user_colourList
     charting_meta_data = charts_init(conn, cursor)
