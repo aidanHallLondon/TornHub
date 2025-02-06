@@ -56,92 +56,106 @@ def create_attacks(conn, cursor, force=False):
     
     
     DROP VIEW IF EXISTS attack_events;
+
     CREATE VIEW attack_events AS
-    SELECT
-        DATE(a.started) as event_date,
-        CASE
-            WHEN u.user_id = a.attacker_id THEN 'attack'
-            ELSE 'defend'
-        END as event_type,
-        u.user_id,
-        u.name as user_name,
-        CASE
-            WHEN u.user_id = a.attacker_id THEN a.defender_id
-            ELSE a.attacker_id
-        END as opponent_id,
-        a.result AS attack_result, -- Retain original result field
-        CASE
-            WHEN u.user_id = a.attacker_id THEN
-                CASE a.result
-                    WHEN 'Arrested' THEN -1
-                    WHEN 'Timeout' THEN -1
-                    WHEN 'Lost' THEN -1
-                    WHEN 'Interrupted' THEN 0
-                    WHEN 'Special' THEN 0
-                    WHEN 'Escape' THEN 0
-                    WHEN 'Stalemate' THEN 0
-                    WHEN 'Assist' THEN 1
-                    WHEN 'Attacked' THEN 1
-                    WHEN 'Mugged' THEN 1
-                    WHEN 'Hospitalized' THEN 1
-                    ELSE 0 -- Default to draw if unknown
-                END
-            ELSE -- User is defender
-                CASE a.result
-                    WHEN 'Arrested' THEN 1
-                    WHEN 'Timeout' THEN 1
-                    WHEN 'Lost' THEN 1
-                    WHEN 'Interrupted' THEN 1
-                    WHEN 'Special' THEN 1
-                    WHEN 'Escape' THEN 1
-                    WHEN 'Stalemate' THEN 1
-                    WHEN 'Assist' THEN -1
-                    WHEN 'Attacked' THEN -1
-                    WHEN 'Mugged' THEN -1
-                    WHEN 'Hospitalized' THEN -1
-                    ELSE 0 -- Default to draw if unknown
-                END
-        END as result,
-        CASE
-            WHEN u.user_id = a.attacker_id THEN a.respect_gain
-            ELSE a.respect_loss * -1
-        END as respect_change,
-        a.chain,
-        a.is_interrupted,
-        CASE
-            WHEN u.user_id = a.attacker_id THEN a.is_stealthed
-            ELSE FALSE
-        END as is_stealthed,
-        CASE
-            WHEN u.user_id = a.defender_id THEN a.is_stealthed
-            ELSE FALSE
-        END as is_opponent_stealthed,
-        a.is_raid,
-        a.is_ranked_war,
-        CASE
-            WHEN u.user_id = a.attacker_id AND a.result = 'Assist' THEN TRUE
-            ELSE FALSE
-        END as is_assist,
-            a.started,
-        a.ended,
-        a.modifier_fair_fight,
-        a.modifier_war,
-        a.modifier_retaliation,
-        a.modifier_group_attack,
-        a.modifier_overseas,
-        a.modifier_chain_modifier,
-        a.modifier_warlord,
-        a.finishing_hit_effects,
-        a.attack_id,
-        a.attack_code
-    FROM
-        attacks a
-    LEFT JOIN
-        users u ON (a.attacker_id = u.user_id OR a.defender_id = u.user_id)
-    WHERE
-        u.is_in_faction = 1
-    ORDER BY
-        a.started DESC;
+        SELECT 
+            event_date,	event_type,	a.user_id,	user_name,	
+            opponent_id,	oppo.name as opponent_name, oppo.level AS opponent_level,
+            attack_result,	result,	respect_change,	chain,	
+            is_interrupted,	is_stealthed,	is_opponent_stealthed,	is_raid,	is_ranked_war,	is_assist,	
+            started,	ended,	modifier_fair_fight,	
+            modifier_war,modifier_retaliation,	modifier_group_attack,	modifier_overseas,	
+            modifier_chain_modifier,	modifier_warlord,	
+            finishing_hit_effects,	attack_id,	attack_code	
+        FROM (
+        SELECT
+                DATE(a.started) as event_date,
+                CASE
+                    WHEN u.user_id = a.attacker_id THEN 'attack'
+                    ELSE 'defend'
+                END as event_type,
+                u.user_id,
+                u.name as user_name,
+                CASE
+                    WHEN u.user_id = a.attacker_id THEN a.defender_id
+                    ELSE a.attacker_id
+                END as opponent_id,
+                CASE
+                    WHEN u.user_id = a.attacker_id THEN a.defender_id
+                    ELSE a.attacker_id
+                END as opponent_id,
+                a.result AS attack_result, -- Retain original result field
+                CASE
+                    WHEN u.user_id = a.attacker_id THEN
+                        CASE a.result
+                            WHEN 'Arrested' THEN -1
+                            WHEN 'Timeout' THEN -1
+                            WHEN 'Lost' THEN -1
+                            WHEN 'Interrupted' THEN 0
+                            WHEN 'Special' THEN 0
+                            WHEN 'Escape' THEN 0
+                            WHEN 'Stalemate' THEN 0
+                            WHEN 'Assist' THEN 1
+                            WHEN 'Attacked' THEN 1
+                            WHEN 'Mugged' THEN 1
+                            WHEN 'Hospitalized' THEN 1
+                            ELSE 0 -- Default to draw if unknown
+                        END
+                    ELSE -- User is defender
+                        CASE a.result
+                            WHEN 'Arrested' THEN 1
+                            WHEN 'Timeout' THEN 1
+                            WHEN 'Lost' THEN 1
+                            WHEN 'Interrupted' THEN 1
+                            WHEN 'Special' THEN 1
+                            WHEN 'Escape' THEN 1
+                            WHEN 'Stalemate' THEN 1
+                            WHEN 'Assist' THEN -1
+                            WHEN 'Attacked' THEN -1
+                            WHEN 'Mugged' THEN -1
+                            WHEN 'Hospitalized' THEN -1
+                            ELSE 0 -- Default to draw if unknown
+                        END
+                END as result,
+                CASE
+                    WHEN u.user_id = a.attacker_id THEN a.respect_gain
+                    ELSE a.respect_loss * -1
+                END as respect_change,
+                a.chain,
+                a.is_interrupted,
+                CASE
+                    WHEN u.user_id = a.attacker_id THEN a.is_stealthed
+                    ELSE FALSE
+                END as is_stealthed,
+                CASE
+                    WHEN u.user_id = a.defender_id THEN a.is_stealthed
+                    ELSE FALSE
+                END as is_opponent_stealthed,
+                a.is_raid,
+                a.is_ranked_war,
+                CASE
+                    WHEN u.user_id = a.attacker_id AND a.result = 'Assist' THEN TRUE
+                    ELSE FALSE
+                END as is_assist,
+                    a.started,
+                a.ended,
+                a.modifier_fair_fight,
+                a.modifier_war,
+                a.modifier_retaliation,
+                a.modifier_group_attack,
+                a.modifier_overseas,
+                a.modifier_chain_modifier,
+                a.modifier_warlord,
+                a.finishing_hit_effects,
+                a.attack_id,
+                a.attack_code
+            FROM
+                attacks a
+            LEFT JOIN
+                users u ON (a.attacker_id = u.user_id OR a.defender_id = u.user_id) AND u.is_in_faction = 1
+                ) a
+            LEFT JOIN users AS oppo ON oppo.user_id = a.opponent_id and oppo.user_id IS NOT NULL
+            ORDER BY started DESC
     """)
 
     cursor.executescript(
@@ -152,7 +166,9 @@ def create_attacks(conn, cursor, force=False):
     WITH
         Attacks7d AS (
             SELECT
-                opponent_id,
+                opponent_id, 
+                opponent_name,
+                opponent_level,
                 SUM(CASE WHEN event_type = 'defend' THEN 1 ELSE 0 END) AS attacks_7d,
                 SUM(CASE WHEN event_type = 'defend' THEN respect_change ELSE 0 END) AS respect_lost_7d,
                 COUNT(DISTINCT user_id) AS members_attacked_7d,
@@ -179,6 +195,8 @@ def create_attacks(conn, cursor, force=False):
         )
     SELECT
         COALESCE(a7d.opponent_id, aAll.opponent_id) AS opponent_id,
+        COALESCE(a7d.opponent_name, a7d.opponent_id) AS opponent_name,
+        opponent_level, 
         COALESCE(a7d.attacks_7d, 0) AS attacks_7d,
         COALESCE(a7d.respect_lost_7d, 0) AS respect_lost_7d,
         COALESCE(a7d.members_attacked_7d, 0) AS members_attacked_7d,
@@ -328,3 +346,8 @@ def _insert_attacks(conn, cursor, attacks, is_full_endpoint):
         for attackRow in attacks
     ],
     )
+
+def add_missing_users(conn, cursor):
+    cursor.execute('''
+''')
+    pass

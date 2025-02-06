@@ -63,11 +63,13 @@ def crimeexp_rank_bump_plot(
     #
     cursor.execute(
         f"""
-        SELECT batch_date, history.user_id, users.name as user_name, crimeexp_rank as rank, position_in_faction as role
+        SELECT batch_date, history.user_id, users.name as user_name, 
+                crimeexp_rank as rank, position_in_faction as role
         FROM crimeexp_ranks_history history
         LEFT JOIN users 
         ON users.user_id = history.user_id
         WHERE rank BETWEEN {limit_window[0]} and {limit_window[1]}
+            and user_name IS NOT NULL
         ORDER BY batch_date ASC, crimeexp_rank DESC
     """
     )

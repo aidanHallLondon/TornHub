@@ -332,7 +332,7 @@ def _api_raw_call(conn, cursor, url, params=None):
         data = response.json()
         if "error" in data:
             print(f'\n\nError data={data}\n      url={url}')
-            if data["error"].get("code",0)==6:
+            if data["error'"].get("code",0)==6:
                 return data # !!!
             else:
                 raise APIError(data["error"])  # Raise a custom APIError

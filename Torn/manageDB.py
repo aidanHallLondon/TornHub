@@ -12,7 +12,7 @@ from Torn.db.faction import create_faction, update_faction
 from Torn.db.faction_upgrades import create_faction_upgrades, update_faction_upgrades
 from Torn.db.items import create_items, update_items
 from Torn.db.revives import create_revives, update_revives
-from Torn.db.users import create_users, update_faction_members
+from Torn.db.users import create_users, uodate_users, update_faction_members
 from Torn.db._globals import DB_PATH, DB_NAME, DB_CONNECTPATH
 
 db_initialised = False
@@ -50,7 +50,8 @@ def updateDB(conn,cursor,force=False):
     update_armory(conn, cursor)
     update_faction_upgrades(conn,cursor,)
     update_attacks(conn,cursor, force=force)
-
+    # 
+    uodate_users(conn,cursor)
 
     conn.commit()
     print("\n < Updates done")

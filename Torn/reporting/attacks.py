@@ -25,6 +25,8 @@ def incoming_attack_chart(
         """
         SELECT
             opponent_id,
+            opponent_name,
+            opponent_level,
             threat_score,
             last_incoming_attack_date
         FROM
@@ -78,7 +80,7 @@ def incoming_attack_chart(
     # HTML for the table
     table_html_str = ""
     # Loop through each opponent
-    for opponent_id, threat_score, last_attack_date in opponents:
+    for opponent_id, opponent_name, opponent_level, threat_score, last_attack_date in opponents:
         # 2. Query for Attacks Involving the Opponent
         cursor.execute(
             f"""
@@ -168,7 +170,7 @@ def incoming_attack_chart(
             else:
                 color = "red" if respect_change < 0 else "green"
 
-            # Add bubble with transparency
+            # Add event bubble with transparency
             y_shift = +5 if event_type == "defend" else -5
             title=f'''{user_id} {"retaliation"+event_type if is_retaliation else event_type}  {attack_date} respect change = {respect_change} '''
             svg_content += f'''<circle cx="{day_x}" cy="{y+y_shift}" r="{radius}" fill="{color}" 
@@ -191,7 +193,11 @@ def incoming_attack_chart(
         # Add a row to the HTML table
         table_html_str += f"""
         <tr>
-            <td>{opponent_id}</td>
+            <td title="{opponent_name} [{opponent_id}] Level {opponent_level if {opponent_level} else "pending"}">
+                <a href="https://www.torn.com/profiles.php?XID={opponent_id}" target="_blank">
+                {opponent_name} {("L="+str(opponent_level)) if opponent_level else ""}
+                </a>
+            </td>
             <td>{threat_score:.2f}</td>
             <td>{svg_content}</td>
         </tr>

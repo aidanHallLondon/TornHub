@@ -9,8 +9,7 @@ def create_items(conn, cursor, force=False):
         cursor.execute("DROP TABLE IF EXISTS item_listings_history;")
  
 
-    cursor.executescript("""
-        DROP TABLE IF EXISTS items;                          
+    cursor.executescript("""                     
         CREATE TABLE IF NOT EXISTS items (
             id_pk INTEGER PRIMARY KEY,  
             item_id INTEGER UNIQUE,
