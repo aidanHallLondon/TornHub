@@ -1,6 +1,10 @@
 import json
 from Torn.api import cached_api_call
  
+
+def get_faction_id(conn,cursor):
+    return 22631
+
 def getFaction(conn,cursor,params=None, cache_age_limit=3600, force=False):
     return cached_api_call(conn,cursor,"faction?selections=basic,currency,hof,stats", force=True )
 
