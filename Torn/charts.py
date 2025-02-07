@@ -12,6 +12,9 @@ user_colourList=None
 def init(conn,cursor):
     return {'colourList':load_user_colourList_for_charts(conn, cursor, cmap="tab20c")}
 
+def close_all_figures():
+    plt.close('all')
+
 def plt_save_image(path, out_filename, show_image=False, clear_image=True):
     if path is not None and out_filename is not None:
         if not os.path.exists(path):
@@ -21,6 +24,8 @@ def plt_save_image(path, out_filename, show_image=False, clear_image=True):
         plt.show()
     if clear_image:
         plt.clf()
+        if not show_image: 
+            plt.close()
 
 def load_user_colourList_for_charts(conn,cursor, cmap='magma'):
     '''

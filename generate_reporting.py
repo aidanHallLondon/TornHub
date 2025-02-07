@@ -1,16 +1,10 @@
 import os
 import shutil
 import sqlite3
-import time
-from Torn.threads import (
-    _background_thread_task,
-    run_background_threads_and_exit,
-    start_httpd_server,
-    stop_hhtpd_server,
-)
-from Torn.charts import init as charts_init
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import get_last_updateDB_delta, initDB, updateDB
+from Torn.threads import run_background_threads_and_exit
+from Torn.charts import close_all_figures, init as charts_init
 from Torn.reporting.all_tables import (
     move_template_file_with_subs,
     save_browsable_tables,
@@ -56,6 +50,7 @@ def main(fast=True):
         interval=BACKGROUND_UPDATE_DUTY_CYCLE_SECONDS,
     )
 
+
 def main_thread_update():
     last_update = get_last_updateDB_delta()
     if (
@@ -97,6 +92,7 @@ def generate_reporting(conn, cursor):
         template_file="templates/_menu.html",
         out_filename="_menu.html",
     )
+    close_all_figures()
 
 
 def attacks_reporting(conn, cursor, f_menu):
