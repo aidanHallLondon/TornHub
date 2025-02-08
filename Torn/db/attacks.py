@@ -203,30 +203,57 @@ CREATE VIEW attack_events AS
                 opponent_id
         )
     SELECT
-        COALESCE(a7d.opponent_id, aAll.opponent_id) AS opponent_id,
-        COALESCE(a7d.opponent_name, a7d.opponent_id) AS opponent_name,
-        opponent_level, 
+        COALESCE(a7d.opponent_id, aAll.opponent_id) AS user_id,
+        COALESCE(a7d.opponent_name, a7d.opponent_id) AS user_name,
+        opponent_level as user_level, 
         COALESCE(a7d.attacks_7d, 0) AS attacks_7d,
-        COALESCE(a7d.respect_lost_7d, 0) AS respect_lost_7d,
-        COALESCE(a7d.members_attacked_7d, 0) AS members_attacked_7d,
-        COALESCE(a7d.days_since_last_incoming_attack, 9999) AS days_since_last_incoming_attack, -- Use a large value if no recent attacks
-        a7d.last_incoming_attack_date,
+        COALESCE(a7d.respect_lost_7d, 0) AS respect_change_7d,
+        COALESCE(a7d.members_attacked_7d, 0) AS individuals_7d,
+        COALESCE(a7d.days_since_last_incoming_attack, 9999) AS days_since_last_event, -- Use a large value if no recent attacks
+        a7d.last_incoming_attack_date as last_event_date,
         COALESCE(aAll.overall_respect_lost, 0) AS overall_respect_lost,
         (
             (
                 COALESCE(ABS(a7d.respect_lost_7d), 0) * 1.1 +
                 COALESCE(a7d.members_attacked_7d, 0) * 1 
                 ) * (7 - COALESCE(a7d.days_since_last_incoming_attack, 7)) 
-        ) AS threat_score
+        ) AS interest_score
     FROM
         Attacks7d a7d
     FULL OUTER JOIN
         AttacksAllTime aAll ON a7d.opponent_id = aAll.opponent_id
     ORDER BY
-        threat_score DESC;
+        interest_score DESC;
 
     """
     )
+
+    cursor.executescript("""   
+        DROP VIEW IF EXISTS  attacks_outgoing;
+
+        CREATE VIEW attacks_outgoing AS
+            SELECT * FROM (
+                SELECT
+                            attack_events.user_id, 
+                            attack_events.user_name,
+                            users.level AS user_level,
+                            SUM(CASE WHEN event_type = 'attack' THEN 1 ELSE 0 END) AS attacks_7d,
+                        SUM(CASE WHEN event_type = 'defend' THEN 1 ELSE 0 END) AS defends_7d,
+                            SUM(CASE WHEN event_type = 'attack' THEN respect_change ELSE 0 END) AS respect_change_7d,
+                            COUNT(DISTINCT opponent_id) AS individuals_7d,
+                            MAX(CASE WHEN event_type = 'defend' THEN event_date ELSE NULL END) AS last_event_date, -- Filter for 'defend' events
+                            JULIANDAY('now') - JULIANDAY(MAX(CASE WHEN event_type = 'attack' THEN event_date ELSE NULL END)) AS days_since_last_event ,
+                            SUM(CASE WHEN event_type = 'attack' THEN respect_change ELSE 0 END)  *COUNT(DISTINCT attack_events.user_id)  AS  interest_score
+                        FROM
+                            attack_events LEFT JOIN users on users.user_id = attack_events.user_id
+                        WHERE
+                            attack_events.user_id IS NOT NULL AND
+                            event_date >= DATE('now', '-7 days')
+                        GROUP BY attack_events.user_id
+                        ) summary
+                        WHERE attacks_7d>0
+                        ORDER BY respect_change_7d DESC
+""")
 
 
 def update_attacks(conn, cursor, force=False):

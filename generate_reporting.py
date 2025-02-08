@@ -13,6 +13,7 @@ from Torn.reporting.attacks import (
     attacks_incoming_overview,
     attacks_overview,
     incoming_attack_chart,
+    outgoing_attack_chart,
 )
 from Torn.reporting.build_menus import _menu_item_for_file, save_menus_as_html
 from Torn.reporting.faction import faction_data_page
@@ -29,7 +30,7 @@ imageExtension = ".png"
 charting_meta_data = None
 user_colourList = None
 
-BACKGROUND_UPDATE_DUTY_CYCLE_SECONDS = 60
+BACKGROUND_UPDATE_DUTY_CYCLE_SECONDS = 10
 BACKGROUND_UPDATE_UPDATEDB_DUTY_CYCLE_SECONDS = 300
 
 
@@ -99,6 +100,8 @@ def attacks_reporting(conn, cursor, f_menu):
     f_menu = attacks_incoming_overview(conn, cursor, f_menu=f_menu)
     f_menu = attacks_overview(conn, cursor, f_menu=f_menu)
     f_menu = incoming_attack_chart(conn, cursor, f_menu=f_menu)
+    f_menu = outgoing_attack_chart(conn, cursor, f_menu=f_menu)
+    
     return f_menu
 
 

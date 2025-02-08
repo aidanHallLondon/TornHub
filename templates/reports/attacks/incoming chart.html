@@ -1,14 +1,14 @@
-
 <html>
-<head>
-  <title>$title_str</title>
-  <style>
- body {
+  <head>
+    <title>$title_str</title>
+    <style>
+      body {
         font-family: sans-serif; /* Apply sans-serif font to the entire body */
         color: #444; /* Set default text color to #444 */
       }
-      a { /*  This targets all anchor (link) tags.  Replace 'a' with your element's selector. */
-          text-decoration: none;
+      a {
+        /*  This targets all anchor (link) tags.  Replace 'a' with your element's selector. */
+        text-decoration: none;
       }
       table {
         border-collapse: collapse; /* Collapse borders for consistent striping */
@@ -28,40 +28,86 @@
       table th:nth-child(even) {
         background-color: #ddf4;
       }
-      table td:nth-child(1),table td:nth-child(2){
-        padding:0.5em;
+      table td:nth-child(1),
+      table td:nth-child(2) {
+        padding: 0.5em;
       }
       th,
       td {
         border: none;
         padding: 8px;
       }
-      .defenders::before{content:"Victim(s): "; font-weight: Bold;}
-      .defenders{
-        color:#800;
-        font-size: 12px;
+      .friends::before {
+        content: "Friends: ";
+        font-weight: Bold;
+        font-size: 11px;
       }
-      .attackers::before{content:"Avenger(s): "; font-weight: Bold;}
-      .attackers{
-        color:#060;
-        font-size: 12px;
+      .friends  {
+        color: #060;
+        font-size: 11px;
+      }.friends A { color:#0a0;}
+      .foes::before {
+        content: "Foes: ";
+        font-weight: Bold;
+        font-size: 11px;
       }
-  </style>
-</head>
-<body>
-  <h1>$title_str</h1>
-  <table>
-    <thead>
+      .foes {
+        color: #600;
+        font-size: 11px;
+      }
+      .foes A{
+        color: #A00;
+      }
+      .highlight {
+      stroke: orange;
+      stroke-width: 6px;
+      opacity:1;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>$title_str</h1>
+    <table>
+      <thead>
         <tr>
-            <th>Opponent ID</th>
-            <th>Members</th>
-            <th>Attacks</th>
+          <th>$user_label</th>
+          <th>Members</th>
+          <th>Attacks</th>
         </tr>
-    </thead>
-    <tbody>
-$content_html
-    </tbody>
-</table>
-
-</body>
+      </thead>
+      <tbody>
+        $content_html
+      </tbody>
+    </table>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const userLinks = document.querySelectorAll("a.user");
+  
+        userLinks.forEach(link => {
+          link.addEventListener("mouseover", (event) => {
+            // Get the target ID from the data-target attribute
+            const targetId = link.dataset.target; // Use dataset for data-* attributes
+  
+            // Find the corresponding SVG element
+            const svgElements = document.querySelectorAll(`.u${targetId}`);
+  
+            svgElements.forEach(element => {
+              element.classList.add('highlight');
+            });
+            event.stopPropagation(); // Prevent event bubbling
+          });
+  
+          link.addEventListener("mouseout", (event) => {
+            const targetId = link.dataset.target;
+            const svgElements = document.querySelectorAll(`.u${targetId}`);
+  
+            svgElements.forEach(element => {
+              element.classList.remove('highlight');
+            });
+            event.stopPropagation(); // Prevent event bubbling
+          });
+        });
+      });
+    </script>
+  </body>
 </html>

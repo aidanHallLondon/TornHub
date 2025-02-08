@@ -16,27 +16,63 @@ def incoming_attack_chart(
     template_file_path="templates/reports/attacks/incoming chart.html",
     title_str="Attacks Incoming Chart",
     table_title="Attacks",
+    menu_name="attacks_incoming_chart",
     path="reports/attacks",
     out_filename="incoming_chart.html",
     f_menu=[],
 ):
-    # 1. Get Attackers Ordered by Threat Score
-    cursor.execute(
-        """
-        SELECT
-            opponent_id,
-            opponent_name,
-            opponent_level,
-            threat_score,
-            last_incoming_attack_date
-        FROM
-            attacks_incoming
-        WHERE threat_score > 0
-        ORDER BY
-            threat_score DESC
-        """
+    return _draw_attack_chart(
+        conn,
+        cursor,
+        user_type="defenders",
+        template_file_path=template_file_path,
+        title_str=title_str,
+        table_title=table_title,
+        menu_name=menu_name,
+        path=path,
+        out_filename=out_filename,
+        f_menu=f_menu,
     )
-    opponents = cursor.fetchall()
+
+
+def outgoing_attack_chart(
+    conn,
+    cursor,
+    template_file_path="templates/reports/attacks/incoming chart.html",
+    title_str="Attacks Outgoing Chart",
+    table_title="outgoing attacks",
+    menu_name="attacks_outgoing_chart",
+    path="reports/attacks",
+    out_filename="outgoing_chart.html",
+    f_menu=[],
+):
+    return _draw_attack_chart(
+        conn,
+        cursor,
+        user_type="attackers",
+        template_file_path=template_file_path,
+        title_str=title_str,
+        table_title=table_title,
+        menu_name=menu_name,
+        path=path,
+        out_filename=out_filename,
+        f_menu=f_menu,
+    )
+
+
+def _draw_attack_chart(
+    conn,
+    cursor,
+    user_type,  # attackers or defenders
+    template_file_path,
+    title_str,
+    table_title,
+    menu_name,
+    path,
+    out_filename,
+    f_menu=[],
+):
+    # menu_name="attacks_incoming_chart"
 
     # Define SVG dimensions and other parameters
     svg_width = 1000  # Example width
@@ -44,7 +80,7 @@ def incoming_attack_chart(
     x_margin = 10  # Example margin
     y_centre = 50  # centre line
     min_radius = 5  # Minimum radius
-    max_radius = svg_height / 2 - 10  # Example max radius
+    max_radius = svg_height / 2 - 4  # Example max radius
     percentile = 0.95  # Exclude the top 5% as outliers
     # ... other parameters for margins, colors, etc.
 
@@ -52,67 +88,39 @@ def incoming_attack_chart(
     time_range = timedelta(days=7).total_seconds()  # Total seconds in 7 days
     x_scale = (svg_width - x_margin * 2) / time_range
 
-    # Calculate Percentiles for Respect Change
-    cursor.execute(
-        f"""
-        WITH RespectChange AS (
-            SELECT
-                ABS(respect_change) AS abs_respect_change
-            FROM
-                attack_events
-            WHERE
-                event_date >= DATE('now', '-7 days')
-        )
-        SELECT
-            MAX(abs_respect_change)
-        FROM (
-            SELECT abs_respect_change, NTILE(100) OVER (ORDER BY abs_respect_change) AS percentile
-            FROM RespectChange
-        ) AS subquery
-        WHERE percentile <= {percentile*100};
-        """
-    )
-    max_respect_change = cursor.fetchone()[0]
-
-    # Determine max_radius (you might want to adjust the scaling factor)
-    respect_scaling_factor = (
-        max_radius / (max_respect_change**0.5) if max_respect_change > 0 else 0.1
-    )
+    # 1. Get Attackers Ordered by Threat Score
+    primary_users_list = _get_primary_user_list(cursor, user_type)
+    max_respect_sum, max_respect_change = _calculate_percentiles(cursor, percentile)
 
     # HTML for the table
     table_html_str = ""
+
+    attacks_all,respect_max,respect_sum_max = get_attacks_and_meta_data(cursor, user_type, primary_users_list)
+    print(respect_max,respect_sum_max)
+    respect_bubble_scaling_factor = max_radius / (respect_max**0.5)if respect_max > 0.1 else 0.1
+    respect_sparkline_scaling_factor = max_radius / (respect_sum_max)if respect_sum_max > 0.1 else 0.1
+    print(respect_bubble_scaling_factor,respect_sparkline_scaling_factor)
+   # Determine max_radius (you might want to adjust the scaling factor)
+    # respect_scaling_factor = (
+    #     max_radius / (max_respect_change**0.5) if max_respect_change > 0 else 0.1
+    # )
+    # if user_type == "attackers":
+    #     max_radius = max_radius / 10
+ 
+
     # Loop through each opponent
     # Query for Attacks Involving the Opponent
     # and draw it
     for (
-        opponent_id,
-        opponent_name,
-        opponent_level,
-        threat_score,
-        last_attack_date,
-    ) in opponents:
-        cursor.execute(
-            f"""
-            SELECT
-                started,
-                event_type,
-                respect_change,
-                user_id, user_name, 
-				opponent_id, opponent_name,	opponent_level,
-				modifier_fair_fight as fair_fight,
-				modifier_retaliation as retaliation ,
-				modifier_group_attack as group_attack, 
-				is_assist as assist,
-				modifier_overseas as overseas
-            FROM
-                attack_events 
-            WHERE
-                 opponent_id=? AND started >= '{datetime.now() - timedelta(days=7)}'
-             ORDER BY started ASC
-            """,
-            (opponent_id,),
-        )
-        attacks = cursor.fetchall()
+        prime_user_id,
+        prime_user_name,
+        prime_user_level,
+        interest_score,
+        last_event_date,
+    ) in primary_users_list:
+        # process each user
+        attacks = attacks_all[prime_user_id] #_get_attack_events_by_user(cursor, user_type, prime_user_id)
+        # if user_type=="attackers": print(attacks)
 
         # Find the minimum time for this opponent
         min_attack_time = datetime.now() - timedelta(days=7)  # 7 days ago
@@ -121,7 +129,7 @@ def incoming_attack_chart(
         has_defends = any(attack[1] == "defend" for attack in attacks)
 
         # If no defends, skip this opponent
-        if not has_defends:
+        if user_type == "defenders" and not has_defends:
             continue
 
         # Start building the SVG string
@@ -136,7 +144,7 @@ def incoming_attack_chart(
             y_centre=y_centre,
             min_radius=min_radius,
             x_scale=x_scale,
-            respect_scaling_factor=respect_scaling_factor,
+            respect_scaling_factor=None,
         )
 
         svg_content += _draw_attack_event_bubbles(
@@ -148,7 +156,7 @@ def incoming_attack_chart(
             y_centre=y_centre,
             min_radius=min_radius,
             x_scale=x_scale,
-            respect_scaling_factor=respect_scaling_factor,
+            respect_scaling_factor=respect_bubble_scaling_factor,
         )
 
         svg_content += _draw_cumulative_respect_sparkline(
@@ -160,19 +168,19 @@ def incoming_attack_chart(
             y_centre=y_centre,
             min_radius=min_radius,
             x_scale=x_scale,
-            respect_scaling_factor=respect_scaling_factor,
+            respect_scaling_factor=respect_sparkline_scaling_factor,
         )
 
         svg_content += "</svg>"
 
-        versus_html = get_member_roles_in_the_attacks(attacks)
+        versus_html = get_member_roles_in_the_attacks(prime_user_id, attacks, user_type)
 
         # Add a row to the HTML table
         table_html_str += f"""
         <tr>
-            <td title="{opponent_name} [{opponent_id}] Level {opponent_level if {opponent_level} else "pending"}, threat score = {threat_score:.2f}">
-                <a href="https://www.torn.com/profiles.php?XID={opponent_id}" target="_blank">
-                {opponent_name} {'<span class="level_label">{' + str(opponent_level) +'}</span>' if opponent_level else '' }
+            <td title="{prime_user_name} [{prime_user_id}] Level {prime_user_level if {prime_user_level} else "pending"}, threat score = {interest_score:.2f}">
+                <a href="https://www.torn.com/profiles.php?XID={prime_user_id}" target="_blank">
+                {prime_user_name} {'<span class="level_label">{' + str(prime_user_level) +'}</span>' if prime_user_level else '' }
                 </a>
             </td>
             <td>{versus_html}</td>
@@ -189,6 +197,7 @@ def incoming_attack_chart(
     final_html = html_template.safe_substitute(
         page_title=title_str,
         title_str=title_str,
+        user_label=user_type,
         content_html=table_html_str,
     )
     with open(output_filename, "w") as f:
@@ -196,40 +205,224 @@ def incoming_attack_chart(
     print(f"{title_str} saved in {output_filename}")
 
     # Menu Item (if needed)
-    f_menu.append(
-        _menu_item_for_file(path=path, name="attacks_incoming_chart", href=out_filename)
-    )
+    f_menu.append(_menu_item_for_file(path=path, name=menu_name, href=out_filename))
     return f_menu
 
-
-def get_member_roles_in_the_attacks(attacks):
-    faction_members = {"attack": [], "defend": []}
+def get_attacks_and_meta_data(cursor, user_type, primary_users_list):
+    '''
+    loas the attacks into a list
+    go through that list and work out:
+    the maximum absolute cummulatative respect and max individual respect_changes per user
+    return the list and max values in a tuple
+    '''
+    percentile=0.95
+    respect_sum_list=[]
+    respect_max_list=[]
+    attacks_all={}
     for (
-        attack_date,
-        event_type,
-        respect_change,
-        user_id,
-        user_name,
-        opponent_id,
-        opponent_name,
-        opponent_level,
-        fair_fight,
-        retaliation,
-        group_attack,
-        assist,
-        overseas,
-    ) in attacks:
-        if user_name not in faction_members[event_type]:
-            faction_members[event_type].append(user_name)
+        prime_user_id,
+        prime_user_name,
+        prime_user_level,
+        interest_score,
+        last_event_date,
+    ) in primary_users_list:
+            attacks = _get_attack_events_by_user(cursor, user_type, prime_user_id)
+            attacks_all[prime_user_id] = attacks
+            # 
+            respect_sum=0
+            respect_max=0
+            respect_sum_max=0
+            for attack in attacks:
+                    event_type = attack[1]
+                    respect_change = attack[2]
+                    respect_max = max(respect_max,abs(respect_change))
+                    respect_sum+=respect_change
+                    respect_sum_max= max(abs(respect_sum),respect_sum_max)
+            respect_max_list.append(respect_max)
+            respect_sum_list.append(respect_sum_max)
+    respect_max_list.sort()
+    respect_sum_list.sort()
+    respect_max = respect_max_list[round(len(respect_max_list)*percentile)] if len(respect_max_list)>10 else respect_max_list[-1]
+    respect_sum = respect_sum_list[round(len(respect_sum_list)*percentile)] if len(respect_sum_list)>10 else respect_sum_list[-1]
+    return (attacks_all,respect_max,respect_sum)
 
-    versus_html = f"""<div class="defenders"><span class="defender">{'</span> <span class="defender">'.join(faction_members["defend"])}</span></div>"""
 
-    if (
-        faction_members["attack"] != faction_members["defend"]
-        and len(faction_members["attack"]) > 0
-    ):
-        versus_html += f"""<div class="attackers"><span class="attacker">{'</span> <span class="attacker">'.join(faction_members["attack"])}</span></div>"""
-    return versus_html
+def _get_attack_events_by_user(cursor, user_type, prime_user_id):
+    id_field_name = "opponent_id" if user_type == "defenders" else "user_id"
+    cursor.execute(
+        f"""
+            SELECT
+                started,
+                event_type,
+                respect_change,
+                user_id, user_name, 
+                opponent_id, opponent_name,	opponent_level,
+                modifier_fair_fight as fair_fight,
+                modifier_retaliation as retaliation ,
+                modifier_group_attack as group_attack, 
+                is_assist as assist,
+                modifier_overseas as overseas
+            FROM
+                attack_events 
+            WHERE
+                {id_field_name}=? AND started >= '{datetime.now() - timedelta(days=7)}'
+            ORDER BY started ASC
+            """,
+        (prime_user_id,),
+    )
+    events = cursor.fetchall()
+    return events
+
+
+def _calculate_percentiles(cursor, percentile):
+    percentile = 5
+    cursor.execute(
+        f"""
+        SELECT
+            (SELECT sum_respect_change
+            FROM (
+                SELECT SUM(respect_change) AS sum_respect_change,
+                    100 * PERCENT_RANK() OVER (ORDER BY SUM(respect_change) DESC) AS percentRank
+                FROM attack_events
+                WHERE event_date >= DATE('now', '-7 days')
+                GROUP BY user_id
+            )
+            WHERE percentRank >= ?
+            ORDER BY percentRank ASC
+            LIMIT 1
+            ) AS sum_respect_change,
+
+            (SELECT max_respect_change
+            FROM (
+                SELECT MAX(respect_change) AS max_respect_change,
+                    100 * PERCENT_RANK() OVER (ORDER BY MAX(respect_change) DESC) AS percentRank
+                FROM attack_events
+                WHERE event_date >= DATE('now', '-7 days')
+                GROUP BY user_id
+            )
+            WHERE percentRank >= ?
+            ORDER BY percentRank ASC
+            LIMIT 1
+            ) AS max_respect_change;
+        """,(percentile,percentile,))
+    max_respect_sum ,max_respect_change = cursor.fetchone()
+    return (max_respect_sum, max_respect_change)
+
+
+def _get_primary_user_list(cursor, user_type):
+    # user_type = "attacker" | "defenders"
+    user_data_source = (
+        "attacks_incoming" if user_type == "defenders" else "attacks_outgoing"
+    )
+
+    cursor.execute(
+        f"""
+        SELECT
+            user_id,
+            user_name,
+            user_level,
+            interest_score,
+            last_event_date
+        FROM {user_data_source}
+        WHERE COALESCE(interest_score,0) > 0 -- ignore the tens of thousands of dull rows
+        ORDER BY
+            interest_score DESC
+        """
+    )
+    user_list = cursor.fetchall()
+    print(f'user_list("{user_data_source}") = {len(user_list)}')
+    return user_list
+
+
+def get_member_roles_in_the_attacks(
+    prime_user_id, attacks, user_type="defenders"
+):  # user_type parameter is unused
+    """
+    Processes a list of game attacks and returns HTML representing attackers and defenders.
+
+    Args:
+        prime_user_id: the user we are building this report for
+        attacks: A list of tuples, where each tuple represents an attack
+                 and contains the following elements:
+                 (attack_date, event_type, respect_change, user_id, user_name,
+                  opponent_id, opponent_name, opponent_level, fair_fight,
+                  retaliation, group_attack, assist, overseas).
+        user_type:  Unused parameter.  Consider removing.
+
+    Returns:
+        An HTML string showing attackers and/or defenders.  Returns an empty
+        string if there are no attackers or defenders.
+    """
+
+    faction_members = {"foes": [], "friends": []}
+
+    for attack in attacks:
+        (
+            attack_date,
+            event_type,
+            respect_change,
+            user_id,
+            user_name,
+            opponent_id,
+            opponent_name,
+            opponent_level,
+            fair_fight,
+            retaliation,
+            group_attack,
+            assist,
+            overseas,
+        ) = attack  # Unpack directly in the loop
+
+        if not opponent_name:
+            opponent_name = "Someone"
+
+        existing_foes = {member[0] for member in faction_members["foes"]}
+        if opponent_name not in existing_foes:
+            faction_members["foes"].append(
+                (
+                    opponent_name,
+                    _torn_profile_anchor_html(
+                        "user foe", opponent_id, opponent_name, opponent_level
+                    ),
+                )
+            )
+        existing_friends = {member[0] for member in faction_members["friends"]}
+        if user_name not in existing_friends:
+            faction_members["friends"].append(
+                (
+                    user_name,
+                    _torn_profile_anchor_html("user friend", user_id, user_name, None),
+                )
+            )
+    # Build the HTML using f-strings and join for cleaner formatting.
+    foes_html = ""
+    if len(faction_members["foes"]):
+        foes_links = [member[1] for member in faction_members["foes"]]
+        foes_html = f'<div class="foes">{", ".join(foes_links)}</div>'
+
+    defenders_html = ""
+    if len(faction_members["friends"]):
+        friends_links = [member[1] for member in faction_members["friends"]]
+        friends_html = f'<div class="friends">{", ".join(friends_links)}</div>'
+
+    return foes_html + friends_html  # Concatenate the two HTML strings
+
+
+def _torn_profile_anchor_html(class_name, user_id, user_name, user_level):
+    """
+    Generates an HTML anchor tag for a Torn profile link.
+
+    Args:
+        user_id: The Torn user ID.
+        user_name: The Torn user name.
+        user_level: The user's level.
+
+    Returns:
+        An HTML string representing the anchor tag.
+    """
+    href= f"https://www.torn.com/profiles.php?XID={user_id}"
+    user_level_label = f"({user_level})" if user_level else ''
+    return f'<a class={class_name} href="{href}" data-target="{user_id}" target="_blank">{user_name} {user_level_label}</a>'
 
 
 def _x_from_date(attack_date, min_attack_time, x_margin, x_scale):
@@ -318,7 +511,7 @@ def _draw_attack_event_bubbles(
         day_x = _x_from_date(attack_date, min_attack_time, x_margin, x_scale)
         y = y_centre  # Center vertically
         y_shift = +5 if event_type == "defend" else -5
-        radius = respect_scaling_factor * math.sqrt(abs(respect_change**0.5))
+        radius = respect_scaling_factor * (abs(respect_change)**0.5)
         if radius < min_radius:
             radius = min_radius
 
@@ -350,7 +543,8 @@ assist={str(assist) if assist>0 else ''}"""
         #
         # Add event bubble with transparency
         y_label = max(y + y_shift + radius + 5, svg_height - y_centre - 10)
-        svg_content += f"""<circle cx="{day_x}" cy="{y+y_shift}" r="{radius}" fill="{color}" 
+        class_list = " ".join([(f"u{user_id}" if user_id else ""),(f"u{opponent_id}" if opponent_id else "")])
+        svg_content += f"""<circle class="{class_list}" cx="{day_x}" cy="{y+y_shift}" r="{radius}" fill="{color}" 
                 fill-opacity="0.4" stroke="{"white" if retaliation==1 else "Black"}" 
                 stroke-width="{(retaliation+group_attack+overseas) if retaliation+group_attack+overseas!=3 else 0.75}"><title>{title}</title></circle>"""
         # svg_content += f"""<text x="{day_x }" y="{y_label}" text-anchor="middle" font-size="8">
@@ -378,7 +572,7 @@ def _draw_cumulative_respect_sparkline(
     """
 
     def _y(cumulative_respect):
-        y = -cumulative_respect * respect_scaling_factor * 0.3
+        y = -cumulative_respect * respect_scaling_factor 
         return max(min(y, svg_height - 5 - y_centre), 5 - y_centre)
 
     y_centre = svg_height / 2  # Calculate y_centre here for drawing
@@ -431,7 +625,8 @@ def attacks_incoming_overview(
     out_filename="incoming.html",
     f_menu=[],
 ):
-    cursor.execute(f'''
+    cursor.execute(
+        f"""
     SELECT
             started,
             user_name, 
@@ -450,7 +645,8 @@ def attacks_incoming_overview(
             WHERE
                  event_type="defend" and started >= '{datetime.now() - timedelta(days=7)}'
              ORDER BY started DESC
-''')
+"""
+    )
     table_html_str = html_table(cursor)
     #
     output_filename = os.path.join(path, out_filename)
@@ -467,10 +663,13 @@ def attacks_incoming_overview(
         f.write(final_html)
     print(f"{title_str} saved in {output_filename}")
     f_menu.append(
-        _menu_item_for_file(path=path, name="attacks_incoming_recent", href=out_filename)
+        _menu_item_for_file(
+            path=path, name="attacks_incoming_recent", href=out_filename
+        )
     )
 
     return f_menu
+
 
 def attacks_overview(
     conn,
@@ -482,7 +681,8 @@ def attacks_overview(
     out_filename="attacks_recent.html",
     f_menu=[],
 ):
-    cursor.execute(f'''
+    cursor.execute(
+        f"""
     SELECT
             started,
             user_name, 
@@ -501,7 +701,8 @@ def attacks_overview(
             WHERE
                  event_type="attack" and started >= '{datetime.now() - timedelta(days=7)}'
              ORDER BY started DESC
-''')
+"""
+    )
     table_html_str = html_table(cursor)
     #
     output_filename = os.path.join(path, out_filename)
