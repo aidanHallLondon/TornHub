@@ -20,7 +20,7 @@ def html_table(cursor,data=None):
 def generateStyledTable(data, headers, colalign):
     # generate html table
     table_html_str = tabulate(
-        data, headers=headers, colalign=("right",), tablefmt="html"
+        data, headers=headers, colalign=colalign, tablefmt="html"
     )
     soup = BeautifulSoup(table_html_str, "html.parser")
 

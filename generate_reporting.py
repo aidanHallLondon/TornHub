@@ -19,6 +19,7 @@ from Torn.reporting.build_menus import _menu_item_for_file, save_menus_as_html
 from Torn.reporting.faction import faction_data_page
 from Torn.reporting.faction_revives import (
     list_revivers_to_html_file,
+    revive_contract,
     revivers_share_donut,
     revives_pivot_to_html_file,
     revives_stackedarea_chart,
@@ -101,7 +102,7 @@ def attacks_reporting(conn, cursor, f_menu):
     f_menu = attacks_overview(conn, cursor, f_menu=f_menu)
     f_menu = incoming_attack_chart(conn, cursor, f_menu=f_menu)
     f_menu = outgoing_attack_chart(conn, cursor, f_menu=f_menu)
-    
+
     return f_menu
 
 
@@ -158,6 +159,7 @@ def faction_reporting(conn, cursor, f_menu):
     f_menu = faction_revive_reporting(conn, cursor, f_menu)
     f_menu = faction_crime_reporting(conn, cursor, f_menu)
     f_menu = faction_oc_reporting(conn, cursor, f_menu)
+
     return f_menu
 
 
@@ -412,6 +414,21 @@ def faction_revive_reporting(conn, cursor, f_menu):
     f_menu.append(
         _menu_item_for_file(
             path, "revives_by_date_last-12-weeks", "stacked_area_by_date_12weeks.png"
+        )
+    )
+
+    revive_contract(
+        conn,
+        cursor,
+        revive_contract_id=1,
+        template_file_path="templates/reports/revives/contract.html",
+        name="revives_contract",
+        path=path,
+        out_filename="revive_contract.html",
+    )
+    f_menu.append(
+        _menu_item_for_file(
+            path, "revives_contract", "revive_contract.html"
         )
     )
 

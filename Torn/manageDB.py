@@ -11,7 +11,7 @@ from Torn.db.crimes import create_crimes, update_crimes
 from Torn.db.faction import create_faction, get_faction_id, update_faction
 from Torn.db.faction_upgrades import create_faction_upgrades, update_faction_upgrades
 from Torn.db.items import create_items, update_items
-from Torn.db.revives import create_revives, update_revives
+from Torn.db.revives import create_revive_contracts, create_revives, update_revive_contracts, update_revives
 from Torn.db.users import create_users, uodate_users, update_faction_members
 from Torn.db._globals import DB_PATH, DB_NAME, DB_CONNECTPATH
 
@@ -47,6 +47,8 @@ def initDB(conn, cursor, force=False):
     create_faction_upgrades(conn, cursor, force=force)
     create_attacks(conn, cursor, faction_id=faction_id, force=force)
     create_revives(conn, cursor, force=force)
+    create_revive_contracts(conn, cursor, force=force)
+
     conn.commit()
     db_initialised = True
     return db_initialised
@@ -56,7 +58,8 @@ def updateDB(conn, cursor, force=False):
     update_faction(conn, cursor)
     conn.commit()
     update_faction_members(conn, cursor)
-    update_revives(conn, cursor, force=force)  # FORCE FORCE
+    update_revives(conn, cursor, force=force)  
+    update_revive_contracts(conn, cursor, force=force)
     update_crimes(conn, cursor, force=force)
     update_items(
         conn, cursor, force=force

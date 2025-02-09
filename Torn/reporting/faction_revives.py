@@ -15,16 +15,174 @@ from Torn.charts import (
 from Torn.reporting.build_menus import _menu_item_for_file
 from Torn.tables import generateStyledTable
 
-def revivers_share_donut(conn, cursor, title=None, name=None, period=None,path=None,out_filename=None):
-    '''
+ 
+
+def revive_contract(conn, cursor,    template_file_path,
+    name,
+    path,
+    out_filename,  revive_contract_id=None):
+    title_str="Revives for contract"
+    revive_contract_id, ally_factionname, enemy_factionname, started, ended, chance_min = _get_revive_contract(cursor, revive_contract_id)
+    # 
+    cursor.execute("""
+        WITH results AS (
+            SELECT
+                reviver_name,
+                reviver_factionname,
+				skill_est,
+                target_factionname,
+                SUM(success) AS success,
+                SUM(attempt) AS attempt,
+                SUM(failure) AS failure,
+                SUM(score) AS score,
+                SUM(total) AS total
+            FROM (
+                SELECT
+                    revives.timestamp,
+                    revives.result,
+                    CASE
+                        WHEN result = 'success' THEN 'success'
+                        WHEN revives.chance >= 50 AND result = 'failure' THEN 'attempt'
+                        WHEN revives.chance < 50 AND result = 'failure' THEN 'failure'
+                        ELSE 'other'
+                    END AS contracted_result,
+                    revives.chance,
+                    revives.reviver_name,
+                    revives.reviver_factionname,
+					skill_est,
+                    revives.target_name,
+                    revives.target_factionname,
+                    revives.target_hospital_reason,
+                    revives.target_last_action_timestamp,
+                    CASE WHEN revives.result = 'success' THEN 1 ELSE 0 END AS success,
+                    CASE WHEN revives.result = 'failure' AND chance >= 50 THEN 1 ELSE 0 END AS attempt,
+                    CASE WHEN revives.result = 'failure' AND chance < 50 THEN 1 ELSE 0 END AS failure,
+                    CASE WHEN revives.result = 'success' THEN 1 WHEN revives.result = 'failure' AND revives.chance >= 50 THEN 0.5 ELSE 0 END AS score,
+                    1 AS total
+                FROM
+                    revives
+                LEFT JOIN revive_contracts ON revive_contracts.revive_contract_id = ?
+				LEFT JOIN revivers ON revivers.user_name= revives.reviver_name
+                WHERE
+                    revives.target_factionname = revive_contracts.target_factionname
+                    AND strftime('%Y-%m-%d %H:%M:%S', revives.timestamp)  BETWEEN revive_contracts.started AND revive_contracts.ended
+            ) AS subquery
+            GROUP BY
+                reviver_name,
+                reviver_factionname,
+                target_factionname
+        )
+        SELECT reviver_name,skill_est, reviver_factionname, target_factionname, success, attempt, failure, score, total
+        FROM results
+        UNION ALL
+        SELECT 'Total' AS reviver_name, AVG(skill_est), NULL, NULL, SUM(success), SUM(attempt), SUM(failure), SUM(score), SUM(total)
+        FROM results
+        ORDER BY score DESC
+        """,
+        (1,))
+    headers = [description[0] for description in cursor.description]
+    colalign = ["right" for description in cursor.description]
+    data = cursor.fetchall()
+    table_html_str = generateStyledTable(data, headers, colalign)
+
+    cursor.execute("""
+                   SELECT 
+                        revives.timestamp ,
+                        revives.result ,
+                        revives.chance  ,
+                       --reviver_id ,
+                        revives.reviver_name ,
+                        revives.reviver_factionname ,
+                       -- target_id,
+                        revives.target_name ,
+                        revives.target_factionname,
+                        revives.target_hospital_reason
+                      --  target_early_discharge,
+                        --revives.target_last_action_timestamp        
+                   FROM revives
+                   LEFT JOIN revive_contracts ON revive_contracts.revive_contract_id = ?
+                    WHERE
+                    revives.target_factionname = revive_contracts.target_factionname
+                    AND strftime('%Y-%m-%d %H:%M:%S', timestamp)  BETWEEN revive_contracts.started AND revive_contracts.ended
+                   ORDER BY revives.timestamp DESC;
+                   """,(1,))
+    headers = [description[0] for description in cursor.description]
+    colalign = ["right" for description in cursor.description]
+    data = cursor.fetchall()
+    table_html_str += "<h2>Revives</h2>" + generateStyledTable(data, headers, colalign)
+
+    output_filename = _process_template_report(template_file_path, path, out_filename, title_str, table_html_str)
+    return _menu_item_for_file(path, name, output_filename)
+
+def _process_template_report(template_file_path, path, out_filename, title_str, table_html_str):
+    output_filename = os.path.join(path, out_filename)
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(template_file_path, "r") as f:
+        html_template = Template(f.read())
+    final_html = html_template.safe_substitute(
+        page_title=title_str,
+        table_html=table_html_str,
+        table_title="Table",
+    )
+    with open(output_filename, "w") as f:
+        f.write(final_html)
+    print(f"{title_str} saved in {output_filename}")
+    return output_filename
+
+def _get_revive_contract(cursor, revive_contract_id):
+    if revive_contract_id:
+        cursor.execute(
+            """
+            SELECT revive_contract_id,
+                ally_factionname,
+                target_factionname,
+                started,
+                ended,
+                chance_min 
+            FROM revive_contracts 
+            WHERE revive_contract_id=?
+            """,
+            (revive_contract_id,),
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT revive_contract_id,
+                ally_factionname,
+                target_factionname,
+                started,
+                ended,
+                chance_min 
+            FROM revive_contracts 
+            ORDER BY started DESC
+            LIMIT 1
+            """
+        )
+    (
+        revive_contract_id,
+        ally_factionname,
+        enemy_factionname,
+        started,
+        ended,
+        chance_min,
+    ) = cursor.fetchone()
+    
+    return revive_contract_id, ally_factionname, enemy_factionname, started, ended, chance_min
+
+def revivers_share_donut(
+    conn, cursor, title=None, name=None, period=None, path=None, out_filename=None
+):
+    """
     period is a valid time period for SQLite DATE('now', ?) e.g. '-2 days'
-    '''
+    """
     if period is None:
         cursor.execute(
             """SELECT user_name AS label, successful_revives AS size FROM revivers ORDER BY 2 ASC"""
         )
     else:
-        cursor.execute("""
+        cursor.execute(
+            """
         SELECT
                 r_user.name AS label,
                 COUNT(*) AS size             
@@ -37,7 +195,9 @@ def revivers_share_donut(conn, cursor, title=None, name=None, period=None,path=N
             GROUP BY
                 revives.reviver_id,
                 r_user.name   
-        """,(period,))
+        """,
+            (period,),
+        )
     data = cursor.fetchall()
     labels = [row[0] for row in data]
     values = [row[1] for row in data]
@@ -48,13 +208,17 @@ def revivers_share_donut(conn, cursor, title=None, name=None, period=None,path=N
         title=title if title else "Contributions by Revivers",
         autopct=_make_autopct(values, format_string="{value:d}\n({percentage:.1f}%)"),
         path=path,
-        out_filename=out_filename
+        out_filename=out_filename,
     )  # pie
     # draw_donut_chart(series=values, labels=labels) # pie
-    return _menu_item_for_file(path, name=name if name else out_filename, href=out_filename)
+    return _menu_item_for_file(
+        path, name=name if name else out_filename, href=out_filename
+    )
+
 
 def revives_stackedarea_chart(
-    conn,cursor,
+    conn,
+    cursor,
     periodName,
     periodAlias,
     title="Revivers_contributors",
@@ -63,7 +227,7 @@ def revives_stackedarea_chart(
     truncate_after=None,
 ):
     xaxis_data, series_data = revives_pivot_stackedarea_dataseries(
-        conn,cursor,periodAlias=periodAlias, periodName=periodName
+        conn, cursor, periodAlias=periodAlias, periodName=periodName
     )
     if truncate_after:  # removes older data points
         xaxis_data = xaxis_data[:truncate_after]
@@ -85,12 +249,12 @@ def revives_stackedarea_chart(
         out_filename=filename,
         show_image=False,
     )
-    return _menu_item_for_file(path,name=filename,href=filename)
+    return _menu_item_for_file(path, name=filename, href=filename)
 
 
-def revives_pivot_stackedarea_dataseries(conn,cursor,periodAlias, periodName):
+def revives_pivot_stackedarea_dataseries(conn, cursor, periodAlias, periodName):
     data, headers, colalign = get_revives_pivotted(
-        conn,cursor,periodAlias, periodName, totals=False
+        conn, cursor, periodAlias, periodName, totals=False
     )
     # Extract columns into separate lists
     xaxis_data = [row[0] for row in data]
@@ -103,7 +267,7 @@ def revives_pivot_stackedarea_dataseries(conn,cursor,periodAlias, periodName):
     return xaxis_data, series_data
 
 
-def get_revives_pivotted(conn,cursor,periodAlias, periodName, totals=True):
+def get_revives_pivotted(conn, cursor, periodAlias, periodName, totals=True):
     pivot_template = Template(
         (
             """
@@ -208,10 +372,12 @@ def list_revivers_to_html_file(
     with open(output_filename, "w") as f:
         f.write(final_html)
     print(f"{title_str} saved in {output_filename}")
-    return _menu_item_for_file(path,out_filename,out_filename)
+    return _menu_item_for_file(path, out_filename, out_filename)
+
 
 def revives_pivot_to_html_file(
-    conn,cursor,
+    conn,
+    cursor,
     template_file_path,
     name,
     path,
@@ -223,7 +389,7 @@ def revives_pivot_to_html_file(
     out_filename,
 ):
     data, headers, colalign = get_revives_pivotted(
-        conn,cursor,periodAlias, periodName, totals=True
+        conn, cursor, periodAlias, periodName, totals=True
     )
 
     # Replace all instances of exactly 0 with None
@@ -246,4 +412,4 @@ def revives_pivot_to_html_file(
     with open(output_filename, "w") as f:
         f.write(final_html)
     print(f"{title_str} saved in {output_filename}")
-    return  _menu_item_for_file(path, name, output_filename)
+    return _menu_item_for_file(path, name, output_filename)

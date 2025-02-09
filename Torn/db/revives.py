@@ -14,7 +14,20 @@ REVIVES_CALLS = {
     "revivesFull": {"endpoint": "faction?selections=revivesFull", "LIMIT": 1000},
 }
 
-
+def create_revive_contracts(conn, cursor, force=False):
+    if force:
+        cursor.execute("DROP TABLE IF EXISTS revive_contracts;")
+    cursor.executescript(
+        """CREATE TABLE IF NOT EXISTS revive_contracts (
+                revive_contract_id INTEGER PRIMARY KEY NOT NULL,
+                ally_factionname TEXT,
+                target_factionname TEXT,
+                started DATETIME,
+                ended DATETIME,
+                chance_min INTEGER
+            )
+        """)
+ 
 def create_revives(conn, cursor, force=False):
     if force:
         cursor.execute("DROP TABLE IF EXISTS revives;")
@@ -25,13 +38,13 @@ def create_revives(conn, cursor, force=False):
             result TEXT NOT NULL,
             chance REAL NOT NULL,
             reviver_id INTEGER NOT NULL,
-            -- reviver_name TEXT,
+            reviver_name TEXT,
             reviver_faction_id INTEGER,
-            -- reviver_factionname TEXT,
+            reviver_factionname TEXT,
             target_id INTEGER NOT NULL,
-            --target_name TEXT,
+            target_name TEXT,
             target_faction_id INTEGER,
-            --target_factionname TEXT,
+            target_factionname TEXT,
             target_hospital_reason TEXT NOT NULL,
             target_early_discharge BOOLEAN NOT NULL,
             target_last_action_status TEXT NOT NULL,
@@ -161,8 +174,27 @@ def create_revives(conn, cursor, force=False):
     '''
   )
 
+def update_revive_contracts(conn, cursor, force=False):
+    if force:
+        print("Force deleting revives")
+        cursor.execute("DELETE FROM revive_contracts;")
+    cursor.executescript(
+        """
+        DELETE FROM revive_contracts;
+        
+        INSERT OR IGNORE INTO revive_contracts (
+            revive_contract_id,
+            ally_factionname,
+            target_factionname,
+            started,
+            ended,
+            chance_min 
+            ) VALUES (1,"Halos","The Psychonauts",'2025-02-08 23:00:00', '2025-02-09 13:15:00', 50);
+        """)
+
+
 def update_revives(conn, cursor, force=False):
-    is_full_endpoint = True
+    is_full_endpoint = False
     callType = REVIVES_CALLS["revivesFull" if is_full_endpoint else "revives"]
     endpoint = callType["endpoint"]  # if is_full_endpoint else "faction/revives"
     limit = callType["LIMIT"]  # if is_full_endpoint else 100
@@ -199,7 +231,7 @@ def _insert_revives_callback_fn(conn, cursor, revives, parameters):
     _insert_revives(conn, cursor, revives, is_full_endpoint)
 
 
-def _insert_revives(conn, cursor, revives, is_full_endpoint):
+def _insert_revives(conn, cursor, revives, is_full_endpoint):  
     cursor.executemany(
         """
         INSERT OR IGNORE INTO revives (
@@ -209,14 +241,16 @@ def _insert_revives(conn, cursor, revives, is_full_endpoint):
             result, 
             chance, 
             reviver_id, 
-            reviver_faction_id, 
+            reviver_name,
+            reviver_factionname,
             target_id, 
-            target_faction_id, 
+            target_name,
+            target_factionname,
             target_hospital_reason, 
             target_early_discharge, 
             target_last_action_status, 
             target_last_action_timestamp
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         [
             (
@@ -226,9 +260,11 @@ def _insert_revives(conn, cursor, revives, is_full_endpoint):
                 revive_row["result"],
                 revive_row["chance"],
                 revive_row["reviver_id"],
-                revive_row.get("reviver_faction_id"),
+                revive_row["reviver_name"],
+                revive_row.get("reviver_factionname"),
                 revive_row["target_id"],
-                revive_row.get("target_faction_id"),
+                revive_row["target_name"],
+                revive_row.get("target_factionname"),
                 revive_row["target_hospital_reason"],
                 1 if revive_row["target_early_discharge"] else 0,
                 revive_row["target_last_action"].get("status"),
@@ -237,6 +273,7 @@ def _insert_revives(conn, cursor, revives, is_full_endpoint):
                 ).isoformat(),
             )
             for revive_row in revives
+      
             # for revive_key, revive_row in revives.items()
         ],
     )
