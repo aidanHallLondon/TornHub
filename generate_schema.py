@@ -39,7 +39,7 @@ engine = create_engine(f'sqlite:///./{DB_CONNECTPATH}')  # Note the triple slash
 metadata = MetaData()
 metadata.reflect(bind=engine)
 
-render_er(metadata, 'reports/db/images/schema_diagram.png') 
+render_er(metadata, 'reports/db/images/schema_diagram') 
 
 # Generate the main diagram, excluding the large tables
 exclude_list = ['faction_history'] 
@@ -47,12 +47,12 @@ filtered_metadata = MetaData()
 all_tables = metadata.tables.keys()  # Get names of all tables
 included_tables = [table for table in all_tables if table not in exclude_list]
 filtered_metadata.reflect(bind=engine, only=included_tables)
-render_er(filtered_metadata, 'reports/db/images/schema_diagram_without_factionrecords.png')
+render_er(filtered_metadata, 'reports/db/images/schema_diagram_without_factionrecord')
 
 # Generate a separate diagram for the large table
 large_table_metadata = MetaData()
 large_table_metadata.reflect(bind=engine, only=exclude_list)
-render_er(large_table_metadata, 'reports/db/images/schema_diagram_for_factionrecords.png')
+render_er(large_table_metadata, 'reports/db/images/schema_diagram_for_factionrecords')
 
 print('')
 cursor.execute('''PRAGMA integrity_check;''')

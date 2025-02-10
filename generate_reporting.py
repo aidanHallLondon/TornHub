@@ -3,6 +3,7 @@ import shutil
 import sqlite3
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import get_last_updateDB_delta, initDB, updateDB
+from Torn.reporting.reviver_bump import reviver_count_bump_plot, reviver_skill_bump_plot
 from Torn.threads import run_background_threads_and_exit
 from Torn.charts import close_all_figures, init as charts_init
 from Torn.reporting.all_tables import (
@@ -27,7 +28,7 @@ from Torn.reporting.faction_revives import (
 from Torn.reporting.crimes import crimeexp_rank_bump_plot
 from Torn.reporting.oc import oc_item_requirements
 
-imageExtension = ".png"
+imageExtension = ".svg"
 charting_meta_data = None
 user_colourList = None
 
@@ -193,12 +194,12 @@ def faction_crime_reporting(conn, cursor, f_menu):
         user_colourList,
         limit_window=(1, 100),
         path=path,
-        out_filename="Crime_experience_ranks_all" + imageExtension,
+        out_filename="Crime_experience_ranks_all" ,
         show_image=False,
     )
     f_menu.append(
         _menu_item_for_file(
-            path, "crime_exp_ranks_all", "Crime_experience_ranks_all" + imageExtension
+            path, "crime_exp_ranks_all", "Crime_experience_ranks_all" 
         )
     )
 
@@ -257,8 +258,32 @@ def faction_crime_reporting(conn, cursor, f_menu):
 
 
 def faction_revive_reporting(conn, cursor, f_menu):
+    
     path = "reports/faction/revives"
+    reviver_count_bump_plot(
+        conn,
+        cursor,
+        user_colourList,
+        title="Revivers' ranked by count of revives, over time ",
+        title_add_limits=True,
+        path=path,
+        out_filename="revivers_count"
+    )
+    f_menu.append(_menu_item_for_file(path, "revives_revivers_count", "revivers_count.svg"))
 
+    mi=reviver_skill_bump_plot(
+        conn,
+        cursor,
+        user_colourList,
+        title="Revivers' skill rank over time ",
+        title_add_limits=True,
+        path=path,
+        out_filename="revivers_skill"
+    )
+    f_menu.append(_menu_item_for_file(path, "revives_revivers_skill", "revivers_skill.svg"))
+    # http://localhost:8000/faction/revives/revivers_skill.svg
+
+    path = "reports/faction/revives"
     mi = revivers_share_donut(
         conn,
         cursor,
@@ -333,8 +358,8 @@ def faction_revive_reporting(conn, cursor, f_menu):
         title_str="Revives pivot by date",
         image_title="Charts",
         image_list=[
-            "revives_stacked_area_by_date.png",
-            "revives_stacked_area_by_date_12weeks.png",
+            "revives_stacked_area_by_date.svg",
+            "revives_stacked_area_by_date_12weeks.svg",
         ],
         out_filename="by_date.html",
     )
@@ -351,8 +376,8 @@ def faction_revive_reporting(conn, cursor, f_menu):
         title_str="Revives pivot by week",
         image_title="Charts",
         image_list=[
-            "revives_stacked_area_by_week.png",
-            "revives_stacked_area_by_week_12weeks.png",
+            "revives_stacked_area_by_week.svg",
+            "revives_stacked_area_by_week_12weeks.svg",
         ],
         out_filename="by_week.html",
     )
@@ -369,7 +394,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
         filename="stacked_area_by_week",
     )
     f_menu.append(
-        _menu_item_for_file(path, "revives_by_week_all", "stacked_area_by_week.png")
+        _menu_item_for_file(path, "revives_by_week_all", "stacked_area_by_week.svg")
     )
 
     mi = revives_stackedarea_chart(
@@ -382,7 +407,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
         filename="stacked_area_by_date",
     )
     f_menu.append(
-        _menu_item_for_file(path, "revives_by_date_all", "stacked_area_by_date.png")
+        _menu_item_for_file(path, "revives_by_date_all", "stacked_area_by_date.svg")
     )
 
     mi = revives_stackedarea_chart(
@@ -397,7 +422,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
     )
     f_menu.append(
         _menu_item_for_file(
-            path, "revives_by_week_last-12-weeks", "stacked_area_by_week_12weeks.png"
+            path, "revives_by_week_last-12-weeks", "stacked_area_by_week_12weeks.svg"
         )
     )
 
@@ -413,7 +438,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
     )
     f_menu.append(
         _menu_item_for_file(
-            path, "revives_by_date_last-12-weeks", "stacked_area_by_date_12weeks.png"
+            path, "revives_by_date_last-12-weeks", "stacked_area_by_date_12weeks.svg"
         )
     )
 

@@ -3,23 +3,25 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.cm as cm
 import os
-
+import colorcet 
+import matplotlib.colors as mcolors
 # import numpy as np
 
 IMAGE_DEFAULT = {"WIDTH_INCHES": 12, "HEIGHT_INCHES": 6}
 user_colourList=None
 
 def init(conn,cursor):
-    return {'colourList':load_user_colourList_for_charts(conn, cursor, cmap="tab20c")}
+    return {'colourList':load_user_colourList_for_charts(conn, cursor, cmap="bespoke")} #tab20c
 
 def close_all_figures():
     plt.close('all')
 
-def plt_save_image(path, out_filename, show_image=False, clear_image=True):
+def plt_save_image(path, out_filename, show_image=False, clear_image=True,format="svg"):
     if path is not None and out_filename is not None:
         if not os.path.exists(path):
             os.makedirs(path)
-        plt.savefig(os.path.join(path, out_filename), bbox_inches="tight")
+        full_file_path = f"{os.path.join(path, out_filename)}.{format}"
+        plt.savefig(full_file_path, bbox_inches="tight", format=format)
     if show_image:
         plt.show()
     if clear_image:
@@ -27,7 +29,12 @@ def plt_save_image(path, out_filename, show_image=False, clear_image=True):
         if not show_image: 
             plt.close()
 
-def load_user_colourList_for_charts(conn,cursor, cmap='magma'):
+def bespoke_cmap():
+    return mcolors.ListedColormap(colorcet.glasbey_dark[:100])  # Slice for your number of categories
+  
+
+
+def load_user_colourList_for_charts(conn,cursor, cmap='lab20c'):
     '''
     color_for_named_user = user_colour_dict.get(user_name, "grey")
     '''
@@ -35,7 +42,8 @@ def load_user_colourList_for_charts(conn,cursor, cmap='magma'):
     cursor.execute('''SELECT crimeexp_rank AS rank, user_id, user_name FROM crimeexp_ranks ORDER BY 1 ASC''')
     ranks= cursor.fetchall()
     num_players = len(ranks)
-    cmap = cm.get_cmap(cmap)
+
+    cmap = bespoke_cmap() if cmap=='bespoke' else cm.get_cmap(cmap)
     # colors = cmap(np.linspace(0, 1, num_players))
     colors = [cmap(i % cmap.N) for i in range(num_players)] 
     # Add colors to the rank data
@@ -162,6 +170,7 @@ def draw_donut_chart(
         path=path,
         out_filename=out_filename,
         show_image=False,
+        format="svg"
     )
 
     

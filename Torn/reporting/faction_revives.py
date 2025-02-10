@@ -31,8 +31,10 @@ def revive_contract(conn, cursor,    template_file_path,
                 reviver_factionname,
 				skill_est,
                 target_factionname,
-                SUM(success) AS success,
-                SUM(attempt) AS attempt,
+                SUM(success_offline) AS success_offline,
+                SUM(success_online) AS success_online,
+                SUM(attempt_offline) AS attempt_offline,
+                SUM(attempt_online) AS attempt_online,
                 SUM(failure) AS failure,
                 SUM(score) AS score,
                 SUM(total) AS total
@@ -53,11 +55,18 @@ def revive_contract(conn, cursor,    template_file_path,
                     revives.target_name,
                     revives.target_factionname,
                     revives.target_hospital_reason,
+                    revives.target_last_action_status,
+                    CASE WHEN revives.target_last_action_status="Offline" then 1 ELSE 0 END as target_idle,
                     revives.target_last_action_timestamp,
-                    CASE WHEN revives.result = 'success' THEN 1 ELSE 0 END AS success,
-                    CASE WHEN revives.result = 'failure' AND chance >= 50 THEN 1 ELSE 0 END AS attempt,
+                    CASE WHEN revives.result = 'success' AND revives.target_last_action_status = "Offline" THEN 1 ELSE 0 END AS success_offline,
+                    CASE WHEN revives.result = 'success' AND revives.target_last_action_status != "Offline" THEN 1 ELSE 0 END AS success_online,
+                    CASE WHEN revives.result = 'failure' AND chance >= 50 AND revives.target_last_action_status="Offline" THEN 1 ELSE 0 END AS attempt_offline,
+                    CASE WHEN revives.result = 'failure' AND chance >= 50 AND revives.target_last_action_status != "Offline"  THEN 1 ELSE 0 END AS attempt_online,
                     CASE WHEN revives.result = 'failure' AND chance < 50 THEN 1 ELSE 0 END AS failure,
-                    CASE WHEN revives.result = 'success' THEN 1 WHEN revives.result = 'failure' AND revives.chance >= 50 THEN 0.5 ELSE 0 END AS score,
+                    CASE WHEN revives.result = 'success' AND revives.target_last_action_status = "Offline" THEN 1 
+                         WHEN revives.result = 'failure' AND revives.chance >= 50 AND revives.target_last_action_status = "Offline" THEN 0.5 
+                         ELSE 0 
+                   END AS score,
                     1 AS total
                 FROM
                     revives
@@ -72,10 +81,11 @@ def revive_contract(conn, cursor,    template_file_path,
                 reviver_factionname,
                 target_factionname
         )
-        SELECT reviver_name,skill_est, reviver_factionname, target_factionname, success, attempt, failure, score, total
+        SELECT reviver_name,skill_est, reviver_factionname, target_factionname, 
+                   success_offline, attempt_offline, success_online, attempt_online, failure, score, total
         FROM results
         UNION ALL
-        SELECT 'Total' AS reviver_name, AVG(skill_est), NULL, NULL, SUM(success), SUM(attempt), SUM(failure), SUM(score), SUM(total)
+        SELECT 'Total' AS reviver_name, AVG(skill_est), NULL, NULL, SUM(success_offline), SUM(attempt_offline),  SUM(success_online), SUM(attempt_online), SUM(failure), SUM(score), SUM(total)
         FROM results
         ORDER BY score DESC
         """,
@@ -90,15 +100,11 @@ def revive_contract(conn, cursor,    template_file_path,
                         revives.timestamp ,
                         revives.result ,
                         revives.chance  ,
-                       --reviver_id ,
                         revives.reviver_name ,
                         revives.reviver_factionname ,
-                       -- target_id,
                         revives.target_name ,
                         revives.target_factionname,
-                        revives.target_hospital_reason
-                      --  target_early_discharge,
-                        --revives.target_last_action_timestamp        
+                        revives.target_last_action_status      
                    FROM revives
                    LEFT JOIN revive_contracts ON revive_contracts.revive_contract_id = ?
                     WHERE
@@ -310,7 +316,7 @@ def get_revives_pivotted(conn, cursor, periodAlias, periodName, totals=True):
     return data, headers, colalign
 
 
-def list_revivers_to_html_file(
+def list_revivers_to_html_file( # revivers_list
     conn,
     cursor,
     template_file_path,
@@ -413,3 +419,4 @@ def revives_pivot_to_html_file(
         f.write(final_html)
     print(f"{title_str} saved in {output_filename}")
     return _menu_item_for_file(path, name, output_filename)
+
