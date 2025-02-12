@@ -115,6 +115,7 @@ def db_reporting(conn, cursor):
 def copy_assets_from_template_folder():
     _copy_folder("templates/assets", "reports/assets")
     _copy_file("templates/db", "schema.html", "reports/db")
+    _copy_file("templates/reports", "_viewer.html", "reports/")
     move_template_file_with_subs(
         template_file_path="templates/_home.html",
         out_path="reports",
@@ -131,7 +132,7 @@ def copy_assets_from_template_folder():
 
 def _copy_file(source_path, file_name, destination_path):
     """Copies a folder and its contents to the destination, creating the target path if needed."""
-    if not os.path.exists(destination_path):
+    if destination_path and not os.path.exists(destination_path):
         os.makedirs(destination_path)
     try:
         shutil.copy(
@@ -447,16 +448,29 @@ def faction_revive_reporting(conn, cursor, f_menu):
         cursor,
         revive_contract_id=1,
         template_file_path="templates/reports/revives/contract.html",
-        name="revives_contract",
+        name="revives_contract_1",
         path=path,
-        out_filename="revive_contract.html",
+        out_filename="revive_contract_1.html",
     )
     f_menu.append(
         _menu_item_for_file(
-            path, "revives_contract", "revive_contract.html"
+            path, "revives_contract_1", "revive_contract_1.html"
         )
     )
-
+    revive_contract(
+        conn,
+        cursor,
+        revive_contract_id = 2,
+        template_file_path="templates/reports/revives/contract.html",
+        name="revives_contract_2",
+        path=path,
+        out_filename="revive_contract_2.html",
+    )
+    f_menu.append(
+        _menu_item_for_file(
+            path, "revives_contract_2", "revive_contract_2.html"
+        )
+    )
     return f_menu
 
 

@@ -18,13 +18,20 @@ def create_revive_contracts(conn, cursor, force=False):
     if force:
         cursor.execute("DROP TABLE IF EXISTS revive_contracts;")
     cursor.executescript(
-        """CREATE TABLE IF NOT EXISTS revive_contracts (
+        """
+        DROP TABLE IF EXISTS revive_contracts;
+
+        CREATE TABLE IF NOT EXISTS revive_contracts (
                 revive_contract_id INTEGER PRIMARY KEY NOT NULL,
                 ally_factionname TEXT,
                 target_factionname TEXT,
                 started DATETIME,
                 ended DATETIME,
-                chance_min INTEGER
+                chance_min INTEGER,
+                success_fee INTEGER,
+                failure_fee INTEGER,
+                faction_cut REAL,
+                notes_html TEXT
             )
         """)
  
@@ -177,19 +184,27 @@ def create_revives(conn, cursor, force=False):
 def update_revive_contracts(conn, cursor, force=False):
     if force:
         print("Force deleting revives")
-        cursor.execute("DELETE FROM revive_contracts;")
+        cursor.execute("DELETE FROM revive_contracts; DROP TABLE revive_contracts")
     cursor.executescript(
         """
         DELETE FROM revive_contracts;
-        
         INSERT OR IGNORE INTO revive_contracts (
             revive_contract_id,
             ally_factionname,
             target_factionname,
             started,
             ended,
-            chance_min 
-            ) VALUES (1,"Halos","The Psychonauts",'2025-02-08 23:00:00', '2025-02-09 13:15:00', 50);
+            chance_min,
+            success_fee,
+            failure_fee,
+            faction_cut,
+            notes_html) 
+            VALUES 
+            (1,"Halos","The Psychonauts",'2025-02-08 23:30:00', '2025-02-09 19:30:00', 50, 820000,410000,0.125,
+                "Test case - may differ slightly from actual billing"),
+            (2,"Monarch HQ","Natural Selection",'2025-02-15 00:00:00', '2025-02-16 23:59:59', 50, 1500000,500000,0.125,
+                'For this contract you will have to join the <a href="https://discord.gg/WWkSwFAa">Monarch QC Discord Server</a>'
+            );
         """)
 
 

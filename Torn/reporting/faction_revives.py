@@ -16,108 +16,176 @@ from Torn.reporting.build_menus import _menu_item_for_file
 from Torn.tables import generateStyledTable
 
  
+import sqlite3
+
+def _add_totals_row(data, headers):
+    """Adds totals row, handles grouped numbers, and reformats totals."""
+
+    num_cols = len(headers)
+    totals_row = ["Totals"] + [0] * (num_cols - 1)
+
+    for row in data:
+        for i in range(1, num_cols):
+            try:
+                value_str = str(row[i])
+                value_str = value_str.replace(",", "")  # Remove commas for calculation
+                value = float(value_str)
+                totals_row[i] += value
+            except (ValueError, TypeError):
+                pass
+
+    # Reformat the totals with commas
+    for i in range(1, num_cols):
+        try:
+            totals_row[i] = "{:,.0f}".format(totals_row[i]) # Format with commas
+        except (ValueError, TypeError):
+            pass  # In case the total is not a number
+
+    data.append(totals_row)
+    return data
+
 
 def revive_contract(conn, cursor,    template_file_path,
     name,
     path,
     out_filename,  revive_contract_id=None):
+    # 
     title_str="Revives for contract"
-    revive_contract_id, ally_factionname, enemy_factionname, started, ended, chance_min = _get_revive_contract(cursor, revive_contract_id)
+    contract = _get_revive_contract(cursor, revive_contract_id)
+    revive_contract_id, ally_factionname, enemy_factionname, started, ended, chance_min = contract
     # 
     cursor.execute("""
-        WITH results AS (
-            SELECT
-                reviver_name,
-                reviver_factionname,
-				skill_est,
-                target_factionname,
-                SUM(success_offline) AS success_offline,
-                SUM(success_online) AS success_online,
-                SUM(attempt_offline) AS attempt_offline,
-                SUM(attempt_online) AS attempt_online,
-                SUM(failure) AS failure,
-                SUM(score) AS score,
-                SUM(total) AS total
-            FROM (
+        SELECT 
+            revive_contract_id,	ally_factionname,	target_factionname,	
+            started, 	ended,	
+            chance_min,	
+            success_fee, failure_fee,	
+            faction_cut,
+            notes_html
+        FROM revive_contracts
+        WHERE revive_contract_id= ? """,(revive_contract_id,))
+    data = cursor.fetchone()
+    if len(data)==0:
+        revive_contract_id=None
+    else:
+        (revive_contract_id,	ally_factionname,	target_factionname,	
+            started, 	ended,	
+            chance_min,	
+            success_fee, failure_fee,	
+            faction_cut,
+            notes_html)=data
+        
+        html_str=f"""<h2>Contract #{revive_contract_id}</h2>
+            <div class="contract">
+            <div class="war"><span class="ally_faction">{ally_factionname}</span>
+                            <span class="target_faction">{target_factionname}</span></div>
+            <div class="period"><span class="started">{started}</span><span class="ended">{ended}</span></div>
+            <div class="rules">
+                <span class="chance_min">{chance_min}</span>
+                <span class="status">Offline only</span>
+            </div>
+            <div class="finance">
+                <div class="gross">
+                    <span class="success_fee">{success_fee:,.0f}</span>
+                    <span class="failure_fee">{failure_fee:,.0f}</span>
+                </div>
+                <div class="net">
+                    <span class="success_fee">{success_fee*(1-faction_cut):,.0f}</span>
+                    <span class="failure_fee">{failure_fee*(1-faction_cut):,.0f}</span>
+                    <span class="faction_cut">{faction_cut}</span>
+                </div>
+               
+            </div>
+            <div class="notes">{notes_html}</div>
+        </div>
+        <h2>Overview</h2>
+    """
+    
+        cursor.execute("""
+            SELECT 
+        reviver_name,
+        SUM(CASE WHEN c_result = "failure" THEN 1 ELSE 0 END) AS "failure",
+        SUM(CASE WHEN c_result = "invalid" THEN 1 ELSE 0 END) AS "invalid",
+        SUM(CASE WHEN c_result = "success" THEN 1 ELSE 0 END) AS "success",
+        count(*) AS total,
+    --	sum(CASE WHEN target_last_action_status='Online' THEN 1 ELSE 0 END) as onlines,
+    -- 	sum(gross_payment) AS gross_payment,
+    -- 	sum(gross_payment)* (1-faction_cut) AS net_pay,
+    -- 	sum(gross_payment)*(faction_cut) AS faction_contribution,
+        printf('%,.0f', sum(gross_payment)) AS gross_payment,
+        printf('%,.0f', sum(gross_payment)* (1-faction_cut)) AS net_pay,
+        printf('%,.0f', sum(gross_payment)*(faction_cut)) AS faction_contribution
+    FROM(
                 SELECT
-                    revives.timestamp,
+                    --revives.timestamp,
                     revives.result,
-                    CASE
-                        WHEN result = 'success' THEN 'success'
-                        WHEN revives.chance >= 50 AND result = 'failure' THEN 'attempt'
-                        WHEN revives.chance < 50 AND result = 'failure' THEN 'failure'
-                        ELSE 'other'
-                    END AS contracted_result,
                     revives.chance,
                     revives.reviver_name,
                     revives.reviver_factionname,
-					skill_est,
-                    revives.target_name,
                     revives.target_factionname,
-                    revives.target_hospital_reason,
-                    revives.target_last_action_status,
-                    CASE WHEN revives.target_last_action_status="Offline" then 1 ELSE 0 END as target_idle,
-                    revives.target_last_action_timestamp,
-                    CASE WHEN revives.result = 'success' AND revives.target_last_action_status = "Offline" THEN 1 ELSE 0 END AS success_offline,
-                    CASE WHEN revives.result = 'success' AND revives.target_last_action_status != "Offline" THEN 1 ELSE 0 END AS success_online,
-                    CASE WHEN revives.result = 'failure' AND chance >= 50 AND revives.target_last_action_status="Offline" THEN 1 ELSE 0 END AS attempt_offline,
-                    CASE WHEN revives.result = 'failure' AND chance >= 50 AND revives.target_last_action_status != "Offline"  THEN 1 ELSE 0 END AS attempt_online,
-                    CASE WHEN revives.result = 'failure' AND chance < 50 THEN 1 ELSE 0 END AS failure,
-                    CASE WHEN revives.result = 'success' AND revives.target_last_action_status = "Offline" THEN 1 
-                         WHEN revives.result = 'failure' AND revives.chance >= 50 AND revives.target_last_action_status = "Offline" THEN 0.5 
-                         ELSE 0 
-                   END AS score,
-                    1 AS total
-                FROM
-                    revives
-                LEFT JOIN revive_contracts ON revive_contracts.revive_contract_id = ?
-				LEFT JOIN revivers ON revivers.user_name= revives.reviver_name
+                    target_last_action_status,
+                    failure_fee,
+                    success_fee,
+                    faction_cut,
+                    CASE 
+                                WHEN target_last_action_status = "Online"  THEN "invalid"
+                                WHEN result="success" THEN "success"
+                                WHEN chance < 50 THEN "invalid"
+                                WHEN result="failure" THEN "failure" 
+                                ELSE "ERROR"
+                    END AS c_result,
+                    CASE 
+                                WHEN target_last_action_status = "Online"  THEN 0
+                                WHEN result="success" THEN success_fee
+                                WHEN chance < 50 THEN 0
+                                WHEN result="failure" THEN failure_fee
+                                ELSE 0
+                    END AS gross_payment
+                FROM revives
+                LEFT JOIN revive_contracts ON revive_contract_id = ?
+                LEFT JOIN revivers ON revivers.user_name= reviver_name
                 WHERE
                     revives.target_factionname = revive_contracts.target_factionname
-                    AND strftime('%Y-%m-%d %H:%M:%S', revives.timestamp)  BETWEEN revive_contracts.started AND revive_contracts.ended
-            ) AS subquery
-            GROUP BY
-                reviver_name,
-                reviver_factionname,
-                target_factionname
-        )
-        SELECT reviver_name,skill_est, reviver_factionname, target_factionname, 
-                   success_offline, attempt_offline, success_online, attempt_online, failure, score, total
-        FROM results
-        UNION ALL
-        SELECT 'Total' AS reviver_name, AVG(skill_est), NULL, NULL, SUM(success_offline), SUM(attempt_offline),  SUM(success_online), SUM(attempt_online), SUM(failure), SUM(score), SUM(total)
-        FROM results
-        ORDER BY score DESC
-        """,
-        (1,))
-    headers = [description[0] for description in cursor.description]
-    colalign = ["right" for description in cursor.description]
-    data = cursor.fetchall()
-    table_html_str = generateStyledTable(data, headers, colalign)
+                    AND strftime('%Y-%m-%d %H:%M:%S', revives.timestamp)  BETWEEN strftime('%Y-%m-%d %H:%M:%S',revive_contracts.started) 
+                                                                                                                                                            AND strftime('%Y-%m-%d %H:%M:%S',revive_contracts.ended)		
+        ) AS c_revives
+    GROUP BY reviver_name
+    ORDER BY sum(gross_payment) DESC, 1 ASC
 
-    cursor.execute("""
-                   SELECT 
-                        revives.timestamp ,
-                        revives.result ,
-                        revives.chance  ,
-                        revives.reviver_name ,
-                        revives.reviver_factionname ,
-                        revives.target_name ,
-                        revives.target_factionname,
-                        revives.target_last_action_status      
-                   FROM revives
-                   LEFT JOIN revive_contracts ON revive_contracts.revive_contract_id = ?
-                    WHERE
-                    revives.target_factionname = revive_contracts.target_factionname
-                    AND strftime('%Y-%m-%d %H:%M:%S', timestamp)  BETWEEN revive_contracts.started AND revive_contracts.ended
-                   ORDER BY revives.timestamp DESC;
-                   """,(1,))
-    headers = [description[0] for description in cursor.description]
-    colalign = ["right" for description in cursor.description]
-    data = cursor.fetchall()
-    table_html_str += "<h2>Revives</h2>" + generateStyledTable(data, headers, colalign)
+    """,
+            (revive_contract_id,))
+        headers = [description[0] for description in cursor.description]
+        colalign = ["right" for description in cursor.description]
+        data = cursor.fetchall()
+        data = _add_totals_row(data, headers)
+        html_str += generateStyledTable(data, headers, colalign)
 
-    output_filename = _process_template_report(template_file_path, path, out_filename, title_str, table_html_str)
+        cursor.execute("""
+                    SELECT 
+                            revives.timestamp ,
+                            revives.result ,
+                            revives.chance  ,
+                            revives.reviver_name ,
+                            revives.reviver_factionname ,
+                            revives.target_name ,
+                            revives.target_factionname,
+                            revives.target_last_action_status      
+                    FROM revives
+                    LEFT JOIN revive_contracts ON revive_contracts.revive_contract_id = ?
+                        WHERE
+                        revives.target_factionname = revive_contracts.target_factionname
+                        AND strftime('%Y-%m-%d %H:%M:%S', timestamp)  BETWEEN revive_contracts.started AND revive_contracts.ended
+                    ORDER BY revives.timestamp DESC;
+                    """,(revive_contract_id,))
+        headers = [description[0] for description in cursor.description]
+        colalign = ["right" for description in cursor.description]
+        data = cursor.fetchall()
+        if len(data):
+            html_str += "<h2>Revives</h2>" + generateStyledTable(data, headers, colalign)
+        else:
+            html_str += "<h2>Revives</h2> None recorded" 
+
+    output_filename = _process_template_report(template_file_path, path, out_filename, title_str, html_str)
     return _menu_item_for_file(path, name, output_filename)
 
 def _process_template_report(template_file_path, path, out_filename, title_str, table_html_str):
@@ -165,15 +233,18 @@ def _get_revive_contract(cursor, revive_contract_id):
             LIMIT 1
             """
         )
-    (
-        revive_contract_id,
-        ally_factionname,
-        enemy_factionname,
-        started,
-        ended,
-        chance_min,
-    ) = cursor.fetchone()
-    
+    data= cursor.fetchone()
+    if len(data):
+        (
+            revive_contract_id,
+            ally_factionname,
+            enemy_factionname,
+            started,
+            ended,
+            chance_min,
+        ) =data
+    else: revive_contract_id=None
+        
     return revive_contract_id, ally_factionname, enemy_factionname, started, ended, chance_min
 
 def revivers_share_donut(

@@ -130,7 +130,7 @@ def _tree_to_html(path, menu_tree):
                 if entity_type != "file":
                     href = os.path.join(path, f"{entity_type}_{part['href']}.html")
                 html = f"""<a class="{class_name}" href="{href}"
-                    onclick="parent.frames['main-content'].location.href='{href}';  event.stopPropagation(); return false;" 
+                    onclick="open_page('{href}');  event.stopPropagation(); return false;" 
                     title="{part['href']}">{part['label']}</a>"""
             else:
                 # If it's not an href, but it is a folder, add the folder-toggle class

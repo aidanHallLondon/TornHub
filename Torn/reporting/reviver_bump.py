@@ -107,7 +107,7 @@ def reviver_skill_bump_plot(
     path="reports/revives",
     out_filename="Reviver_skill",
     limit_window=(1,None),
-    figsize_in=(24,None),# width, height in inches - set height to None for auto
+    figsize_in=(12,None),# width, height in inches - set height to None for auto
     line_width=5,
     show_image=False,
 ):

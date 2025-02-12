@@ -33,17 +33,53 @@
       padding: 8px;
       text-align: right;
     }
+    .contract{box-sizing: border-box; margin:1em 0}
+    .contract div {box-sizing: border-box;}
+    .contract span, .contract .notes {  
+      display: inline-block; background-color: #f0f0f0; border-radius: 8px;
+      padding:0.5em; margin:0 0.25em;  border:2px dotted #708090;
+    }
 
-   
+    .contract .war,  .contract .period, .contract .finance ,.contract .rules, .contract .finance {
+      margin: 0.5em;
+    }
+    .contract .period, .contract .rules{ display:inline-block; } 
+
+    .contract .finance .gross, .contract .finance .net{
+      margin:0 1em; }
+    /* .contract .period .started{}
+    .contract .period .ended{} */
+    /* .contract .rules .chance_min{} */
+    /* .contract .rules .status{} */
+
+
+    /* .contract .success_fee, .contract .failure_fee{} 
+    .contract .faction_cut{}
+    .contract .notes{}
+    */
+
+    .contract .war .ally_faction::before{content:"Ally: "; font-weight: bold;}
+    .contract .war .target_factionname::before{content:"Target: "; font-weight: bold;}
+    .contract .period .started::before{content:"from: "; font-weight: bold;}
+    .contract .period .ended::before{content:" to: "; font-weight: bold;}
+    .contract .rules::before{ content:"Rules"; font-weight: bold;}  
+    .contract .rules .chance_min::before{content:"Minimum chance: "; font-weight: bold;}
+    .contract .rules .status::before{content:"Status: "; font-weight: bold;}
+
+    .contract .finance .gross::before{content:"Gross fee charged: "; font-weight: bold;}
+    .contract .finance .net::before{content:"Net paid to reviver: "; font-weight: bold;}
+    .contract .success_fee::before{content:"success fee: "; font-weight: bold;}
+    .contract .failure_fee::before{content:"failure fee: "; font-weight: bold;}
+    .contract .faction_cut::before{content:"Faction cut: "; font-weight: bold;}
+  
+    .contract .notes::before{content:"Notes: "; font-weight: bold;}  
   </style>
+
 </head>
 <body>
 
 <h1>$page_title</h1>
-<h2>$table_title</h2>
 $table_html
 
-<h2>$table2_title</h2>
-$table2_html
 </body> 
 </html>

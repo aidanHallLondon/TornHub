@@ -105,6 +105,16 @@
     $content_html
     
     <script>
+      function open_page(href){
+        if(href.slice(-4).toLowerCase() === '.svg'){
+          href= '/_viewer.html?svg=' + encodeURIComponent(href);
+        }
+        console.log(href);
+        parent.frames['main-content'].location.href=href;  
+        event.stopPropagation(); 
+        return false;
+      }
+
       // JavaScript to handle the expand/collapse functionality
       const folders = document.querySelectorAll(".folder-toggle .label"); // Select the span.label within .folder-toggle
       folders.forEach((labelSpan) => {
