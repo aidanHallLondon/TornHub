@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>$page_title</title>
+    <style>
+      body {
+        font-family: sans-serif; /* Apply sans-serif font to the entire body */
+        color: #444; /* Set default text color to #444 */
+      }
+
+      table {
+        border-collapse: collapse; /* Collapse borders for consistent striping */
+        border: 1px dotted #1115;
+        background-color: #f8f8f8;
+      }
+      table thead tr {
+        background-color: #ddf8;
+        font-weight: bold;
+        border-bottom: 1px dotted #1115;
+      }
+      table tr:nth-child(even) {
+        background-color: #ddf6; /* Light gray for even rows */
+      }
+
+      table td:nth-child(even),
+      table th:nth-child(even) {
+        background-color: #ddf4;
+      }
+
+      th,
+      td {
+        border: none;
+        padding: 8px;
+        text-align: right;
+      }
+      .svg-container {
+        display: block;
+        width: 100%; /* Or any desired width */
+        /* Optional: Add a border for visualization */
+        border: 1px solid black;
+      }
+
+      .svg-container img {
+        display: block; /* Remove extra space below the image */
+        width: 100%; /* Make the image take the full width of its container */
+        height: auto; /* Maintain aspect ratio */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>$page_title</h1>
+    <h2 class="item_name">
+      $item_name <span class="item_type">$item_type</span>
+    </h2>
+    <div class="pricing">
+      Average price <span class="average_price">$average_price</span>
+    </div>
+    <div class="chart" id="chart-svg">
+      <div class="svg-container">$chart_html</div>
+    </div>
+    $content_html
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const svgPath = urlParams.get("svg");
+
+      ap_el = document.querySelector(".average_price");
+      if (ap_el) {
+        // format the integer string into a grouped dollar value no dp e.g. $12,000,001
+        ap_el.innerText = "$" + parseInt(ap_el.innerText).toLocaleString("en-US");
+      }
+
+      if (svgPath) {
+        fetch(svgPath)
+          .then((response) => response.text())
+          .then((svgContent) => {
+            const div = document.getElementById("chart-svg .svg-container");
+            div.innerHTML = svgContent;
+          });
+      }
+    </script>
+  </body>
+</html>

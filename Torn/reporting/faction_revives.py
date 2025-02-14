@@ -65,7 +65,7 @@ def revive_contract(conn, cursor,    template_file_path,
         FROM revive_contracts
         WHERE revive_contract_id= ? """,(revive_contract_id,))
     data = cursor.fetchone()
-    if len(data)==0:
+    if data and len(data)==0:
         revive_contract_id=None
     else:
         (revive_contract_id,	ally_factionname,	target_factionname,	
@@ -205,6 +205,12 @@ def _process_template_report(template_file_path, path, out_filename, title_str, 
     return output_filename
 
 def _get_revive_contract(cursor, revive_contract_id):
+    ally_factionname=None
+    enemy_factionname=None
+    started=None
+    ended=None
+    chance_min=None
+    # 
     if revive_contract_id:
         cursor.execute(
             """
@@ -234,7 +240,7 @@ def _get_revive_contract(cursor, revive_contract_id):
             """
         )
     data= cursor.fetchone()
-    if len(data):
+    if data and len(data):
         (
             revive_contract_id,
             ally_factionname,

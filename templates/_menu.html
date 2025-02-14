@@ -106,8 +106,9 @@
     
     <script>
       function open_page(href){
-        if(href.slice(-4).toLowerCase() === '.svg'){
+        if(href.split('?')[0].slice(-4).toLowerCase() === '.svg'){
           href= '/_viewer.html?svg=' + encodeURIComponent(href);
+          console.log("SVG Intercepted");
         }
         console.log(href);
         parent.frames['main-content'].location.href=href;  

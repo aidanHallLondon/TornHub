@@ -41,7 +41,7 @@ def create_faction(conn,cursor, force=False):
         hof_rank_value TEXT NOT NULL,
         hof_respect_rank INTEGER NOT NULL,
         hof_respect_value INTEGER NOT NULL,
-        hof_chain_rank INTEGER NOT NULL,
+        hof_chain_rank INTEGER,
         hof_chain_value INTEGER NOT NULL,
         medicalitemsused INTEGER NOT NULL,
         criminaloffences INTEGER NOT NULL,

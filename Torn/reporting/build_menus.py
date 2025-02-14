@@ -3,10 +3,10 @@ from Torn.reporting.reporting import move_template_file_with_subs
 
 PARTS_SEPARATOR_STR=" | "
 
-def _menu_item_for_file(path, name, href):
+def _menu_item_for_file(path=None, name=None, href=None):
     if path:
         href = os.path.join(path, href) if path else href
-        href = href[8:] if href.startswith("reports/") else href
+    href = href[8:] if href.startswith("reports/") else href
     return {
         "name": name,
         "href": href,

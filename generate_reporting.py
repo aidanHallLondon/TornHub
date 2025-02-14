@@ -3,6 +3,7 @@ import shutil
 import sqlite3
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import get_last_updateDB_delta, initDB, updateDB
+from Torn.reporting.itemMarket import item_reporting
 from Torn.reporting.reviver_bump import reviver_count_bump_plot, reviver_skill_bump_plot
 from Torn.threads import run_background_threads_and_exit
 from Torn.charts import close_all_figures, init as charts_init
@@ -79,6 +80,8 @@ def generate_reporting(conn, cursor):
     db_menu = db_reporting(conn, cursor)
     f_menu = []
     f_menu = faction_reporting(conn, cursor, f_menu)
+    f_menu = item_reporting(conn,cursor,f_menu)
+    # 
     save_menus_as_html(
         menus=[
             {
