@@ -182,7 +182,7 @@ def update_user(conn, cursor, user_id, cache_age_limit=3600 * 12, force=False):
         force=force,
     )
     # print(f'''data={data}''')
-    if data and len(data):
+    if data and len(data) and "name" in data:
         user = data
         cursor.execute(
             """
