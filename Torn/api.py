@@ -7,7 +7,7 @@ import re
 import sqlite3
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.api_keyHandler import get_api_key
-from urllib.parse import urlencode, urlparse, parse_qsl
+from urllib.parse import urlencode, urlparse, parse_qsl, parse_qs
 
 VERBOSE = False
 BASE_URL = "https://api.torn.com/v2"
@@ -21,11 +21,12 @@ API_SEMAPHORE_CALL_RATE = {
 }  # actual limit is 100 every 60s across all api_keys
 CACHE_PATH = "data/cache"  # Directory to store cached files
 JSON_INDENT = 2
-TEXT = {"API_CALL":'•', "CACHE": "📄", "WAIT": "🛑", "PAUSE": "🐌"}
+TEXT = {"API_CALL": "•", "CACHE": "📄", "WAIT": "🛑", "PAUSE": "🐌"}
 
 
 if not os.path.exists(CACHE_PATH):
     os.makedirs(CACHE_PATH)
+
 
 def api_semaphore_check(conn, cursor):
     """
@@ -252,18 +253,19 @@ def _saveData(endpoint, params=None, data=None):
         json.dump(data, file, indent=JSON_INDENT)
 
 
-def _getApiURL(endpoint,params = None):
+def _getApiURL(endpoint, params=None):
     global BASE_URL
-    url =f"{BASE_URL}/{endpoint}"
+    url = f"{BASE_URL}/{endpoint}"
     if params:
         url = add_params_to_url(url, params)  # Add parameters safely
     return url
+
 
 def add_params_to_url(url, params):
     """Safely adds parameters to a URL, handling existing query strings."""
     url_parts = urlparse(url)
     query = dict(parse_qsl(url_parts.query))
-    query.update({k: v for k, v in params.items() if v } )
+    query.update({k: v for k, v in params.items() if v})
     return url_parts._replace(query=urlencode(query)).geturl()
 
 
@@ -331,13 +333,13 @@ def _api_raw_call(conn, cursor, url, params=None):
 
         data = response.json()
         if "error" in data:
-            print(f'\n\nError data={data}\n      url={url}')
-            if data["error'"].get("code",0)==6:
-                return data # !!!
+            print(f"\n\nError data={data}\n      url={url}")
+            if data.get("error").get("code", 0) == 6:
+                return data  # !!!
             else:
                 raise APIError(data["error"])  # Raise a custom APIError
-        # 
-        print(TEXT["API_CALL"],end='',flush=True)
+        #
+        print(TEXT["API_CALL"], end="", flush=True)
         return data
 
     except requests.exceptions.HTTPError as http_err:
@@ -383,7 +385,9 @@ def cached_api_call(
     else:
         data = _loadCachedData(endpoint, params=params, cache_age_limit=cache_age_limit)
     if data == None:
-        data = _api_raw_call(conn, cursor, url=_getApiURL(endpoint,params=params), params=params)
+        data = _api_raw_call(
+            conn, cursor, url=_getApiURL(endpoint, params=params), params=params
+        )
         if dataKey:
             data = data[dataKey]
         _saveData(endpoint, params, data)
@@ -481,50 +485,51 @@ def paginated_api_calls(
     limit=100,
     callback=None,
     callback_parameters={},
-    short_name=''
+    short_name="",
 ):
     """
     Requests data from a paged API call using timestamps with dynamic field names.
     """
     global headers
-    verbose=False
+    verbose = False
     data = []
     running = True
     if params is None:
         params = {}
-    if short_name=='':
-        short_name=endpoint
-    if fromTimestamp: params["from"] = ( fromTimestamp )
-    if short_name=='verbose'  :
-        verbose=True
+    if short_name == "":
+        short_name = endpoint
+    if fromTimestamp:
+        params["from"] = fromTimestamp
+    if short_name == "verbose":
+        verbose = True
         print(f"\n\nVerbose mode on for {short_name} !!!!!!!!!!!!!!!!!!!!!!!")
         print(f"endpoint = {endpoint}")
         print(f"params =  {params}")
-    # if not fromTimestamp:
-    #     fromTimestamp=int(datetime.strptime('2020-01-01 00:00:00', "%Y-%m-%d %H:%M:%S").timestamp())  
-    print(f"[{short_name}{':' if short_name else ''}",end='',flush=True)
+    print(f"[{short_name}{':' if short_name else ''}", end="", flush=True)
     while running:
-        if fromTimestamp: params["from"] = ( fromTimestamp )
-        new_data=[]
+        if fromTimestamp:
+            params["from"] = fromTimestamp
+        new_data = []
         # try:
-        if 1==1: 
-            new_data = _api_raw_call(conn, cursor, url=_getApiURL(endpoint,params=params), params=params)
-            if verbose: print(f'url {_getApiURL(endpoint,params=params)} : {len(new_data['revives'])}') 
+        if 1 == 1:
+            new_data = _api_raw_call(
+                conn, cursor, url=_getApiURL(endpoint, params=params), params=params
+            )
+            if verbose:
+                print(
+                    f"url {_getApiURL(endpoint,params=params)} : {len(new_data['revives'])}"
+                )
             if dataKey and dataKey in new_data:
                 new_data = new_data[dataKey]
-        # except Exception as e:
-        #     print(f"API call failed: {e}")
-        #     running = False
-        #     raise APIError({"endpoint":endpoint,"params":params,'response':new_data["error"] if new_data else 'unknown'})
-        #     break
-
         count = len(new_data) if new_data is not None else 0
         if count > 0:
             if isinstance(new_data, list):
                 data.extend(new_data)
             elif isinstance(new_data, dict):
                 # Convert the dictionary to a list of rows, including the key
-                new_data = [{"revive_id": key, **value} for key, value in new_data.items()] 
+                new_data = [
+                    {"revive_id": key, **value} for key, value in new_data.items()
+                ]
                 data.extend(new_data)  # Add all rows from the converted list
             else:
                 print(f"Unexpected data type: {type(new_data)}")
@@ -538,16 +543,76 @@ def paginated_api_calls(
             if callback is not None:
                 callback(conn, cursor, new_data, callback_parameters)
 
-            if verbose: print(f'\nfromTimestamp={fromTimestamp} oldestTimestamp={oldestTimestamp} latestTimestamp={latestTimestamp}') 
+            if verbose:
+                print(
+                    f"\nfromTimestamp={fromTimestamp} oldestTimestamp={oldestTimestamp} latestTimestamp={latestTimestamp}"
+                )
         else:
-            latestTimestamp=0
-            running=False
-        if fromTimestamp and latestTimestamp<=fromTimestamp and running:
+            latestTimestamp = 0
+            running = False
+        if fromTimestamp and latestTimestamp <= fromTimestamp and running:
             running = False
         else:
-            fromTimestamp = latestTimestamp+1
-    print(len(data),"]",end='',flush=True)
+            fromTimestamp = latestTimestamp + 1
+    print(len(data), "]", end="", flush=True)
     return data
 
+
 def date_to_unix(date_str):
-    return int(datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").timestamp()) # date_to_unix('2014-01-01 00:00:00')
+    return int(
+        datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").timestamp()
+    )  # date_to_unix('2014-01-01 00:00:00')
+
+
+def paginated_api_calls_auto(
+    conn,
+    cursor,
+    endpoint,
+    dictionary_key=None,
+    offset=None,
+    params={},
+    callback=None,
+    callback_parameters=None,
+    short_name="",
+):
+    global headers
+    verbose = True
+    data = []
+    running = True
+    if params is None:
+        params = {}
+    if offset is None:
+        offset=0
+    if short_name == "":
+        short_name = endpoint
+    print(f"[{short_name}{':' if short_name else ''}", end="", flush=True)
+    while running:
+        params["offset"] = offset
+        new_data = []
+        uri = _getApiURL(endpoint, params=params)
+        new_data = _api_raw_call(
+            conn, cursor, url=uri, params=params
+        )
+        if (not new_data) or ("error" in new_data):
+            print("ERROR paginated_api_calls_auto")
+            running=False
+        else:
+            _metadata = new_data.get("_metadata",{"prev":None,"next":None})
+            # CALLBACK execution
+            if callback is not None:
+                callback(conn, cursor, new_data, callback_parameters)
+
+            if _metadata.get("next") is None:
+                running = False
+            else:
+                if _metadata.get("next"):
+                    new_offset = int(parse_qs(urlparse(_metadata.get("next", "")).query).get('offset', [None])[0]) 
+                    if new_offset is None:
+                        running=False
+                    else:
+                        offset=new_offset
+                        if verbose:
+                            print(f""">>> {paginated_api_calls_auto} offset: {offset}""")
+                        #repeat the loop
+    print(len(data), "]", end="", flush=True)
+    return data

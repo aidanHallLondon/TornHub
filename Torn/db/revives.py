@@ -269,22 +269,23 @@ def _insert_revives(conn, cursor, revives, is_full_endpoint):
         """,
         [
             (
-                revive_row["revive_id"],
+                revive_row["id"],
                 1 if is_full_endpoint else 0,
                 datetime.fromtimestamp(revive_row["timestamp"]).isoformat(),
                 revive_row["result"],
-                revive_row["chance"],
-                revive_row["reviver_id"],
-                revive_row["reviver_name"],
-                revive_row.get("reviver_factionname"),
-                revive_row["target_id"],
-                revive_row["target_name"],
-                revive_row.get("target_factionname"),
-                revive_row["target_hospital_reason"],
-                1 if revive_row["target_early_discharge"] else 0,
-                revive_row["target_last_action"].get("status"),
+                revive_row["success_chance"],
+                revive_row["reviver"].get("id"),
+                revive_row["reviver"].get("name"),
+                revive_row["reviver"].get("faction",{}).get("name"),
+                revive_row["target"].get("id"),
+                revive_row["target"].get("name"),
+                revive_row["target"].get("faction",{}).get("name") if revive_row["target"].get("faction",{}) is not None else None,
+ 
+                revive_row["target"].get("hospital_reason"),
+                1 if revive_row["target"].get("early_discharge") else 0,
+                revive_row["target"].get("target_last_action",{}).get("status"),
                 datetime.fromtimestamp(
-                    revive_row.get("target_last_action").get("timestamp")
+                    revive_row["target"].get("last_action")
                 ).isoformat(),
             )
             for revive_row in revives
