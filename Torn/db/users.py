@@ -38,6 +38,7 @@ def create_users(conn, cursor, force=False):
     cursor.executescript(
         """
         DROP VIEW IF EXISTS users_unknown_from_attacks;
+        DROP VIEW IF EXISTS users_activity;
                          
         CREATE VIEW IF NOT EXISTS users_unknown_from_attacks AS         
             SELECT user_id FROM (
@@ -53,6 +54,43 @@ def create_users(conn, cursor, force=False):
             ) u
             GROUP BY user_id
             ORDER by max(timestamp);
+
+
+            CREATE VIEW IF NOT EXISTS users_activity AS         
+                SELECT 
+                    count(*) AS actions,
+                    sum(CASE WHEN act="attack" THEN 1 ELSE 0 END ) AS attacks,
+                    sum(CASE WHEN act="revive" THEN 1 ELSE 0 END ) AS revives,
+                    count(DISTINCT user_id) AS users,
+                    STRFTIME('%H', timestamp) AS hour_of_day, 
+                    STRFTIME('%w', timestamp) AS day_of_week, 
+                    CASE CAST(STRFTIME('%w', timestamp) AS INTEGER)
+                            when 0 then 'Sunday'
+                            when 1 then 'Monday'
+                            when 2 then 'Tuesday'
+                            when 3 then 'Wednesday'
+                            when 4 then 'Thursday'
+                            when 5 then 'Friday'
+                            else 'Saturday' 
+                    END AS day_of_week_name,
+                    STRFTIME('%Y', timestamp)||"-"|| STRFTIME('%m', timestamp)||"-"||"01" AS month
+                 FROM  (
+                    SELECT 
+                        "attack" AS act,
+                        "attacker_id" as user_id,
+                        started as timestamp
+                    FROM attacks 
+                    WHERE attacker_faction_name="Halos Pulse" 
+                UNION ALL
+                        SELECT  
+                                "revive" as act,
+                                reviver_id as user_id,
+                                timestamp
+                        From revives
+                        WHERE reviver_factionname="Halos Pulse" 
+
+                    )
+                GROUP BY hour_of_day, day_of_week, day_of_week_name ,month
         """
     )
 

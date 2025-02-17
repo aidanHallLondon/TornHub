@@ -163,38 +163,42 @@ def plot_armory_pricing_chart(
             original_outliers: Boolean Series indicating outliers in the original data.
         """
 
-        def plt_scatter(x, y, color, label, marker="",size=None, alpha=0.5):
+        def _plt_scatter(x, y, color, gid, label, marker=".", size=12, alpha=0.5):
             for i in range(len(x)):
                 plt_label = label if i == 0 else None  # Only label the first point
                 plt.plot(
                     x.iloc[i],
                     y.iloc[i],
-                    marker=".",
+                    marker=marker,
                     linestyle="",
                     color=color,
                     alpha=alpha,
                     label=plt_label,
-                    ms=size
+                    ms=size,
+                    gid=f"""datum|{gid}|{i}"""
                 )
             plt.legend()
 
         # Plot categorized points (filtered data), using the calculated classifications.
-        plt_scatter(
+        _plt_scatter(
             df_filtered.loc[df_filtered["above_trend"], "measure"],
             df_filtered.loc[df_filtered["above_trend"], "price"],
+            gid="above_trend",
             color="red",
             label="Above Trend"
         )
 
-        plt_scatter(
+        _plt_scatter(
             df_filtered.loc[df_filtered["on_trend"], "measure"],
             df_filtered.loc[df_filtered["on_trend"], "price"],
+            gid="on_trend",
             color="blue",
             label="On Trend"
         )
-        plt_scatter(
+        _plt_scatter(
             df_filtered.loc[df_filtered["below_trend"], "measure"],
             df_filtered.loc[df_filtered["below_trend"], "price"],
+            gid="below_trend",
             color="green",
             label="Below Trend"
         )
@@ -241,13 +245,15 @@ def plot_armory_pricing_chart(
         plt.ylim(ymin - padding_y, ymax + padding_y)
 
         # Outlier points (using original_outliers)
-        plt_scatter(
+        _plt_scatter(
             df_raw[original_outliers]["measure"],
             df_raw[original_outliers]["price"],
+            gid="excluded_outliers",
             color="black",
             label="Excluded Outliers",
             marker="x",
-            size=50,
+            size=4,
+            alpha=.1,
         )
         plt.xlabel("Measure")
         plt.ylabel("Price")

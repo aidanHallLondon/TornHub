@@ -3,6 +3,7 @@ import shutil
 import sqlite3
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import get_last_updateDB_delta, initDB, updateDB
+from Torn.reporting.user_activity import user_activity
 from Torn.reporting.itemMarket import item_reporting
 from Torn.reporting.reviver_bump import reviver_count_bump_plot, reviver_skill_bump_plot
 from Torn.threads import run_background_threads_and_exit
@@ -164,7 +165,7 @@ def faction_reporting(conn, cursor, f_menu):
     f_menu = faction_revive_reporting(conn, cursor, f_menu)
     f_menu = faction_crime_reporting(conn, cursor, f_menu)
     f_menu = faction_oc_reporting(conn, cursor, f_menu)
-
+    f_menu = user_activity(conn, cursor, f_menu=f_menu)
     return f_menu
 
 

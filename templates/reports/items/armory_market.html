@@ -40,7 +40,7 @@
         border: 1px solid black;
       }
 
-      .svg-container img {
+      .svg-container img,.svg-container svg {
         display: block; /* Remove extra space below the image */
         width: 100%; /* Make the image take the full width of its container */
         height: auto; /* Maintain aspect ratio */
@@ -59,6 +59,7 @@
       <div class="svg-container">$chart_html</div>
     </div>
     $content_html
+    <div id="tooltip" class="tooltip">tooltip</div>
     <script>
       const urlParams = new URLSearchParams(window.location.search);
       const svgPath = urlParams.get("svg");
@@ -73,10 +74,45 @@
         fetch(svgPath)
           .then((response) => response.text())
           .then((svgContent) => {
-            const div = document.getElementById("chart-svg .svg-container");
-            div.innerHTML = svgContent;
+            const div = document.querySelector("#chart-svg .svg-container");
+            if(div) div.innerHTML = svgContent;
+            else console.error("#chart-svg .svg-container not found")
           });
       }
+
+
+        //Find all g tag with id starting with "datum"
+        const dataElements = document.querySelectorAll('g[id^="datum"]');
+
+        dataElements.forEach(element => {
+            element.addEventListener('mouseover', (event) => {
+                const gid = event.currentTarget.id; // Get the full gid
+                const parts = gid.split('|');      // Split the gid
+                const seriesName = parts[1];      // e.g., "series1"
+                const index = parseInt(parts[2], 10); // e.g., 0, 1, 2...  (parse as integer!)
+                const tooltip = document.getElementById('tooltip');
+                    tooltip.innerHTML = `
+                        Series: ${seriesName}<br>
+                        Value: ${index}
+                    `; // Adapt to your data structure
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = `${event.clientX + 10}px`;  // Position near the mouse
+                    tooltip.style.top = `${event.clientY + 10}px`;
+
+                    // Add highlight (optional)
+                    event.currentTarget.classList.add('highlight'); 
+            });
+            element.addEventListener('mouseout', (event) => {
+            // Hide tooltip
+            document.getElementById('tooltip').style.display = 'none';
+
+            // Remove highlight (optional)
+            event.currentTarget.classList.remove('highlight');
+            });
+        });
+
+      
+    </script>
     </script>
   </body>
 </html>
