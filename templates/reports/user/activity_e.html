@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html style="width: 100%;height:100%;">
+
+<head>
+    <meta charset="utf-8">
+    <title>ECharts with DOMContentLoaded</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.js"></script>
+    <style>
+        #main,
+        #second {
+            background-color: #ffffff;
+            border-radius: 8px;
+            margin: 1em;
+            padding: 1em;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize the echarts instance based on the prepared DOM
+            var myChart = echarts.init(document.getElementById('main'));
+            var myChart2 = echarts.init(document.getElementById('second'));
+
+            // ... (rest of your ECharts code) ...
+
+            function plot(meta_data, data) {
+                console.log("Data:", data);
+
+                const seriesCount = 4; // Number of series
+                const textStyle = { fontSize: 18 };
+                let seriesType = 'line';
+                let seriesNames = meta_data.headings.slice(0, seriesCount);
+
+                // Extract categories (hours of the day)
+                let categories = data.map(row => row[4]);
+                let hours = seriesNames.map((name, i) => data.map(row => row[i].toFixed(2)));
+
+                console.log("Series Data:", hours);
+
+                // Build 24-hour clock indicators
+                let clockHours = Array.from({ length: 24 }, (_, i) => ({
+                    name: `${i}:00`,
+                    max: Math.max(...hours.flat()) // Set max dynamically
+                }));
+
+                // Transpose hours data for the radar chart
+                let radarData = seriesNames.map((name, i) => ({
+                    name: name,
+                    value: hours[i].slice(0, 24)  // Ensure each series provides 24 hourly values
+                }));
+
+                let eChart_options = {
+                    title: { text: 'Activity over 90-days by Hour' },
+                    legend: { data: seriesNames },
+                    tooltip: {
+                        trigger: 'item',
+
+                        formatter: function (params) {
+                            //console.log(params  )
+                            return `${params.seriesName}`;
+                        }
+                    },
+                    radar: {
+                        indicator: [...clockHours].reverse(),  // Reversed to make it go clockwise
+                        startAngle: 90 + (360 / 24), // Midnight at the top
+                    },
+                    series: [
+                        {
+                            name: seriesNames[0],
+                            type: 'radar',
+                            data: [{ // Wrap
+                                value: data.map(row => row[0].toFixed(0)).reverse(),
+                                name: seriesNames[0]
+                            }]
+
+                        },
+                        {
+                            name: seriesNames[1],
+                            type: 'radar',
+                            data: [{ // Wrap
+                                value: data.map(row => row[1].toFixed(0)).reverse(),
+                                name: seriesNames[1]
+                            }]
+                        },
+                        {
+                            name: seriesNames[2],
+                            type: 'radar',
+                            data: [{ // Wrap
+                                value: data.map(row => row[2].toFixed(0)).reverse(),
+                                name: seriesNames[2]
+                            }]
+                        },
+                        {
+                            name: seriesNames[3],
+                            type: 'radar',
+                            data: [{ // Wrap
+                                value: data.map(row => row[3].toFixed(0)).reverse(),
+                                name: seriesNames[3]
+                            }]
+                        }
+                    ]
+                };
+
+                myChart.setOption(eChart_options);
+
+                // Line chart options
+
+                // Adjust the hours data to close the loop for the line chart
+                let wrappedHours = hours.map(series => [...series.slice(0, 24), series[0]]);  // Add 00:00 value to the end
+
+                // Update x-axis to include 24:00
+                let wrappedClockHours = [...clockHours.map(h => h.name), '24:00'];
+
+                // Line chart options with wrapped data
+                eChart_options = {
+                    series: seriesNames.map((name, i) => ({
+                        name: name,
+                        type: seriesType,
+                        title: { text: "Activiy over 90-days by hour" },
+                        data: wrappedHours[i],
+                        smooth: true,
+                        markArea: {
+                            silent: true,
+                            itemStyle: {
+                                color: 'rgba(200, 200, 200, 0.2)'  // Soft grey with transparency
+                            },
+                            data: [
+                                [
+                                    { xAxis: '0:00' },
+                                    { xAxis: '7:00' }
+                                ],
+                                [
+                                    { xAxis: '23:00' },
+                                    { xAxis: '24:00' }
+                                ]
+                            ]
+                        }
+                    })),
+                    xAxis: {
+                        type: 'category',
+                        data: wrappedClockHours,  // Include 24:00
+                        axisLabel: { rotate: 0, fontSize: 18 }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        textStyle: textStyle,
+                    },
+                    legend: { data: seriesNames },
+                    textStyle: textStyle,
+                    tooltip: { trigger: 'axis' },
+                };
+                myChart2.setOption(eChart_options);
+
+            }
+            fetch('activity_e.json')
+                .then(response => response.json()) // Parse the JSON response
+                .then(data => {
+                    plot(data.meta_data, data.data);
+                })
+                .catch(error => {
+                    console.error('Error loading JSON:', error);
+                });
+        });
+    </script>
+</head>
+
+<body style="width: 100%;height:90%;">
+    <div id="main" style="width: 100%;height:50%;"></div>
+    <div id="second" style="width: 100%;height:50%;"></div>
+</body>
+
+</html>

@@ -3,7 +3,7 @@ import shutil
 import sqlite3
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import get_last_updateDB_delta, initDB, updateDB
-from Torn.reporting.user_activity import user_activity
+from Torn.reporting.user_activity import user_activity_json
 from Torn.reporting.itemMarket import item_reporting
 from Torn.reporting.reviver_bump import reviver_count_bump_plot, reviver_skill_bump_plot
 from Torn.threads import run_background_threads_and_exit
@@ -165,7 +165,13 @@ def faction_reporting(conn, cursor, f_menu):
     f_menu = faction_revive_reporting(conn, cursor, f_menu)
     f_menu = faction_crime_reporting(conn, cursor, f_menu)
     f_menu = faction_oc_reporting(conn, cursor, f_menu)
-    f_menu = user_activity(conn, cursor, f_menu=f_menu)
+    _copy_file("templates/reports/user", "activity_e.html", "reports/user")
+    user_activity_json(conn,cursor,path="reports/user",out_filename="activity_e")
+    f_menu.append(
+        _menu_item_for_file(
+            "reports/user", "user_activity_90days", "activity_e.html" 
+        )
+    )
     return f_menu
 
 
