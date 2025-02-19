@@ -31,7 +31,7 @@ def _menu_list_to_tree(menu_items):
         name = item["name"]
         href = item.get("href", name)
         entity_type = item["type"]
-        row_count = item["row_count"]
+        row_count = item.get("row_count",None)
         # split name into parts but skip the first char to ignore any leading "_"
         parts = name[1:].split("_")
         parts[0] = name[0] + parts[0]
