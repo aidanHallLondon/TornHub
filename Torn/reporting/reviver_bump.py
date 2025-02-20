@@ -7,6 +7,48 @@ from Torn.db._globals import DB_CONNECTPATH
 from Torn.charts import plt_save_image
 
 
+
+def revier_json(conn,cursor,
+                        path ="reports/user",
+                        title_str="user_activity_json",
+                        out_filename="activity_e"):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    # 
+    # cursor.execute('''
+    #    SELECT  
+    #         sum(actions),sum(attacks),sum(revives),sum(users),
+    #         hour_of_day, day_of_week, day_of_week_name
+    #     From users_activity
+    #     WHERE month>date('now', '-90 days')
+    #     GROUP BY hour_of_day--, day_of_week, day_of_week_name
+    #     ORDER BY hour_of_day; --day_of_week;
+    # ''')
+    cursor.execute('''
+       SELECT  
+            avg(actions),avg(attacks),avg(revives),avg(users),
+            hour_of_day, day_of_week, day_of_week_name
+        From users_activity
+        WHERE month>date('now', '-90 days')
+        GROUP BY hour_of_day 
+        ORDER BY hour_of_day;
+    ''')
+    raw_data=cursor.fetchall()
+    data={
+        "meta_data":{
+                "name":"user_activity",
+                "source":"user_activity_json",
+                "headings":["Actions per hour", "Attacks", "Revives", "Active Users", "hour_of_day"],
+            },
+          "data":raw_data
+    }
+    # 
+    with open(os.path.join(path, out_filename+'.json'), "w") as f:
+        f.write(json.dumps(data,indent=4))
+    print(f"{title_str} saved in {out_filename}")  
+
+
+
 def _sigmoid_pairwise(xs, ys, smooth=8, n=1000):
     """
     Work out the sigmoid curve control points based on a pair of points in a bump chart

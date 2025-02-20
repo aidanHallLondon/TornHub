@@ -120,6 +120,8 @@ def copy_assets_from_template_folder():
     _copy_folder("templates/assets", "reports/assets")
     _copy_file("templates/db", "schema.html", "reports/db")
     _copy_file("templates/reports", "_viewer.html", "reports/")
+    _copy_file("templates/reports", "_viewer.html", "reports/")
+    _copy_file("templates/reports/items/armory/items", "item_pricing.html", "reports/items/armory/items")
     move_template_file_with_subs(
         template_file_path="templates/_home.html",
         out_path="reports",

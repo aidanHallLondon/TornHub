@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html style="width: 100%;height:100%;">
+
+<head>
+    <meta charset="utf-8">
+    <title>ECharts with DOMContentLoaded</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.js"></script>
+    <style>
+        #main,
+        #second {
+            background-color: #ffffff;
+            border-radius: 8px;
+            margin: 1em;
+            padding: 1em;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize the echarts instance based on the prepared DOM
+            var myChart = echarts.init(document.getElementById('main'));
+
+
+
+
+            /**
+ * Generates an ECharts chart configuration.
+ *
+ * @param {Object} metaData - The meta data object.
+ * @param {Array} rawData - The raw data array of arrays.
+ * @returns {Object} ECharts option object.
+ */
+            function generateArmoryPricingChart(metaData, rawData) {
+                // Constants
+                const OUTLIER_THRESHOLD = 2.0;
+                const MODERN_LISTING_ID_THRESHOLD = 10000;
+                const UPPER_MARGIN_FACTOR = 0.2;
+                const LOWER_MARGIN_FACTOR = 0.2;
+                const BIN_FACTOR = 12;
+                const PERCENTILE = 0.05;
+
+                // Data Extraction and Formatting
+                const item_id = metaData.id;
+                const item_name = metaData.name;
+                const item_type = "Armor";
+                const headings = metaData.headings;
+
+                const measureIndex = headings.indexOf("stat_armor");
+                const priceIndex = headings.indexOf("price");
+                const listingIdIndex = headings.indexOf("listing_id");
+                const itemUidIndex = headings.indexOf("item_uid");
+
+                if (measureIndex === -1 || priceIndex === -1 || listingIdIndex === -1 || itemUidIndex === -1) {
+                    console.error("Required columns are missing.");
+                    return null;
+                }
+
+                const formattedData = rawData.map(row => ({
+                    item_uid: row[itemUidIndex],
+                    measure: row[measureIndex],
+                    price: row[priceIndex],
+                    listing_id: row[listingIdIndex]
+                }));
+
+                // Filter out rows where measure or price is null/undefined.
+                const dfRaw = formattedData.filter(item => item.measure != null && item.price != null);
+
+                // Helper Functions (Corrected to avoid side effects)
+                function filterExtremeOutliers(dfRawInput, priceTrendSeries) {
+                    // IMPORTANT: Work on a *copy* of the input data.  Do NOT modify dfRawInput directly.
+                    const dfRaw = dfRawInput.map(item => ({ ...item, measure: parseFloat(item.measure) })); // Create a deep copy and convert measure to number
+                    const dfTrend = Object.entries(priceTrendSeries).map(([measure, trend_price]) => ({ measure: parseFloat(measure), trend_price }));
+
+                    dfTrend.sort((a, b) => a.measure - b.measure);
+                    dfRaw.sort((a, b) => a.measure - b.measure);
+
+                    const trendMeasures = dfTrend.map(item => item.measure);
+                    const trendPrices = dfTrend.map(item => item.trend_price);
+
+                    const interpolatedTrendPrices = dfRaw.map(item => {
+                        if (item.measure < trendMeasures[0]) {
+                            return trendPrices[0];
+                        }
+                        if (item.measure > trendMeasures[trendMeasures.length - 1]) {
+                            return trendPrices[trendMeasures.length - 1];
+                        }
+                        let i = 0;
+                        while (trendMeasures[i] < item.measure) { i++; }
+                        const lowerBound = trendMeasures[i - 1];
+                        const upperBound = trendMeasures[i];
+                        const lowerPrice = trendPrices[i - 1];
+                        const upperPrice = trendPrices[i];
+                        let interpPrice = lowerPrice + (upperPrice - lowerPrice) * ((item.measure - lowerBound) / (upperBound - lowerBound));
+                        return !isNaN(interpPrice) ? interpPrice : (lowerPrice || upperPrice || 0);
+                    });
+
+                    const dfRawWithTrend = dfRaw.map((item, index) => ({
+                        ...item,
+                        trend_price: interpolatedTrendPrices[index],
+                        price_diff: item.price - interpolatedTrendPrices[index]
+                    }));
+                    const dfRawWithOutlier = dfRawWithTrend.map(item => ({
+                        ...item,
+                        outlier: (item.price > (item.trend_price * OUTLIER_THRESHOLD)) || (item.listing_id < MODERN_LISTING_ID_THRESHOLD),
+                    }));
+                    const dfFiltered = dfRawWithOutlier.filter(item => !item.outlier).map(item => ({  //Create a new object from filtered data
+                        ...item,
+                        above_trend: item.price_diff > (item.trend_price * UPPER_MARGIN_FACTOR),
+                        on_trend: item.price_diff <= (item.trend_price * UPPER_MARGIN_FACTOR) && item.price_diff >= -(item.trend_price * LOWER_MARGIN_FACTOR),
+                        below_trend: item.price_diff < -(item.trend_price * LOWER_MARGIN_FACTOR)
+                    }));
+                    const originalOutliers = dfRawWithOutlier.map(item => item.outlier);
+                    return [dfFiltered, originalOutliers]; // Return the filtered data and outlier flags
+                }
+
+
+                function calculateBinPercentiles(df, binSize, percentile) {
+                    df.sort((a, b) => a.measure - b.measure);
+                    const minMeasure = Math.min(...df.map(item => item.measure));
+                    const maxMeasure = Math.max(...df.map(item => item.measure));
+                    const bins = [];
+                    for (let i = minMeasure; i <= maxMeasure + binSize; i += binSize) {
+                        bins.push(i);
+                    }
+
+                    const binPercentiles = {};
+                    for (let i = 0; i < bins.length - 1; i++) {
+                        const binStart = bins[i];
+                        const binEnd = bins[i + 1];
+                        const binMidpoint = (binStart + binEnd) / 2;
+                        const binData = df.filter(item => item.measure >= binStart && item.measure < binEnd);
+
+                        if (binData.length > 0) {
+                            binData.sort((a, b) => a.price - b.price);
+                            const index = Math.floor(percentile * (binData.length - 1));
+                            binPercentiles[binMidpoint] = !isNaN(binData[index]?.price) ? binData[index].price : null;
+                        }
+                    }
+                    const measures = Object.keys(binPercentiles).map(Number).sort((a, b) => a - b);
+                    let lastValidValue = null;
+                    for (let i = 0; i < measures.length; i++) {
+                        if (binPercentiles[measures[i]] !== null) {
+                            lastValidValue = binPercentiles[measures[i]];
+                        } else if (lastValidValue !== null) {
+                            binPercentiles[measures[i]] = lastValidValue;
+                        }
+                    }
+
+                    lastValidValue = null; // Reset for backward fill
+                    for (let i = measures.length - 1; i >= 0; i--) {
+                        if (binPercentiles[measures[i]] !== null) {
+                            lastValidValue = binPercentiles[measures[i]];
+                        } else if (lastValidValue !== null) {
+                            binPercentiles[measures[i]] = lastValidValue;
+                        }
+                    }
+                    return binPercentiles;
+                }
+
+
+                // Data Processing and Calculations
+                const minMeasure = dfRaw.length > 0 ? Math.min(...dfRaw.map(item => item.measure)) : 0;
+                const maxMeasure = dfRaw.length > 0 ? Math.max(...dfRaw.map(item => item.measure)) : 1;
+                const count = dfRaw.length;
+                const binSize = (BIN_FACTOR * (maxMeasure - minMeasure) / count) || 1;
+
+                const priceTrendSeries = calculateBinPercentiles(dfRaw, binSize, PERCENTILE);
+                const [dfFiltered, originalOutliers] = filterExtremeOutliers(dfRaw, priceTrendSeries); // Use original dfRaw
+
+                // Calculate min/max from dfFiltered ONLY
+                const nonOutlierPrices = dfFiltered.map(item => item.price);
+                const minPrice = nonOutlierPrices.length > 0 ? Math.min(...nonOutlierPrices) : 0;  // Avoid NaN
+                const maxPrice = nonOutlierPrices.length > 0 ? Math.max(...nonOutlierPrices) : 1;  // Avoid NaN
+
+
+                const aboveTrendData = dfFiltered.filter(item => item.above_trend).map(item => [item.measure, item.price, item.item_uid]);
+                const onTrendData = dfFiltered.filter(item => item.on_trend).map(item => [item.measure, item.price, item.item_uid]);
+                const belowTrendData = dfFiltered.filter(item => item.below_trend).map(item => [item.measure, item.price, item.item_uid]);
+                const outlierData = dfRaw.filter((item, index) => originalOutliers[index]).map(item => [item.measure, item.price, item.item_uid]);
+                const trendLineData = Object.entries(priceTrendSeries).map(([measure, price]) => [parseFloat(measure), price]); // Use priceTrendSeries
+                const upperMarginData = trendLineData.map(item => [item[0], item[1] + (item[1] * UPPER_MARGIN_FACTOR)]);
+                const lowerMarginData = trendLineData.map(item => [item[0], item[1] - (item[1] * LOWER_MARGIN_FACTOR)]);
+
+                // ECharts Option Configuration
+                titleText = `${item_name} #${item_id} (${item_type}) Price vs. Measure`;
+                const option = {
+                    title: { text: titleText, left: "center" },
+                    tooltip: { trigger: "item", formatter: params => `Measure: ${params.value[0]}<br/>Price: ${params.value[1]}<br/>UID: ${params.value[2]}` },
+                    legend: {
+                        data: ["Above Trend", "On Trend", "Below Trend", "Excluded Outliers", "Interpolated Trend", `Upper Margin (${(UPPER_MARGIN_FACTOR * 100).toFixed(0)}%)`, `Lower Margin (${(LOWER_MARGIN_FACTOR * 100).toFixed(0)}%)`],
+                        top: "10%"
+                    },
+                    grid: { top: '20%', left: '8%', right: '4%', bottom: '3%', containLabel: true },
+                    xAxis: {
+                        type: "value",
+                        name: "Measure",
+                        min: function (value) {
+                            return value.min - (value.max - value.min) * 0.05;
+                        },
+                        max: function (value) {
+                            return value.max + (value.max - value.min) * 0.05;
+                        },
+                        splitNumber: 5
+                    },
+                    yAxis: {
+                        type: "value",
+                        name: "Price",
+                        min: minPrice - (maxPrice - minPrice) * 0.05,  // 5% padding
+                        max: maxPrice + (maxPrice - minPrice) * 0.05,  // 5% padding
+                        splitNumber: 5,
+                        axisLabel: {
+                            formatter: function (value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    },
+                    dataZoom: [
+                        {
+                            type: 'inside', // Enable inside (mouse wheel) zoom
+                            yAxisIndex: [0], // Control the y-axis
+                            start: 0,      // Initial zoom level (0-100)
+                            end: 100,      // Initial zoom level (0-100)
+                        },
+                        {
+                            type: 'slider', // Add a slider for zoom control
+                            yAxisIndex: [0], // Control the y-axis
+                            start: 0,       // Initial zoom level
+                            end: 100,     // Initial zoom level
+                            left: '0%',     // Position the slider (left, right, top, bottom)
+                            bottom: '1%',    // Position from the bottom
+                            height: '80%'      // Slider height
+                        }
+                    ],
+                    series: [
+                        { name: "Above Trend", type: "scatter", data: aboveTrendData, itemStyle: { color: 'red', opacity: 0.5 }, symbolSize: 6, emphasis: { scale: 1.2 } },
+                        { name: "On Trend", type: "scatter", data: onTrendData, itemStyle: { color: "blue", opacity: 0.5 }, symbolSize: 6, emphasis: { scale: 1.2 } },
+                        { name: "Below Trend", type: "scatter", data: belowTrendData, itemStyle: { color: "green", opacity: 0.5 }, symbolSize: 6, emphasis: { scale: 1.2 } },
+                        { name: "Excluded Outliers", type: "scatter", data: outlierData, itemStyle: { color: "black", opacity: 0.1, }, symbol: "cross", symbolSize: 4, emphasis: { scale: 1.2 } },
+                        { name: "Interpolated Trend", type: "line", data: trendLineData, itemStyle: { color: "orange", }, lineStyle: { width: 2, type: "solid", }, symbol: "none", smooth: false, },
+                        { name: `Upper Margin (${(UPPER_MARGIN_FACTOR * 100).toFixed(0)}%)`, type: "line", data: upperMarginData, itemStyle: { color: "red", }, lineStyle: { width: 1, type: "dashed", opacity: 0.25, }, symbol: "none", smooth: false, },
+                        { name: `Lower Margin (${(LOWER_MARGIN_FACTOR * 100).toFixed(0)}%)`, type: "line", data: lowerMarginData, itemStyle: { color: "green", }, lineStyle: { width: 1, type: "dashed", opacity: 0.25, }, symbol: "none", smooth: false, },
+                    ],
+                };
+
+                return option;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const item_id = urlParams.get('item_id');
+            if (item_id) {
+                fetch(`json/items_armory_${String(item_id).padStart(6, '0')}.json`)
+                    .then(response => response.json()) // Parse the JSON response
+                    .then(data => {
+                        eChart_options = generateArmoryPricingChart(data.meta_data, data.data);
+                        myChart.setOption(eChart_options)
+                    })
+                    .catch(error => {
+                        console.error('Error loading JSON:', error);
+                    });
+            }
+        });
+    </script>
+</head>
+
+<body style="width: 100%;height:90%;">
+    <div id="main" style="width: 100%;height:100%;"></div>
+</body>
+
+</html>

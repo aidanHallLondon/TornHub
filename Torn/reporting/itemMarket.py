@@ -1,3 +1,4 @@
+import json
 from os import path
 import os
 import sqlite3
@@ -24,10 +25,11 @@ MODERN_LISTING_ID_THRESHOLD = 9 * 1000000
 
 def item_reporting(conn, cursor, f_menu):
     path = "reports/items/market/items"
-    f_menu = item_market_page(conn, cursor, item_id=332, path=path, f_menu=f_menu)
-    f_menu = item_market_page(conn, cursor, item_id=652, path=path, f_menu=f_menu)
-    f_menu = item_market_page(conn, cursor, item_id=653, path=path, f_menu=f_menu)
-    f_menu = item_market_page(conn, cursor, item_id=654, path=path, f_menu=f_menu)
+    
+    f_menu = create_item_market_json(conn,cursor, item_id=332, f_menu=f_menu)
+    f_menu = create_item_market_json(conn,cursor, item_id=652, f_menu=f_menu)
+    f_menu = create_item_market_json(conn,cursor, item_id=653, f_menu=f_menu)
+    f_menu = create_item_market_json(conn,cursor, item_id=654, f_menu=f_menu)
     return f_menu
 
 
@@ -326,72 +328,46 @@ def plot_armory_pricing_chart(
 
 # ------------------------
 
-
-def item_market_page(
-    conn,
-    cursor,
-    item_id,
-    template_file_path="templates/reports/items/armory_market.html",
-    title_str="Item Pricing for weapons and armor",
-    path="reports/items/armory/items",
-    name="items_armory",
-    out_filename=None,
-    f_menu=[],
-):
-    item_type = None
-    average_price = None
-    item_name = None
-    html_str = ""
-    chart_html = ""
-    out_filename = out_filename if out_filename else f"""{name}_{item_id:06}"""
-    #
-    cursor.execute(
-        f"""
+def create_item_market_json(conn, cursor, item_id,f_menu):
+    title_str="Item Pricing for weapons and armor"
+    path="reports/items/armory/items/json"
+    out_filename=f"items_armory_{item_id:06}"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    # 
+    cursor.execute(f'''
         SELECT 	item_name,	item_type,	average_price
         FROM items
-        WHERE item_id={item_id} AND item_name IS NOT NULL"""
-    )
+        WHERE item_id={item_id} AND item_name IS NOT NULL
+        LIMIT 1; ''')
     item_data = cursor.fetchone()
     if item_data:
         item_name, item_type, average_price = item_data
-        pricing_chart_path = plot_armory_pricing_chart(
-            conn,
-            cursor,
-            item_id=item_id,
-            item_name=item_name,
-            item_type=item_type,
-            average_price=average_price,
-            bin_factor=12,
-            percentile=TREND_PERCENTILE,
-            out_filename=out_filename,
-            path=path,
+        cursor.execute(f"""
+            SELECT item_uid, stat_damage, stat_accuracy, stat_armor, price, listing_id
+            FROM item_listings
+            WHERE item_id={item_id}
+            ORDER BY listing_id ASC;"""
         )
-        chart_html += f"""<img class="pricing_chart" src="{os.path.join('/',(path[8:] if path.startswith("reports/") else path), pricing_chart_path)}" alt="Pricing chart">"""
-
-    if not os.path.exists(path):
-        os.makedirs(path)
-    output_filepath = os.path.join(path, out_filename)
-    #
-    with open(template_file_path, "r") as f:
-        html_template = Template(f.read())
-        final_html = html_template.safe_substitute(
-            page_title=title_str,
-            item_name=item_name,
-            item_type=item_type,
-            average_price=average_price,
-            chart_html=chart_html,
-            content_html=html_str,
+        raw_data = cursor.fetchall()
+        # 
+        data={
+            "meta_data":{
+                    "name": f"items_armory_{item_name}",
+                    "source": f"item_market_json({item_id})",
+                    "id" : item_id,
+                    "headings":["item_uid", "stat_damage", "stat_accuracy", "stat_armor", "price", "listing_id"],
+                },
+            "data":raw_data
+        }
+        # 
+        with open(os.path.join(path, out_filename+'.json'), "w") as f:
+            f.write(json.dumps(data,indent=4))
+        print(f"{title_str} saved in {out_filename}")  
+        f_menu.append(
+            _menu_item_for_file(
+                name=f"items_armory_{item_name}",
+                href=f"/items/armory/items/item_pricing.html?item_id={item_id}",
+            )
         )
-    #
-    with open(output_filepath + ".html", "w") as f:
-        f.write(final_html)
-
-    print(f"> {title_str} saved in {output_filepath+".html"}")
-    f_menu.append(
-        _menu_item_for_file(
-            name=f"{name}_{item_name}",
-            href=f"{output_filepath+".html"}?svg=/items/market/items/{pricing_chart_path}",
-        )
-    )
-
-    return f_menu
+        return f_menu
