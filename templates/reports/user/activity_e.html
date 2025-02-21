@@ -63,41 +63,14 @@
                         indicator: [...clockHours].reverse(),  // Reversed to make it go clockwise
                         startAngle: 90 + (360 / 24), // Midnight at the top
                     },
-                    series: [
-                        {
-                            name: seriesNames[0],
-                            type: 'radar',
-                            data: [{ // Wrap
-                                value: data.map(row => row[0].toFixed(0)).reverse(),
-                                name: seriesNames[0]
-                            }]
-
-                        },
-                        {
-                            name: seriesNames[1],
-                            type: 'radar',
-                            data: [{ // Wrap
-                                value: data.map(row => row[1].toFixed(0)).reverse(),
-                                name: seriesNames[1]
-                            }]
-                        },
-                        {
-                            name: seriesNames[2],
-                            type: 'radar',
-                            data: [{ // Wrap
-                                value: data.map(row => row[2].toFixed(0)).reverse(),
-                                name: seriesNames[2]
-                            }]
-                        },
-                        {
-                            name: seriesNames[3],
-                            type: 'radar',
-                            data: [{ // Wrap
-                                value: data.map(row => row[3].toFixed(0)).reverse(),
-                                name: seriesNames[3]
-                            }]
-                        }
-                    ]
+                    series: seriesNames.map((name, i) => ({
+                        name: name,
+                        type: 'radar',
+                        data: [{
+                            value: data.map(row => row[i].toFixed(0)).reverse(),
+                            name: name
+                        }]
+                    }))
                 };
 
                 myChart.setOption(eChart_options);
