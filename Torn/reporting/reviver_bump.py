@@ -1,294 +1,116 @@
 from datetime import datetime
+import json
+import os
+import sqlite3
 from matplotlib import text
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from Torn.db._globals import DB_CONNECTPATH
 from Torn.charts import plt_save_image
+from Torn.manageDB import initDB, updateDB
 
+# def main(fast=True):
+#     conn = sqlite3.connect(DB_CONNECTPATH, detect_types=sqlite3.PARSE_DECLTYPES)
+#     cursor = conn.cursor()
+#     if not fast:
+#         initDB(conn, cursor)  # creates the database structure if not already done
+#     if not fast:
+#         updateDB(conn, cursor)
+#     #
+#     reviver_ranks_json(conn, cursor)
 
-
-def revier_json(conn,cursor,
-                        path ="reports/user",
-                        title_str="user_activity_json",
-                        out_filename="activity_e"):
-    if not os.path.exists(path):
-        os.makedirs(path)
-    # 
-    # cursor.execute('''
-    #    SELECT  
-    #         sum(actions),sum(attacks),sum(revives),sum(users),
-    #         hour_of_day, day_of_week, day_of_week_name
-    #     From users_activity
-    #     WHERE month>date('now', '-90 days')
-    #     GROUP BY hour_of_day--, day_of_week, day_of_week_name
-    #     ORDER BY hour_of_day; --day_of_week;
-    # ''')
-    cursor.execute('''
-       SELECT  
-            avg(actions),avg(attacks),avg(revives),avg(users),
-            hour_of_day, day_of_week, day_of_week_name
-        From users_activity
-        WHERE month>date('now', '-90 days')
-        GROUP BY hour_of_day 
-        ORDER BY hour_of_day;
-    ''')
-    raw_data=cursor.fetchall()
-    data={
-        "meta_data":{
-                "name":"user_activity",
-                "source":"user_activity_json",
-                "headings":["Actions per hour", "Attacks", "Revives", "Active Users", "hour_of_day"],
-            },
-          "data":raw_data
-    }
-    # 
-    with open(os.path.join(path, out_filename+'.json'), "w") as f:
-        f.write(json.dumps(data,indent=4))
-    print(f"{title_str} saved in {out_filename}")  
-
-
-
-def _sigmoid_pairwise(xs, ys, smooth=8, n=1000):
-    """
-    Work out the sigmoid curve control points based on a pair of points in a bump chart
-    Uses NumPy data
-    Args
-        xs - np list of relative x axis positions (ordinals from dates)
-        ys - np list of date and rank for one user
-        smooth - real >=8
-        n - int number of steps
-    Returns
-        (x,y)
-        x is a set of x coordinates for the line segments to pass to .plot
-        y is a set of y coordinates for the line segments to pass to .plot
-    """
-
-    def _sigmoid(xs, ys, smooth=smooth, n=n):
-        (x_from, x_to), (y_from, y_to) = xs, ys
-        xs = np.linspace(-smooth, smooth, num=n)[:, None]
-        ys = np.exp(xs) / (np.exp(xs) + 1)
-        return (
-            ((xs + smooth) / (smooth * 2) * (x_to - x_from) + x_from),
-            (ys * (y_to - y_from) + y_from),
-        )
-
-    xs = np.lib.stride_tricks.sliding_window_view(xs, 2)
-    ys = np.lib.stride_tricks.sliding_window_view(ys, 2)
-    interp_x, interp_y = _sigmoid(xs.T, ys.T, smooth=smooth, n=n)
-    return interp_x.T.flat, interp_y.T.flat
-
+#     conn.commit()
+#     conn.close()
 
 # TODO use this approach in the crome.py version too and use a shared module
-def _reviver_rank_bump_plot_sql_ctes():
-    return """
-        WITH RECURSIVE date_series(date_point) AS (
-            SELECT DATE('now', '-182 days') AS date_point
-            UNION ALL
-            SELECT DATE(date_point, '+7 day') AS date_point
-            FROM date_series
-            WHERE date_point < DATE('now')
-        ),
-        revives_slice AS (
-            SELECT
-                ds.date_point,
-                DENSE_RANK() OVER (PARTITION BY ds.date_point ORDER BY COUNT(CASE WHEN rr.result = 'success' THEN 1 END) DESC, MAX(chance) DESC) AS rank_count,  -- Rank by count, then chance
-                DENSE_RANK() OVER (PARTITION BY ds.date_point ORDER BY MAX(chance) DESC, COUNT(CASE WHEN rr.result = 'success' THEN 1 END) DESC) AS rank_skill,  -- Rank by chance, then count
-                rr.reviver_id AS user_id,
-                rr.reviver_name AS user_name,
-                r_user.position_in_faction as role,
-                COUNT(CASE WHEN rr.result = 'success' THEN 1 END) AS successful_revives,
-                round(10*(MAX(chance)-90)) AS skill_est
-            FROM date_series AS ds
-            LEFT JOIN revives AS rr ON DATE(rr.timestamp) <= ds.date_point
-            INNER JOIN users AS r_user ON rr.reviver_id = r_user.user_id AND r_user.is_in_faction = 1
-            GROUP BY ds.date_point, rr.reviver_id, rr.reviver_name
-        )"""
 
-
-def reviver_count_bump_plot(
+def reviver_ranks_json(
     conn,
-    cursor,
-    user_colourList,
-    title="Members' Revive Experience Rank over time ",
-    title_add_limits=True,
-    path="reports/revives",
-    out_filename="Reviver_experience",
-    limit_window=(1, None),
-    figsize_in=(8, None),  # width, height in inches - set height to None for auto
-    line_width=5,
-    show_image=False,
+    cursor
 ):
-    if limit_window == None:
-        limit_window[1, None]
-    if limit_window[1] == None:
-        cursor.execute("""SELECT count(*) as reviver_count FROM revivers""")
-        reviver_count = cursor.fetchone()[0]
-        limit_window = (limit_window[0], reviver_count)
+    def _reviver_rank_bump_plot_sql_ctes():
+        return """
+            WITH RECURSIVE date_series(date_point) AS (
+                SELECT DATE('now', '-182 days') AS date_point
+                UNION ALL
+                SELECT DATE(date_point, '+7 day') AS date_point
+                FROM date_series
+                WHERE date_point < DATE('now')
+            ),
+            revives_slice AS (
+                SELECT
+                    ds.date_point,
+                    DENSE_RANK() OVER (PARTITION BY ds.date_point ORDER BY COUNT(CASE WHEN rr.result = 'success' THEN 1 END) DESC, MAX(chance) DESC) AS rank_count,  -- Rank by count, then chance
+                    DENSE_RANK() OVER (PARTITION BY ds.date_point ORDER BY MAX(chance) DESC, COUNT(CASE WHEN rr.result = 'success' THEN 1 END) DESC) AS rank_skill,  -- Rank by chance, then count
+                    rr.reviver_id AS user_id,
+                    rr.reviver_name AS user_name,
+                    r_user.position_in_faction as role,
+                    COUNT(CASE WHEN rr.result = 'success' THEN 1 END) AS successful_revives,
+                    round(10*(MAX(chance)-90)) AS skill_est
+                FROM date_series AS ds
+                LEFT JOIN revives AS rr ON DATE(rr.timestamp) <= ds.date_point
+                INNER JOIN users AS r_user ON rr.reviver_id = r_user.user_id AND r_user.is_in_faction = 1
+                GROUP BY ds.date_point, rr.reviver_id, rr.reviver_name
+            )"""
     cursor.execute(
         f"""{_reviver_rank_bump_plot_sql_ctes()}
-        SELECT date_point, user_id, user_name,  rank_count as rank,  role 
+        SELECT date_point as date, user_id, user_name,  rank_count, rank_skill, successful_revives, skill_est, role
         FROM revives_slice
-        order by date_point DESC, rank ASC
+        order by date_point DESC, user_id ASC
     """
     )
+
     data = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description] #extract the column names
 
-    return bump_plot(
-        data,
-        user_colourList,
-        title=title,
-        title_add_limits=title_add_limits,
-        path=path,
-        out_filename=out_filename,
-        figsize_in=figsize_in,
-        limit_window=limit_window,
-        show_image=show_image,
-    )
-
-
-def reviver_skill_bump_plot(
-    conn,
-    cursor,
-    user_colourList,
-    title="Members' Reviver Skill Rank over time ",
-    title_add_limits=True,
-    path="reports/revives",
-    out_filename="Reviver_skill",
-    limit_window=(1, None),
-    figsize_in=(8, None),  # width, height in inches - set height to None for auto
-    line_width=5,
-    show_image=False,
-):
-    if limit_window == None:
-        limit_window[1, None]
-    if limit_window[1] == None:
-        cursor.execute("""SELECT count(*) as reviver_count FROM revivers""")
-        reviver_count = cursor.fetchone()[0]
-        limit_window = (limit_window[0], reviver_count)
-    cursor.execute(
-        f"""{_reviver_rank_bump_plot_sql_ctes()}
-        SELECT date_point, user_id, user_name,  rank_skill as rank,  role  -- rank_skill, successful_revives, skill_est, role
-        FROM revives_slice
-        order by date_point DESC, rank ASC
-    """
-    )
-
-    return bump_plot(
-        cursor.fetchall(),
-        user_colourList,
-        title=title,
-        title_add_limits=True,
-        path=path,
-        out_filename=out_filename,
-        figsize_in=figsize_in,
-        limit_window=limit_window,
-        show_image=show_image,
-    )
-
-
-def bump_plot(
-    data,
-    user_colourList,
-    title,
-    title_add_limits,
-    path,
-    out_filename,
-    limit_window=(1, 20),
-    figsize_in=(12, 8),  # width, height in inches - set height to None for auto
-    line_width=5,
-    show_image=False,
-):
-    y_label = "Reviver"
-    if figsize_in[1] == None:
-        figsize_in = (figsize_in[0], 2 + 0.25 * (limit_window[1] - limit_window[0]))
     npData = pd.DataFrame(
-        data, columns=["date", "user_id", "user_name", "rank", "role"]
+        data, columns=columns
     )
-    npData["date"] = pd.to_datetime(npData["date"])
-    rank_df = npData.pivot(index="date", columns=["user_name", "role"], values="rank")
-    fig, ax = plt.subplots(figsize=(figsize_in[0], figsize_in[1]))
 
-    user_colour_dict = {user_name: color for _, _, user_name, color in user_colourList}
-    line_styles = {
-        "Recruit": ((0.4, 1), "o", "Grey"),
-        "Member": ((0.4, 0.4), "d", None),
-        "Astro Guard": ((4, 0.15), "o", None),
-        "Star Explorer": ((1, 0), "P", "Black"),
-        "Galactic Commander": ((1, 0), "*", "Black"),
-        "Co-leader": ((1, 0), "*", "Black"),
-        "Leader": ((1, 0), "*", "Orange"),
+    dates = sorted(npData['date'].unique())
+    date_strings = [str(date) for date in dates]
+
+    chart_data = {
+        "dates": date_strings,
+        "series": []
     }
 
-    for user in rank_df.columns:
-        user_name, role = user
-        y_values = rank_df[user]
-        x_values = pd.to_datetime(rank_df.index).map(datetime.toordinal)
-        color = user_colour_dict.get(user_name, "grey")
-        if not y_values.isnull().all():
-            interp_x, interp_y = _sigmoid_pairwise(x_values, y_values)
-            line_style = line_styles.get(role, ((1, 0), "o", None))
-            ax.plot(
-                interp_x,
-                interp_y,
-                lw=line_width,
-                dashes=line_style[0],
-                color=color,
-                zorder=10,
-            )
-            ax.scatter(
-                x_values, y_values, color="White", marker=line_style[1], s=30, zorder=19
-            )
-            ax.scatter(
-                x_values,
-                y_values,
-                color=line_style[2] if line_style[2] else color,
-                marker=line_style[1],
-                s=10,
-                zorder=20,
-            )
-            # Add annotations for user_name and role
-            user_name_annotation = ax.annotate(
-                f"{user_name}",
-                (interp_x[-1] + 1.6, interp_y[-1]),
-                xytext=(2, 0),  # Reduced xytext
-                textcoords="offset points",
-                va="center",
-                ha="left",
-                color=color,
-                fontsize=9,
-            )
-            user_name_bbox = get_annotation_bbox(fig, user_name_annotation).transformed(
-                ax.transData.inverted()
-            )
-            ax.annotate(
-                f"{role}",
-                (interp_x[-1] + 1.5, interp_y[-1]),
-                xytext=(2, 9),  # Adjust offset based on username length
-                # xytext=(2 + user_name_bbox.width*44 ,0),  # Adjust offset based on username length
-                textcoords="offset points",
-                va="center",
-                ha="left",
-                color="grey",  # Grey color for the role
-                fontsize=5,  # Smaller font size
-            )
-    # x axis
-    ax.set_xticks(pd.to_datetime(rank_df.index).map(datetime.toordinal))
-    ax.set_xticklabels(rank_df.index.strftime("%Y-%m-%d"), rotation=45)
-    # y axis
-    ax.set_ylim(limit_window[0] - 0.5, limit_window[1] + 0.75)
-    ax.set_yticks([i for i in range(limit_window[0], limit_window[1] + 1)])
-    ax.set_ylabel(y_label)
-    ax.invert_yaxis()
-    # chart
-    ax.set_title(title)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    # fig.tight_layout()
-    #
-    plt_save_image(path, out_filename, show_image=show_image, clear_image=True)
+    for (user_id, user_name, role), group in npData.groupby(["user_id", "user_name", "role"]):
+        player_data = {
+            "name": f"{user_name} ({role})",
+            "data": []
+        }
+        for date in dates:
+            ranks = {}  # Dictionary to hold ranks for this date
+            row = group.loc[group['date'] == date]
+            if not row.empty: #check if the row is empty or not
+                ranks["rank_skill"] = int(row['rank_skill'].iloc[0]) if isinstance(row['rank_skill'].iloc[0], np.integer) else row['rank_skill'].iloc[0]
+                ranks["rank_count"] = int(row['rank_count'].iloc[0]) if isinstance(row['rank_count'].iloc[0], np.integer) else row['rank_count'].iloc[0]
+                # Add more ranks here as needed:
+                # ranks["rank_other"] = ...
+            player_data["data"].append(ranks)  # Append the dictionary of ranks
 
+        chart_data["series"].append(player_data)
 
-def get_annotation_bbox(fig, annotation):
-    renderer = fig.canvas.get_renderer()
-    return annotation.get_window_extent(renderer=renderer)
+    meta_data= {
+        "name": "revive_ranks",
+        "source": "reviver_ranks_json",
+        "structure":""" {"dates": [date string, ...], 
+                        "series": [ 
+                            { "name": string, "data":[{rank_skill,rank_count}] }, ... ]
+                        }""",
+        "headings": [
+            "rank_skill",
+            "rank_count"
+        ]
+    },
+    data = {"meta_data":meta_data, "data":chart_data}
+    # print(json.dumps(data, indent=3))
+
+    destination_path = "reports/faction/revives/json"
+    if not os.path.exists(destination_path):
+        os.makedirs(destination_path)
+    with open(os.path.join(destination_path,'rank.json'), 'w') as f:
+        json.dump(data, f, indent=3)
+

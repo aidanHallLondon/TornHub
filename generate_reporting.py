@@ -5,7 +5,7 @@ from Torn.db._globals import DB_CONNECTPATH
 from Torn.manageDB import get_last_updateDB_delta, initDB, updateDB
 from Torn.reporting.user_activity import user_activity_json
 from Torn.reporting.itemMarket import item_reporting
-from Torn.reporting.reviver_bump import reviver_count_bump_plot, reviver_skill_bump_plot
+from Torn.reporting.reviver_bump import  reviver_ranks_json
 from Torn.threads import run_background_threads_and_exit
 from Torn.charts import close_all_figures, init as charts_init
 from Torn.reporting.all_tables import (
@@ -271,29 +271,15 @@ def faction_crime_reporting(conn, cursor, f_menu):
 
 
 def faction_revive_reporting(conn, cursor, f_menu):
-    
+    _copy_file("templates/reports/revives", "rank_count.html", "reports/faction/revives")
+    _copy_file("templates/reports/revives", "rank_skill.html", "reports/faction/revives")
+ 
     path = "reports/faction/revives"
-    reviver_count_bump_plot(
-        conn,
-        cursor,
-        user_colourList,
-        title="Revivers' ranked by count of revives, over time ",
-        title_add_limits=True,
-        path=path,
-        out_filename="revivers_count"
-    )
-    f_menu.append(_menu_item_for_file(path, "revives_revivers_count", "revivers_count.svg"))
+    reviver_ranks_json(conn, cursor)
 
-    mi=reviver_skill_bump_plot(
-        conn,
-        cursor,
-        user_colourList,
-        title="Revivers' skill rank over time ",
-        title_add_limits=True,
-        path=path,
-        out_filename="revivers_skill"
-    )
-    f_menu.append(_menu_item_for_file(path, "revives_revivers_skill", "revivers_skill.svg"))
+    f_menu.append(_menu_item_for_file(path, "revives_revivers_ranked", "rank_skill.html"))
+
+    # f_menu.append(_menu_item_for_file(path, "revives_revivers_skill2", "rank_skill.html"))
     # http://localhost:8000/faction/revives/revivers_skill.svg
 
     path = "reports/faction/revives"
