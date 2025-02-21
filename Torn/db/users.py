@@ -60,6 +60,7 @@ def create_users(conn, cursor, force=False):
                 SELECT 
                     count(*) AS actions,
                     sum(CASE WHEN act="attack" THEN 1 ELSE 0 END ) AS attacks,
+                    sum(CASE WHEN act="attack" and chain=1 THEN 1 ELSE 0 END ) AS chain_attacks,
                     sum(CASE WHEN act="revive" THEN 1 ELSE 0 END ) AS revives,
                     count(DISTINCT user_id) AS users,
                     STRFTIME('%H', timestamp) AS hour_of_day, 
@@ -78,6 +79,7 @@ def create_users(conn, cursor, force=False):
                     SELECT 
                         "attack" AS act,
                         "attacker_id" as user_id,
+						CASE WHEN modifier_chain_modifier>1.0 THEN 1 ELSE 0 END AS chain,
                         started as timestamp
                     FROM attacks 
                     WHERE attacker_faction_name="Halos Pulse" 
@@ -85,6 +87,7 @@ def create_users(conn, cursor, force=False):
                         SELECT  
                                 "revive" as act,
                                 reviver_id as user_id,
+								0 as chain,
                                 timestamp
                         From revives
                         WHERE reviver_factionname="Halos Pulse" 

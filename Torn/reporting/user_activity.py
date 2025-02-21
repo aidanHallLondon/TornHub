@@ -15,22 +15,18 @@ from Torn.tables import html_table
 def user_activity_json(conn,cursor,
                         path ="reports/user",
                         title_str="user_activity_json",
-                        out_filename="activity_e"):
+                        out_filename="activity_e",
+                        exclude_chain=False):
     if not os.path.exists(path):
         os.makedirs(path)
-    # 
-    # cursor.execute('''
-    #    SELECT  
-    #         sum(actions),sum(attacks),sum(revives),sum(users),
-    #         hour_of_day, day_of_week, day_of_week_name
-    #     From users_activity
-    #     WHERE month>date('now', '-90 days')
-    #     GROUP BY hour_of_day--, day_of_week, day_of_week_name
-    #     ORDER BY hour_of_day; --day_of_week;
-    # ''')
     cursor.execute('''
        SELECT  
-            avg(actions),avg(attacks),avg(revives),avg(users),
+            avg(actions) as actions,
+            avg(actions)-avg(chain_attacks) AS non_chain_actions,
+            avg(attacks)-avg(chain_attacks) AS ad_hoc_attacks,  
+            avg(chain_attacks) as chain_attacks,
+            avg(revives) as revives,
+            avg(users) as users_online,
             hour_of_day, day_of_week, day_of_week_name
         From users_activity
         WHERE month>date('now', '-90 days')
@@ -42,7 +38,7 @@ def user_activity_json(conn,cursor,
         "meta_data":{
                 "name":"user_activity",
                 "source":"user_activity_json",
-                "headings":["Actions per hour", "Attacks", "Revives", "Active Users", "hour_of_day"],
+                "headings":["Actions per hour","Actions per hour (ex chain)", "Ad hoc Attacks",  "Chain Attacks", "Revives", "Active Users", "hour_of_day", "day_of_week_id","day_of_week_name"],           
             },
           "data":raw_data
     }
