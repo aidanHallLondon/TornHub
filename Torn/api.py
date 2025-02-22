@@ -576,7 +576,7 @@ def paginated_api_calls_auto(
     short_name="",
 ):
     global headers
-    verbose = True
+    verbose = False
     data = []
     running = True
     if params is None:
