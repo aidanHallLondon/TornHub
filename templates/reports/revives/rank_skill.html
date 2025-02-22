@@ -6,11 +6,9 @@
     <title>ECharts with DOMContentLoaded</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.js"></script>
     <style>
-        #main {
-            background-color: #ffffff;
-            border-radius: 8px;
-            margin: 1em 0;
-            padding: 1em 0;
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            height: 100vh;
         }
 
         .rank_chart {
@@ -18,9 +16,19 @@
             border-radius: 8px;
             padding: 1em 0;
             margin: 1em 0;
+            border: 1px #000000;
+            width: 100%;
+            height: 100%;
+        }
+        #charts{
+            width: 90%;
+            height: 90vh;
         }
     </style>
     <script>
+        let chart = null;
+        let chart2 = null;
+
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize the echarts instance based on the prepared DOM
 
@@ -29,7 +37,7 @@
                 console.log("data:", data);
                 console.log("meta_data:", meta_data);
 
-                const chart = echarts.init(document.getElementById(elName));
+                chart = echarts.init(document.getElementById(elName));
 
                 const option = {
                     xAxis: {
@@ -46,12 +54,6 @@
                         type: 'line',
                         smooth: true,
                         symbolSize: 8,
-                        // markPoint: {
-                        //     data: [
-                        //         { type: 'max', name: 'Max' },
-                        //         { type: 'min', name: 'Min' }
-                        //     ]
-                        // },
                         endLabel: {  // Use endLabel for simplicity
                             show: true,
                             formatter: '{a}', // Display the series name (player name)
@@ -65,28 +67,37 @@
                 };
 
                 chart.setOption(option);
-
             }
 
+
+            function resizeChart() {
+                if (chart) { console.log('resize'); chart.resize(); }
+                if (chart2) { chart2.resize(); }
+            }
+            window.addEventListener('resize', resizeChart, { passive: true });
+
+            console.log('xxxx');
             fetch('json/rank.json')
                 .then(response => response.json()) // Parse the JSON response
                 .then(data => {
-                    plot(data.meta_data, data.data, "rank_skill", "rank_skill");
-                    plot(data.meta_data, data.data, "rank_count", "rank_count");
+                    chart = plot(data.meta_data, data.data, "rank_skill", "rank_skill");
+                    chart2 = plot(data.meta_data, data.data, "rank_count", "rank_count");
                 })
                 .catch(error => {
                     console.error('Error loading JSON:', error);
                 });
         });
+
+
     </script>
 </head>
 
 <body style="width: 100%;height:90%;">
     <div id="charts" style="width: 90%;height:90%;">
         <h2>Revivers ranked by skill</h2>
-        <div id="rank_skill" class="rank_chart" style="width: 100%;height:48%;"></div>
+        <div id="rank_skill" class="rank_chart"></div>
         <h2>Revivers ranked by revive count</h2>
-        <div id="rank_count" class="rank_chart" style="width: 100%;height:48%;"></div>
+        <div id="rank_count" class="rank_chart"></div>
     </div>
 </body>
 
