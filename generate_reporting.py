@@ -290,22 +290,22 @@ def faction_revive_reporting(conn, cursor, f_menu):
         name="revives_contributors_total",
         period=None,
         path=path,
-        out_filename="contributions_all" + imageExtension,
+        out_filename="contributions_all" ,
     )
     f_menu.append(mi)
     mi = None
 
-    mi = revivers_share_donut(
-        conn,
-        cursor,
-        title="Revivers contributions over the last seven days",
-        name="revives_contributors_7-days",
-        period="-7 days",
-        path=path,
-        out_filename="contributions_7days" + imageExtension,
-    )
-    f_menu.append(mi)
-    mi = None
+    # mi = revivers_share_donut(
+    #     conn,
+    #     cursor,
+    #     title="Revivers contributions over the last seven days",
+    #     name="revives_contributors_7-days",
+    #     period="-7 days",
+    #     path=path,
+    #     out_filename="contributions_7days" ,
+    # )
+    # f_menu.append(mi)
+    # mi = None
 
     mi = revivers_share_donut(
         conn,
@@ -314,7 +314,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
         name="revives_contributors_30-days",
         period="-30 days",
         path=path,
-        out_filename="contributions_30days" + imageExtension,
+        out_filename="contributions_30days" ,
     )
     f_menu.append(mi)
     mi = None
@@ -326,7 +326,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
         name="revives_contributors_1-month",
         period="-1 month",
         path=path,
-        out_filename="contributions_month" + imageExtension,
+        out_filename="contributions_month" ,
     )
     f_menu.append(mi)
     mi = None

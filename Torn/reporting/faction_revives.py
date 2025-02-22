@@ -295,7 +295,7 @@ def revivers_share_donut(
     )  # pie
     # draw_donut_chart(series=values, labels=labels) # pie
     return _menu_item_for_file(
-        path, name=name if name else out_filename, href=out_filename
+        path, name=name if name else out_filename, href=out_filename+".svg"
     )
 
 
