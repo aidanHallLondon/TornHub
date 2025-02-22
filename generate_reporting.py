@@ -271,8 +271,8 @@ def faction_crime_reporting(conn, cursor, f_menu):
 
 
 def faction_revive_reporting(conn, cursor, f_menu):
-    _copy_file("templates/reports/revives", "rank_count.html", "reports/faction/revives")
-    _copy_file("templates/reports/revives", "rank_skill.html", "reports/faction/revives")
+    _copy_file("templates/reports/faction/revives", "rank_count.html", "reports/faction/revives")
+    _copy_file("templates/reports/faction/revives", "rank_skill.html", "reports/faction/revives")
  
     path = "reports/faction/revives"
     reviver_ranks_json(conn, cursor)
@@ -334,7 +334,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
     mi = list_revivers_to_html_file(
         conn,
         cursor,
-        template_file_path="templates/reports/revives/revivers_forum_list.html",
+        template_file_path="templates/reports/faction/revives/revivers_forum_list.html",
         path=path,
         title_str="Revivers",
         out_filename="revivers_forum_list.html",
@@ -343,7 +343,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
     f_menu.append(mi)
     mi = None
 
-    template_revives_pivot_to_html_file_path = "templates/reports/revives/pivot.html"
+    template_revives_pivot_to_html_file_path = "templates/reports/faction/revives/pivot.html"
     path = "reports/faction/revives"
 
     mi = revives_pivot_to_html_file(
@@ -445,7 +445,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
         conn,
         cursor,
         revive_contract_id=1,
-        template_file_path="templates/reports/revives/contract.html",
+        template_file_path="templates/reports/faction/revives/contract.html",
         name="revives_contract_1",
         path=path,
         out_filename="revive_contract_1.html",
@@ -459,7 +459,7 @@ def faction_revive_reporting(conn, cursor, f_menu):
         conn,
         cursor,
         revive_contract_id = 2,
-        template_file_path="templates/reports/revives/contract.html",
+        template_file_path="templates/reports/faction/revives/contract.html",
         name="revives_contract_2",
         path=path,
         out_filename="revive_contract_2.html",
