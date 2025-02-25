@@ -10,7 +10,7 @@ from Torn.db.attacks import create_attacks, update_attacks
 from Torn.db.crimes import create_crimes, update_crimes
 from Torn.db.faction import create_faction, get_faction_id, update_faction
 from Torn.db.faction_upgrades import create_faction_upgrades, update_faction_upgrades
-from Torn.db.items import create_items, update_items
+from Torn.db.items import create_item_listings, create_items, update_items
 from Torn.db.revives import create_revive_contracts, create_revives, update_revive_contracts, update_revives
 from Torn.db.users import create_users, uodate_users, update_faction_members
 from Torn.db._globals import DB_PATH, DB_NAME, DB_CONNECTPATH
@@ -36,6 +36,7 @@ def set_last_update():
 
 def initDB(conn, cursor, force=False):
     faction_id = get_faction_id(conn, cursor)
+    create_item_listings(conn, cursor, force=force)
     create_items(conn, cursor, force=force)
     create_faction(conn, cursor, force=force)
     conn.commit()
@@ -57,13 +58,14 @@ def initDB(conn, cursor, force=False):
 def updateDB(conn, cursor, force=False):
     update_faction(conn, cursor)
     conn.commit()
-    update_faction_members(conn, cursor)
-    update_revives(conn, cursor, force=force)  
-    update_revive_contracts(conn, cursor, force=force)
     update_crimes(conn, cursor, force=force)
     update_items(
         conn, cursor, force=force
     )  # should occur AFTER crimes may add new items to be looked up
+    update_faction_members(conn, cursor)
+    update_revives(conn, cursor, force=force)  
+    update_revive_contracts(conn, cursor, force=force)
+
     update_applications(conn, cursor)
     update_armory(conn, cursor)
     update_faction_upgrades(

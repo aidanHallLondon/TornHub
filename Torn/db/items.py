@@ -7,24 +7,43 @@ from Torn.api import paginated_api_calls, cached_api_call, cached_api_paged_call
 def create_item_listings(conn, cursor, force=False):
     if force:
         cursor.execute("DROP TABLE IF EXISTS item_listings;")
-        cursor.execute("DROP TABLE IF EXISTS item_listings_history;")
+        cursor.execute("DROP TABLE IF EXISTS item_listings_latest;")
 
     cursor.executescript("""  
               
         CREATE TABLE IF NOT EXISTS item_listings (
-            id_pk INTEGER PRIMARY KEY,  
+            id_pk INTEGER PRIMARY KEY,
             item_id INTEGER NOT NULL,
-            listing_id INTEGER NOT NULL,
+            listing_id TEXT UNIQUE NOT NULL, -- Changed to TEXT and UNIQUE
             price INTEGER,
             amount INTEGER,
-            item_uid INTEGER,
-            stat_damage REAL,                                       
-            stat_accuracy REAL,                                       
+            item_uid TEXT, -- Changed to TEXT
+            stat_damage REAL,
+            stat_accuracy REAL,
             stat_armor REAL,
-            bonus_json_list TEXT,                                       
+            bonus_json_list TEXT,
+            rarity TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME, -- When the listing was first seen
+            removed_at DATETIME, -- When the listing disappeared
+            price_history TEXT -- CSV or JSON for price changes
+        );
+                       
+
+        CREATE TABLE IF NOT EXISTS item_listings_latest (
+            item_id INTEGER NOT NULL,
+            listing_id TEXT UNIQUE NOT NULL,
+            price INTEGER,
+            amount INTEGER,
+            item_uid TEXT,
+            stat_damage REAL,
+            stat_accuracy REAL,
+            stat_armor REAL,
+            bonus_json_list TEXT,
             rarity TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        );""")
+        );
+""")
 
 
 def create_items(conn, cursor, force=False):
@@ -52,16 +71,16 @@ def get_item(conn, cursor, params=None, cache_age_limit=3600, force=False):
 
 
 def update_items(conn, cursor, force=False):
-    cursor.execute(
-        """SELECT item_id FROM items WHERE item_name IS NULL ORDER BY 1 ASC"""
-    )
+    cursor.execute("DELETE FROM item_listings_latest")
+    cursor.execute('SELECT item_id FROM items WHERE item_type="Defensive" ORDER BY 1 ASC')
     data = cursor.fetchall()
     for (item_id,) in data:  # data looks like [(1,), (172,), (568,), (1203,),
         update_item(conn, cursor, item_id=item_id)
+    update_item_listings(conn,cursor)   
+
 
 
 def _itemmarket_callback(conn, cursor, new_data, callback_parameters):
-    print('Callback')
     if (not new_data) or ("error" in new_data):
         return
     itemmarket = new_data.get("itemmarket", {})
@@ -73,7 +92,6 @@ def _itemmarket_callback(conn, cursor, new_data, callback_parameters):
         return None
     if callback_parameters.get("item_updates",0)<1:
         callback_parameters["item_updates"]=1
-        print("item_updates +1")
         cursor.execute(
             """INSERT OR REPLACE INTO items (
                 item_id ,  
@@ -89,11 +107,10 @@ def _itemmarket_callback(conn, cursor, new_data, callback_parameters):
                 item.get("average_price",None),
             )
         )   
-    if listings:
-        print("update listings")
+    if listings and len(listings)>0:
         callback_parameters["listings_updates"]+=1
         cursor.executemany(
-            """INSERT OR REPLACE INTO item_listings (
+            """INSERT OR REPLACE INTO item_listings_latest (
                 item_id, 
                 listing_id,
                 amount, 
@@ -143,7 +160,42 @@ def update_item(conn, cursor, item_id, cache_age_limit=3600 * 12, force=False):
         callback_parameters=callback_parameters,
         short_name="itemmarket",
     )
-    print(callback_parameters)
 
+def update_item_listings(conn,cursor):
+    cursor.execute("""  
+    INSERT OR IGNORE INTO item_listings (
+                   item_id, listing_id, price, amount, item_uid, stat_damage, stat_accuracy, stat_armor, 
+                   bonus_json_list, rarity, timestamp, created_at)
+    SELECT item_id, listing_id, price, amount, item_uid, stat_damage, stat_accuracy, stat_armor, 
+                   bonus_json_list, rarity, timestamp, timestamp FROM item_listings_latest;
+    """)
+    cursor.execute("""                                                  
+    UPDATE item_listings
+    SET
+        price = (SELECT price FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        amount = (SELECT amount FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        item_uid = (SELECT item_uid FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        stat_damage = (SELECT stat_damage FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        stat_accuracy = (SELECT stat_accuracy FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        stat_armor = (SELECT stat_armor FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        bonus_json_list = (SELECT bonus_json_list FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        rarity = (SELECT rarity FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        timestamp = (SELECT timestamp FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id),
+        price_history = CASE
+            WHEN item_listings.price!= (SELECT price FROM item_listings_latest WHERE item_listings_latest.listing_id = item_listings.listing_id) THEN
+                CASE WHEN item_listings.price_history IS NULL THEN
+                    json_array(json_object('price', item_listings.price, 'time', item_listings.timestamp))
+                ELSE
+                    json_insert(item_listings.price_history, '$[' || (json_array_length(item_listings.price_history)) || ']', json_object('price', item_listings.price, 'time', item_listings.timestamp))
+                END
+            ELSE item_listings.price_history
+        END
+    WHERE item_listings.listing_id IN (SELECT listing_id FROM item_listings_latest);
+    """)
+    cursor.execute(""" 
+    UPDATE item_listings
+        SET removed_at = datetime('now')
+        WHERE listing_id NOT IN (SELECT listing_id FROM item_listings_latest) AND removed_at IS NULL;
+    """)
 
     
