@@ -27,10 +27,10 @@ def user_activity_json(conn,cursor,
             avg(chain_attacks) as chain_attacks,
             avg(revives) as revives,
             avg(users) as users_online,
-            hour_of_day, day_of_week, day_of_week_name
+            day_of_week, day_of_week_name,hour_of_day
         From users_activity
         WHERE month>date('now', '-90 days')
-        GROUP BY hour_of_day 
+        GROUP BY day_of_week,day_of_week_name,hour_of_day 
         ORDER BY hour_of_day;
     ''')
     raw_data=cursor.fetchall()

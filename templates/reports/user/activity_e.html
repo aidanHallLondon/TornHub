@@ -1,100 +1,116 @@
 <!DOCTYPE html>
-<html style="width: 100%;height:100%;">
+<html>
 
 <head>
     <meta charset="utf-8">
     <title>ECharts with DOMContentLoaded</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.js"></script>
     <style>
-        #main,
-        #second {
+        body {
+            font-family: sans-serif;
+            /* Apply sans-serif font to the entire body */
+            color: #444;
+            /* Set default text color to #444 */
+            height:100%;
+        }
+
+        #Heatmap,
+        #Radar,
+        #LineChart {
             background-color: #ffffff;
-            border-radius: 8px;
+            border-radius: 16px;
             margin: 1em;
             padding: 1em;
+            width: 100%;
+            height:40vh;
+            
         }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize the echarts instance based on the prepared DOM
-            var myChart = echarts.init(document.getElementById('main'));
-            var myChart2 = echarts.init(document.getElementById('second'));
-
+            fetch('activity_e.json')
+                .then(response => response.json()) // Parse the JSON response
+                .then(data => {
+                    plot(data.meta_data, data.data);
+                })
+                .catch(error => {
+                    console.error('Error loading JSON:', error);
+                });
             // ... (rest of your ECharts code) ...
 
             function plot(meta_data, data) {
-                console.log("Data:", data);
-
-                const seriesCount = 4; // Number of series
+                const  seriesCount = 4,
+                    seriesIndex = 5,
+                    dayIndex = 6,
+                    dayNameIndex = 7,
+                    hourIndex = 8;
                 const textStyle = { fontSize: 18 };
-                let seriesType = 'line';
+                //
                 let seriesNames = meta_data.headings.slice(0, seriesCount);
-
-                // Extract categories (hours of the day)
-                let categories = data.map(row => row[4]);
-                let hours = seriesNames.map((name, i) => data.map(row => row[i].toFixed(2)));
-
-                console.log("Series Data:", hours);
-
-                // Build 24-hour clock indicators
+                // Aggregate data by hour across all days
+                let hourlyAggregated = {};
+                data.forEach(row => {
+                    const hour = row[hourIndex];
+                    if (!hourlyAggregated[hour]) {
+                        hourlyAggregated[hour] = Array(seriesCount).fill(0);
+                    }
+                    for (let i = 0; i < seriesCount; i++) {
+                        hourlyAggregated[hour][i] += row[i];
+                    }
+                });
+                // Calculate averages
+                let hourlyAverages = {};
+                Object.keys(hourlyAggregated).forEach(hour => {
+                    hourlyAverages[hour] = hourlyAggregated[hour].map(val => val / 7);
+                });
+                let orderedHours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+                let hours = seriesNames.map((_, i) => orderedHours.map(hour => hourlyAverages[hour] ? hourlyAverages[hour][i].toFixed(2) : 0));
                 let clockHours = Array.from({ length: 24 }, (_, i) => ({
                     name: `${i}:00`,
-                    max: Math.max(...hours.flat()) // Set max dynamically
+                    max: Math.max(...hours.flat())
                 }));
 
-                // Transpose hours data for the radar chart
-                let radarData = seriesNames.map((name, i) => ({
-                    name: name,
-                    value: hours[i].slice(0, 24)  // Ensure each series provides 24 hourly values
-                }));
-
-                let eChart_options = {
-                    title: { text: 'Activity over 90-days by Hour' },
+                // Radar chart options
+                let radar_eChart_options = {
+                    title: { text: '' },
                     legend: { data: seriesNames },
                     tooltip: {
                         trigger: 'item',
-
                         formatter: function (params) {
-                            //console.log(params  )
                             return `${params.seriesName}`;
                         }
                     },
                     radar: {
-                        indicator: [...clockHours].reverse(),  // Reversed to make it go clockwise
-                        startAngle: 90 + (360 / 24), // Midnight at the top
+                        indicator: [...clockHours].reverse(), // Reverse the indicators
+                        startAngle: 90 + (360 / 24),
                     },
                     series: seriesNames.map((name, i) => ({
                         name: name,
                         type: 'radar',
                         data: [{
-                            value: data.map(row => row[i].toFixed(0)).reverse(),
+                            value: hours[i].slice().reverse(), // Reverse data directly here
                             name: name
                         }]
                     }))
                 };
 
-                myChart.setOption(eChart_options);
-
                 // Line chart options
-
-                // Adjust the hours data to close the loop for the line chart
-                let wrappedHours = hours.map(series => [...series.slice(0, 24), series[0]]);  // Add 00:00 value to the end
-
+                let wrappedHours = hours.map(series => [...series, series[0]]);
                 // Update x-axis to include 24:00
                 let wrappedClockHours = [...clockHours.map(h => h.name), '24:00'];
-
-                // Line chart options with wrapped data
-                eChart_options = {
+                // 
+                lineChart_eChart_options = {
                     series: seriesNames.map((name, i) => ({
                         name: name,
-                        type: seriesType,
-                        title: { text: "Activiy over 90-days by hour" },
+                        type: 'line',
+                        title: { text: "Average Activity over 90-days by hour" },
                         data: wrappedHours[i],
                         smooth: true,
                         markArea: {
                             silent: true,
                             itemStyle: {
-                                color: 'rgba(200, 200, 200, 0.2)'  // Soft grey with transparency
+                                color: 'rgba(200, 200, 200, 0.2)'
                             },
                             data: [
                                 [
@@ -110,7 +126,7 @@
                     })),
                     xAxis: {
                         type: 'category',
-                        data: wrappedClockHours,  // Include 24:00
+                        data: wrappedClockHours,
                         axisLabel: { rotate: 0, fontSize: 18 }
                     },
                     yAxis: {
@@ -121,24 +137,98 @@
                     textStyle: textStyle,
                     tooltip: { trigger: 'axis' },
                 };
-                myChart2.setOption(eChart_options);
 
-            }
-            fetch('activity_e.json')
-                .then(response => response.json()) // Parse the JSON response
-                .then(data => {
-                    plot(data.meta_data, data.data);
-                })
-                .catch(error => {
-                    console.error('Error loading JSON:', error);
+
+                // Heatmap options
+                // Aggregate data by hour and day for heatmap
+
+                let heatmapData = Array(7).fill(0).map((d, di) => d = Array(24).fill(0).map((h, hi) => h = [hi, di, 0]));
+                let dayNames = Array(7).fill(null);
+                //
+                data.forEach(row => {
+                    const hour = parseInt(row[hourIndex], radix = 10); // hour_of_day
+                    const day = parseInt(row[dayIndex], radix = 10); // hour_of_day
+                    heatmapData[day][hour][2] += row[seriesIndex];
+                    if (!dayNames[day]) dayNames[day] = row[dayNameIndex]
                 });
+
+                let maxV = null, minV = null;
+                heatmapData.forEach(day => day.forEach(hourCoords => {
+                    if (hourCoords[2] > maxV || !maxV) maxV = hourCoords[2];
+                    if (hourCoords[2] < minV || !minV) minV = hourCoords[2];
+                    hourCoords[2]=hourCoords[2].toFixed(1)
+                }
+                )
+                );
+  
+                const heatMap_eChart_options = {
+                    tooltip: {
+                        position: 'top',
+                        formatter: function (params) {
+                            return `${+(params.value[2]).toFixed(1)}`;
+                        }
+                    },
+                    grid: { height: '50%', top: '10%' },
+                    xAxis: {
+                        type: 'category',
+                        data: wrappedClockHours.slice(0, 24),
+                        axisLabel: { rotate: 0, fontSize: 18 },
+                        splitArea: { show: true }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: dayNames, // Use series names for y-axis
+                        textStyle: textStyle,
+                        splitArea: { show: true },
+                    },
+                    visualMap: {
+                        min: minV,
+                        max: maxV,
+                        calculable: true,
+                        orient: 'horizontal',
+                        left: 'center',
+                        bottom: '15%'
+                    },
+                    series: [{
+                        name: 'Activity Heatmap',
+                        type: "heatmap",
+                        title: { text: "Average Activity over 90-days by hour" },
+                        data: heatmapData.flat(1), // Flatten the coords array
+                        smooth: true,
+                        label: {
+                            show: true
+                        },
+                        emphasis: {
+                            itemStyle: {
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+
+                    }]
+                };
+                //
+                //
+                var heatMapChart = echarts.init(document.getElementById('Heatmap'));
+                var radarChart = echarts.init(document.getElementById('Radar'));
+                var lineChart = echarts.init(document.getElementById('LineChart'));
+                //
+                radarChart.setOption(radar_eChart_options);
+                lineChart.setOption(lineChart_eChart_options);
+                heatMapChart.setOption(heatMap_eChart_options);
+            }
+
+
         });
     </script>
 </head>
 
 <body style="width: 100%;height:90%;">
-    <div id="main" style="width: 100%;height:50%;"></div>
-    <div id="second" style="width: 100%;height:50%;"></div>
+    <h1>Members online by day and hour</h1>
+    <div id="Heatmap" ></div>
+    <div id="Radar" ></div>
+    <div id="LineChart"></div>
+
 </body>
 
 </html>
