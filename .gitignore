@@ -1,4 +1,5 @@
 # TornHub
+/credentials.json
 /data/
 /data/db/
 /data/cache/
@@ -176,3 +177,4 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+Torn/credentials.py
