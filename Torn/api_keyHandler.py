@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import sys
+from Torn.credentials import load_credentials
 from Torn.db._globals import DB_CONNECTPATH
 
 api_key_preferenceName='TORN_API_KEY'
@@ -35,6 +36,14 @@ def get_api_key( api_key_settingName='TORN_API_KEY', force=False):
     if api_key != None and checkAPIKey(api_key) and not force:
         return api_key
     
+    #check credentiols file
+    credentials = load_credentials()
+    if credentials:
+        primary_API_key = credentials.get("primary_API_key")
+        if primary_API_key:
+            api_key=primary_API_key
+            return api_key
+        
     # Check for API key in command-line arguments
     for arg in sys.argv:
         if arg.startswith("--api_key="):
@@ -71,8 +80,8 @@ DO NOT SHARE your database with this key
         if not checkAPIKey(api_key):
             print("API key cannot be empty. Please try again.")
     # Store API key in database
-    setPreference(api_key_settingName,api_key)
-    print('API key stored in the DB.')
+    # setPreference(api_key_settingName,api_key)
+    # print('API key stored in the DB.')
 
     return api_key
 

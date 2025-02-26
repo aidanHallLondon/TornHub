@@ -29,6 +29,7 @@ from Torn.reporting.faction_revives import (
 )
 from Torn.reporting.crimes import crimeexp_rank_bump_plot
 from Torn.reporting.oc import oc_item_requirements
+from Torn.upload import upload_web
 
 imageExtension = ".svg"
 charting_meta_data = None
@@ -47,9 +48,11 @@ def main(fast=True):
         updateDB(conn, cursor)
     #
     generate_reporting(conn, cursor)
-
     conn.commit()
     conn.close()
+    upload_web()
+    # 
+    input("Press ENTER to run_background_threads")
     run_background_threads_and_exit(
         main_thread_func=main_thread_update,
         interval=BACKGROUND_UPDATE_DUTY_CYCLE_SECONDS,

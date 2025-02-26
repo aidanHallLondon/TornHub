@@ -28,6 +28,7 @@ if [[ "$OS" == "Darwin" ]]; then  # macOS
     brew install graphviz
     pip install beautifulsoup4
     pip install matplotlib
+    pip install paramiko
 elif [[ "$OS" == "Linux" ]]; then
     echo "Installing dependencies on Linux..."
     # Replace with your Linux distribution's package manager (e.g., apt, yum, dnf)
@@ -36,6 +37,7 @@ elif [[ "$OS" == "Linux" ]]; then
     sudo apt-get install graphviz 
     sudo apt-get install beautifulsoup4
     sudo apt-get install matplotlib
+    sudo apt-get install paramiko
 elif [[ "$OS" == "Windows" ]]; then
     echo "Installing dependencies on Windows..."
     # Provide instructions or a script for Windows installations
@@ -44,6 +46,7 @@ elif [[ "$OS" == "Windows" ]]; then
     echo "    * Graphviz: https://graphviz.org/download/"
     echo "    * beautifulsoup4"
     echo "    * matplotlib"
+    echo "    * paramiko"
 else
     echo "Unsupported operating system: $OS"
 fi
