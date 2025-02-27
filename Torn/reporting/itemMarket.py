@@ -20,13 +20,13 @@ UPPER_MARGIN_FACTOR = 0.20
 LOWER_MARGIN_FACTOR = 0.05
 OUTLIER_THRESHOLD = 2.0
 TREND_PERCENTILE = 0.01
-MODERN_LISTING_ID_THRESHOLD = 9 * 1000000
 
 
 def item_reporting(conn, cursor, f_menu):
     path = "reports/items/market/items"
     
     f_menu = create_item_market_json(conn,cursor, item_id=332, f_menu=f_menu)
+    f_menu = create_item_market_json(conn,cursor, item_id=333, f_menu=f_menu)
     f_menu = create_item_market_json(conn,cursor, item_id=652, f_menu=f_menu)
     f_menu = create_item_market_json(conn,cursor, item_id=653, f_menu=f_menu)
     f_menu = create_item_market_json(conn,cursor, item_id=654, f_menu=f_menu)
@@ -100,7 +100,7 @@ def plot_armory_pricing_chart(
 
         df_raw["outlier"] = (
             df_raw["price"] > (df_raw["trend_price"] * OUTLIER_THRESHOLD)
-        ) | (df_raw["listing_id"] < MODERN_LISTING_ID_THRESHOLD)
+        ) 
         df_filtered = df_raw[~df_raw["outlier"]].copy()
 
         df_filtered.loc[:, "above_trend"] = df_filtered["price_diff"] > (
@@ -268,14 +268,14 @@ def plot_armory_pricing_chart(
     # -- plot_armory_pricing_chart --
     cursor.execute(
         f"""
-        SELECT item_uid, stat_armor as measure, price, listing_id
+        SELECT item_uid, stat_armor as measure, price
         FROM item_listings
         WHERE item_id={item_id}
         ORDER BY measure ASC;"""
     )
     raw_data = cursor.fetchall()
     df_raw = pd.DataFrame(
-        raw_data, columns=["item_uid", "measure", "price", "listing_id"]
+        raw_data, columns=["item_uid", "measure", "price"]
     )
 
     # Calculate dynamic bin size
@@ -328,7 +328,7 @@ def plot_armory_pricing_chart(
 
 # ------------------------
 
-def create_item_market_json(conn, cursor, item_id,f_menu):
+def create_item_market_json(conn, cursor, item_id, f_menu):
     title_str="Item Pricing for weapons and armor"
     path="reports/items/armory/items/json"
     out_filename=f"items_armory_{item_id:06}"
@@ -344,10 +344,10 @@ def create_item_market_json(conn, cursor, item_id,f_menu):
     if item_data:
         item_name, item_type, average_price = item_data
         cursor.execute(f"""
-            SELECT item_uid, stat_damage, stat_accuracy, stat_armor, price, listing_id
+            SELECT item_uid, stat_damage, stat_accuracy, stat_armor, price
             FROM item_listings
             WHERE item_id={item_id}
-            ORDER BY listing_id ASC;"""
+            ORDER BY price ASC;"""
         )
         raw_data = cursor.fetchall()
         # 
@@ -356,7 +356,7 @@ def create_item_market_json(conn, cursor, item_id,f_menu):
                     "name": f"items_armory_{item_name}",
                     "source": f"item_market_json({item_id})",
                     "id" : item_id,
-                    "headings":["item_uid", "stat_damage", "stat_accuracy", "stat_armor", "price", "listing_id"],
+                    "headings":["item_uid", "stat_damage", "stat_accuracy", "stat_armor", "price"],
                 },
             "data":raw_data
         }
